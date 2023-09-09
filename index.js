@@ -4,6 +4,8 @@ const pool = new Pool({ numBrowserMin: 1, numBrowserMax: 1, browserOptions: { nu
 
 (async () => {
     await pool.warmup();
-    
+    const page = await pool.acquirePage();
+    page.goto("https://threejs.org/examples/#webgl_animation_keyframes");
+    console.log("啊啊");
 })()
 .catch(err => console.error(err));
