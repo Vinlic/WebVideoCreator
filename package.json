@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "fluent-ffmpeg": "^2.1.2",
+    "fs-extra": "^11.1.1",
     "generic-pool": "^3.9.0",
     "lodash": "^4.17.21",
     "puppeteer-core": "^21.1.1"
