@@ -10,6 +10,7 @@
   "author": "Vinlic",
   "license": "ISC",
   "dependencies": {
+    "eventemitter3": "^5.0.1",
     "fluent-ffmpeg": "^2.1.2",
     "fs-extra": "^11.1.1",
     "generic-pool": "^3.9.0",

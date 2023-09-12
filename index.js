@@ -27,22 +27,20 @@ await pool.warmup();
 for(let i = 0;i < 1;i++) {
     (async () => {
         const page = await pool.acquirePage();
-        page.onLog(message => console.log(message));
         const synthesizer = new Synthesizer(`${i}`);
-        page.onFrame((data, timestamp) => synthesizer.inputFrame(data, timestamp));
-        page.onPad(duration => synthesizer.padDuration(duration));
+        page.on("consoleLog", message => console.log(message));
+        page.on("consoleError", err => console.error(err));
+        page.on("frame", data => synthesizer.inputFrame(data));
+        page.on("error", err => console.error("page error:", err));
+        page.on("crashed", err => console.error("page crashed:", err));
         await page.goto("https://threejs.org/examples/webgl_lights_spotlight.html");
         await page.setViewport({ width: 1920, height: 1080 });
         await page.startScreencast({ fps: 60, duration: 20000 });
         console.time(`render${i}`);
-        await new Promise(resolve => page.onComplete(resolve));
+        await new Promise(resolve => page.once("screencastCompleted", resolve));
         console.timeEnd(`render${i}`);
-        // await new Promise(resolve => setTimeout(resolve, 15000));
         await page.stopScreencast();
         await page.release();
-        // page = await pool.acquirePage();
-        // console.log(page);
-        // page.onFrame();
     })()
     .catch(err => console.error(err));
 }
