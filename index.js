@@ -1,6 +1,5 @@
 import Pool from "./lib/Pool.js";
 import Synthesizer from "./lib/Synthesizer.js";
-import fs from "fs-extra";
 
 const pool = new Pool({
     numBrowserMin: 1,
