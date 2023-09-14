@@ -5,3 +5,5 @@ tmp
 *.mp3
 *.mp4
 *.wav
+*.ts
+*.webm

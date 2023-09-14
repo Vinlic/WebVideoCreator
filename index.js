@@ -1,6 +1,10 @@
 import Pool from "./lib/Pool.js";
 import FrameSynthesizer from "./lib/FrameSynthesizer.js";
+import VideoChunk from "./lib/VideoChunk.js";
 import Previewer from "./lib/Previewer.js";
+
+// 允许无限量的监听器
+process.setMaxListeners(Infinity);
 
 const pool = new Pool({
     numBrowserMin: 1,
