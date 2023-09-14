@@ -43,21 +43,25 @@ for(let i = 0;i < 1;i++) {
             duration,
             videoCodec: FrameSynthesizer.VCODEC.NVIDIA.H264
         });
-        synthesizer.addAudio({
-            path: "tmp3fpc1yx7.wav",
-            
-            // seekStart: 500,
-            // seekEnd: 1000,
-            loop: true
-            // endTime: 10000
+        synthesizer.on("progress", progress => {
+            console.log(progress);
         });
+        synthesizer.on("error", err => console.error(err));
+        // synthesizer.addAudio({
+        //     path: "tmp3fpc1yx7.wav",
+        //     // seekStart: 500,
+        //     // seekEnd: 1000,
+        //     loop: true
+        //     // endTime: 10000
+        // });
         synthesizer.start();
+        const completedPromise = new Promise(resolve => synthesizer.once("completed", resolve));
         page.on("consoleLog", message => console.log(message));
         page.on("consoleError", err => console.error(err));
         page.on("frame", buffer => synthesizer.input(buffer));
         page.on("error", err => console.error("page error:", err));
         page.on("crashed", err => console.error("page crashed:", err));
-        await page.goto("https://animejs.com/");
+        await page.goto("https://dataveyes.com/en");
         await page.setViewport({ width, height });
         await page.startScreencast({ fps, duration });
         console.log((await page.getCaptureContextConfig()))
@@ -67,6 +71,7 @@ for(let i = 0;i < 1;i++) {
         await page.stopScreencast();
         await page.release();
         synthesizer.endInput();
+        await completedPromise;
         console.log("END");
     })()
     .catch(err => console.error(err));
