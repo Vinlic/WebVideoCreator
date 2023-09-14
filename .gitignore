@@ -1,3 +1,6 @@
 node_modules
 output
 tmp
+*.mp3
+*.mp4
+*.wav

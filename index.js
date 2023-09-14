@@ -27,14 +27,29 @@ await pool.warmup();
 for(let i = 0;i < 1;i++) {
     (async () => {
         const page = await pool.acquirePage();
+
+        const width = 1920;
+        const height = 1080;
+        const fps = 30;
+        const duration = 20000;
+
         // const previewer = new Previewer();
         // await previewer.launch();
         const synthesizer = new FrameSynthesizer({
             outputPath: "./test.mp4",
-            width: 1920,
-            height: 1080,
-            fps: 60,
+            width,
+            height,
+            fps,
+            duration,
             videoCodec: FrameSynthesizer.VCODEC.NVIDIA.H264
+        });
+        synthesizer.addAudio({
+            path: "tmp3fpc1yx7.wav",
+            
+            // seekStart: 500,
+            // seekEnd: 1000,
+            loop: true
+            // endTime: 10000
         });
         synthesizer.start();
         page.on("consoleLog", message => console.log(message));
@@ -42,9 +57,10 @@ for(let i = 0;i < 1;i++) {
         page.on("frame", buffer => synthesizer.input(buffer));
         page.on("error", err => console.error("page error:", err));
         page.on("crashed", err => console.error("page crashed:", err));
-        await page.goto("https://threejs.org/examples/webgl_lights_spotlight.html");
-        await page.setViewport({ width: 1920, height: 1080 });
-        await page.startScreencast({ fps: 60, duration: 20000 });
+        await page.goto("https://animejs.com/");
+        await page.setViewport({ width, height });
+        await page.startScreencast({ fps, duration });
+        console.log((await page.getCaptureContextConfig()))
         console.time(`render`);
         await new Promise(resolve => page.once("screencastCompleted", resolve));
         console.timeEnd(`render`);
