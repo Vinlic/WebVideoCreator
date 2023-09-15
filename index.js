@@ -1,5 +1,5 @@
 import Pool from "./lib/Pool.js";
-import FrameSynthesizer from "./lib/FrameSynthesizer.js";
+import Synthesizer from "./lib/Synthesizer.js";
 import VideoChunk from "./lib/VideoChunk.js";
 import Previewer from "./lib/Previewer.js";
 
@@ -39,14 +39,13 @@ for(let i = 0;i < 1;i++) {
 
         // const previewer = new Previewer();
         // await previewer.launch();
-        const synthesizer = new FrameSynthesizer({
+        const synthesizer = new VideoChunk({
             outputPath: "./test.mp4",
             width,
             height,
             fps,
-            coverCapture: true,
             duration,
-            videoCodec: FrameSynthesizer.VCODEC.NVIDIA.H264
+            videoCodec: VideoChunk.VCODEC.NVIDIA.H264
         });
         
         synthesizer.on("progress", progress => {
@@ -57,8 +56,6 @@ for(let i = 0;i < 1;i++) {
             path: "test.mp3",
             // seekStart: 500,
             // seekEnd: 1000,
-            loop: true
-            // endTime: 10000
         });
         // return;
         synthesizer.start();
@@ -73,6 +70,10 @@ for(let i = 0;i < 1;i++) {
         await page.startScreencast({ fps, duration });
         console.log((await page.getCaptureContextConfig()))
         console.time(`render`);
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        await page.pauseScreencast();
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        await page.resumeScreencast();
         await new Promise(resolve => page.once("screencastCompleted", resolve));
         console.timeEnd(`render`);
         await page.stopScreencast();

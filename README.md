@@ -1,5 +1,5 @@
-# Puppeteer Video Renderer
+# Puppeteer Video Creator
 
 ## 简介
 
-基于无头浏览器打造的视频渲染引擎。
+基于无头浏览器打造的视频渲染器。
