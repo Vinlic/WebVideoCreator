@@ -17,6 +17,7 @@
     "generic-pool": "^3.9.0",
     "linked-list": "^3.1.0",
     "lodash": "^4.17.21",
-    "puppeteer-core": "^21.1.1"
+    "puppeteer-core": "^21.1.1",
+    "uniqid": "^5.4.0"
   }
 }

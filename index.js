@@ -44,20 +44,23 @@ for(let i = 0;i < 1;i++) {
             width,
             height,
             fps,
+            coverCapture: true,
             duration,
             videoCodec: FrameSynthesizer.VCODEC.NVIDIA.H264
         });
+        
         synthesizer.on("progress", progress => {
             console.log(progress);
         });
         synthesizer.on("error", err => console.error(err));
-        // synthesizer.addAudio({
-        //     path: "tmp3fpc1yx7.wav",
-        //     // seekStart: 500,
-        //     // seekEnd: 1000,
-        //     loop: true
-        //     // endTime: 10000
-        // });
+        synthesizer.addAudio({
+            path: "test.mp3",
+            // seekStart: 500,
+            // seekEnd: 1000,
+            loop: true
+            // endTime: 10000
+        });
+        // return;
         synthesizer.start();
         const completedPromise = new Promise(resolve => synthesizer.once("completed", resolve));
         page.on("consoleLog", message => console.log(message));
