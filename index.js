@@ -39,24 +39,24 @@ for(let i = 0;i < 1;i++) {
 
         // const previewer = new Previewer();
         // await previewer.launch();
-        const synthesizer = new VideoChunk({
+        const synthesizer = new Synthesizer({
             outputPath: "./test.mp4",
             width,
             height,
             fps,
             duration,
-            videoCodec: VideoChunk.VCODEC.NVIDIA.H264
+            videoCodec: Synthesizer.VCODEC.NVIDIA.H264
         });
         
         synthesizer.on("progress", progress => {
             console.log(progress);
         });
         synthesizer.on("error", err => console.error(err));
-        synthesizer.addAudio({
-            path: "test.mp3",
-            // seekStart: 500,
-            // seekEnd: 1000,
-        });
+        // synthesizer.addAudio({
+        //     path: "test.mp3",
+        //     // seekStart: 500,
+        //     // seekEnd: 1000,
+        // });
         // return;
         synthesizer.start();
         const completedPromise = new Promise(resolve => synthesizer.once("completed", resolve));
@@ -70,10 +70,10 @@ for(let i = 0;i < 1;i++) {
         await page.startScreencast({ fps, duration });
         console.log((await page.getCaptureContextConfig()))
         console.time(`render`);
-        await new Promise(resolve => setTimeout(resolve, 4000));
-        await page.pauseScreencast();
-        await new Promise(resolve => setTimeout(resolve, 4000));
-        await page.resumeScreencast();
+        // await new Promise(resolve => setTimeout(resolve, 4000));
+        // await page.pauseScreencast();
+        // await new Promise(resolve => setTimeout(resolve, 4000));
+        // await page.resumeScreencast();
         await new Promise(resolve => page.once("screencastCompleted", resolve));
         console.timeEnd(`render`);
         await page.stopScreencast();
