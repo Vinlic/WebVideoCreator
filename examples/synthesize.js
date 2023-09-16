@@ -1,14 +1,20 @@
+import assert from "assert";
 import cliProgress from "cli-progress";
-import { ResourcePool, Synthesizer, VIDEO_CODEC } from "../index.js";
+import _ from "lodash";
+
+import { ResourcePool, Synthesizer } from "../index.js";
+import presetParser from "../lib/preset-parser.js";
 import util from "../lib/util.js";
 
-export default async url => {
+export default async ({
+    url,
+    outputPath,
+    preset
+}) => {
+    assert(util.isURL(url), "URL must be string");
+    assert(_.isString(outputPath), "outputPath must be string");
 
-    // 视频预设参数
-    const width = 1280;
-    const height = 720;
-    const fps = 30;
-    const duration = 20000;
+    const { useGPU, videoCodec, audioCodec, width, height, fps, duration } = presetParser(preset);
 
     // 计算总帧数
     const frameCount = util.durationToFrameCount(duration, fps);
@@ -25,7 +31,7 @@ export default async url => {
         // 浏览器选项
         browserOptions: {
             // 如果您有[独显]或者[核显]建议开启以加速渲染
-            useGPU: true,
+            useGPU,
             // 页面资源最小数量
             numPageMin: 1,
             // 页面资源最大数量
@@ -40,7 +46,7 @@ export default async url => {
     // 设置视窗宽高
     await page.setViewport({ width, height });
     // 跳转到您希望渲染的页面，您可以考虑创建一个本地的Web服务器提供页面以提升加载速度和安全性
-    await page.goto(url || "https://dataveyes.com/en");
+    await page.goto(url);
     // 监听页面打印到console的正常日志
     page.on("consoleLog", message => console.log(message));
     // 监听页面打印到console的错误日志
@@ -54,7 +60,7 @@ export default async url => {
     // 实例化合成器实例
     const synthesizer = new Synthesizer({
         // 输出文件路径
-        outputPath: "./test.mp4",
+        outputPath,
         // 视频宽度
         width,
         // 视频高度
@@ -67,7 +73,8 @@ export default async url => {
         // 如果使用VIDEO_CODEC.INTEL.H264将启用Intel核显的QSV编码器加速编码
         // 如果使用VIDEO_CODEC.NVIDIA.H264将启用Nvidia显卡的NVENC编码器加速编码
         // 如果不具备任何图形加速设备请使用CPU软编码
-        videoCodec: VIDEO_CODEC.NVIDIA.H264
+        videoCodec,
+        audioCodec
     });
     // 监听合成进度
     synthesizer.on("progress", (progress, frameCount) => progressBar.update(frameCount));

@@ -8,7 +8,7 @@ import Page from "./lib/Page.js";
 import Transition from "./lib/Transition.js";
 import examples from "./examples/index.js";
 import util from "./lib/util.js";
-import { VIDEO_CODEC, AUDIO_CODEC, TRANSITION } from "./lib/Preset.js";
+import { VIDEO_CODEC, AUDIO_CODEC, TRANSITION } from "./lib/const.js";
 
 export {
     ResourcePool,
