@@ -1,20 +1,24 @@
-import Pool from "./lib/Pool.js";
+import ResourcePool from "./lib/ResourcePool.js";
 import Synthesizer from "./lib/Synthesizer.js";
 import VideoChunk from "./lib/VideoChunk.js";
 import ChunkSynthesizer from "./lib/ChunkSynthesizer.js";
 import Previewer from "./lib/Previewer.js";
 import Browser from "./lib/Browser.js";
 import Page from "./lib/Page.js";
+import examples from "./examples/index.js";
+import util from "./lib/util.js";
 import { VIDEO_CODEC, AUDIO_CODEC } from "./lib/Preset.js";
 
 export {
-    Pool,
+    ResourcePool,
     Browser,
     Page,
     Synthesizer,
     VideoChunk,
     ChunkSynthesizer,
     Previewer,
+    examples,
+    util,
     VIDEO_CODEC,
     AUDIO_CODEC
-}
+};
