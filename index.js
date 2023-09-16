@@ -7,6 +7,7 @@ import Browser from "./lib/Browser.js";
 import Page from "./lib/Page.js";
 import Transition from "./lib/Transition.js";
 import examples from "./examples/index.js";
+import presetParser from "./lib/preset-parser.js";
 import util from "./lib/util.js";
 import { VIDEO_CODEC, AUDIO_CODEC, TRANSITION } from "./lib/const.js";
 
@@ -21,6 +22,7 @@ export {
     Transition,
     examples,
     util,
+    presetParser,
     VIDEO_CODEC,
     AUDIO_CODEC,
     TRANSITION

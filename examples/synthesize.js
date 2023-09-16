@@ -2,19 +2,37 @@ import assert from "assert";
 import cliProgress from "cli-progress";
 import _ from "lodash";
 
-import { ResourcePool, Synthesizer } from "../index.js";
+import { AUDIO_CODEC, ResourcePool, Synthesizer, VIDEO_CODEC } from "../index.js";
 import presetParser from "../lib/preset-parser.js";
 import util from "../lib/util.js";
 
 export default async ({
     url,
-    outputPath,
-    preset
+    width,
+    height,
+    fps,
+    duration,
+    browserUseGPU,
+    videoCodec,
+    audioCodec,
+    outputPath
 }) => {
-    assert(util.isURL(url), "URL must be string");
-    assert(_.isString(outputPath), "outputPath must be string");
+    url = _.defaultTo(url, "");
+    width = _.defaultTo(width, 1280);
+    height = _.defaultTo(height, 720);
+    fps = _.defaultTo(fps, 30);
+    duration = _.defaultTo(duration, 20000);
+    browserUseGPU = _.defaultTo(browserUseGPU, true);
+    videoCodec = _.defaultTo(videoCodec, VIDEO_CODEC.NVIDIA.H264);
+    audioCodec = _.defaultTo(videoCodec, AUDIO_CODEC.AAC);
 
-    const { useGPU, videoCodec, audioCodec, width, height, fps, duration } = presetParser(preset);
+    assert(util.isURL(url), "url is invalid");
+    assert(_.isFinite(width) && _.isFinite(height), "width and height must be number");
+    assert(_.isFinite(fps), "fps must be number");
+    assert(_.isBoolean(browserUseGPU), "browserUseGPU must be boolean");
+    assert(_.isString(videoCodec), "videoCodec must be string");
+    assert(_.isString(audioCodec), "audioCodec must be string");
+    assert(_.isString(outputPath), "outputPath must be string");
 
     // 计算总帧数
     const frameCount = util.durationToFrameCount(duration, fps);
@@ -31,7 +49,7 @@ export default async ({
         // 浏览器选项
         browserOptions: {
             // 如果您有[独显]或者[核显]建议开启以加速渲染
-            useGPU,
+            useGPU: browserUseGPU,
             // 页面资源最小数量
             numPageMin: 1,
             // 页面资源最大数量
