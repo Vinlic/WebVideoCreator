@@ -5,9 +5,10 @@ import ChunkSynthesizer from "./lib/ChunkSynthesizer.js";
 import Previewer from "./lib/Previewer.js";
 import Browser from "./lib/Browser.js";
 import Page from "./lib/Page.js";
+import Transition from "./lib/Transition.js";
 import examples from "./examples/index.js";
 import util from "./lib/util.js";
-import { VIDEO_CODEC, AUDIO_CODEC } from "./lib/Preset.js";
+import { VIDEO_CODEC, AUDIO_CODEC, TRANSITION } from "./lib/Preset.js";
 
 export {
     ResourcePool,
@@ -17,8 +18,10 @@ export {
     VideoChunk,
     ChunkSynthesizer,
     Previewer,
+    Transition,
     examples,
     util,
     VIDEO_CODEC,
-    AUDIO_CODEC
+    AUDIO_CODEC,
+    TRANSITION
 };

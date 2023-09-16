@@ -25,7 +25,7 @@ export default async url => {
         // 浏览器选项
         browserOptions: {
             // 如果您有[独显]或者[核显]建议开启以加速渲染
-            useGPU: true,
+            useGPU: false,
             // 页面资源最小数量
             numPageMin: 1,
             // 页面资源最大数量
@@ -67,7 +67,7 @@ export default async url => {
         // 如果使用VIDEO_CODEC.INTEL.H264将启用Intel核显的QSV编码器加速编码
         // 如果使用VIDEO_CODEC.NVIDIA.H264将启用Nvidia显卡的NVENC编码器加速编码
         // 如果不具备任何图形加速设备请使用CPU软编码
-        videoCodec: VIDEO_CODEC.NVIDIA.H264
+        videoCodec: VIDEO_CODEC.CPU.H264
     });
     // 监听合成进度
     synthesizer.on("progress", (progress, frameCount) => progressBar.update(frameCount));
