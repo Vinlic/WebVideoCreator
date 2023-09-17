@@ -1,7 +1,7 @@
 {
-  "name": "puppeteer-video-renderer",
+  "name": "web-video-creator",
   "version": "0.0.1",
-  "description": "",
+  "description": "A powerful video synthesis engine based on a headless browser.",
   "type": "module",
   "main": "index.js",
   "scripts": {},
