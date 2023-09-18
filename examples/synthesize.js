@@ -60,10 +60,6 @@ export default async ({
     await pool.warmup();
     // 获取页面资源，它将从资源池自动获取可用的页面
     const page = await pool.acquirePage();
-    // 设置视窗宽高
-    await page.setViewport({ width, height });
-    // 跳转到您希望渲染的页面，您可以考虑创建一个本地的Web服务器提供页面以提升加载速度和安全性
-    await page.goto(url);
     // 监听页面打印到console的正常日志
     page.on("consoleLog", message => console.log(message));
     // 监听页面打印到console的错误日志
@@ -72,6 +68,10 @@ export default async ({
     page.on("error", err => console.error("page error:", err));
     // 监听页面是否崩溃，当内存不足或过载时可能会崩溃
     page.on("crashed", err => console.error("page crashed:", err));
+    // 设置视窗宽高
+    await page.setViewport({ width, height });
+    // 跳转到您希望渲染的页面，您可以考虑创建一个本地的Web服务器提供页面以提升加载速度和安全性
+    await page.goto(url);
 
     console.time("\nrender");
     // 实例化合成器实例
