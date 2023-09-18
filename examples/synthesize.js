@@ -3,7 +3,6 @@ import cliProgress from "cli-progress";
 import _ from "lodash";
 
 import { AUDIO_CODEC, ResourcePool, Synthesizer, VIDEO_CODEC } from "../index.js";
-import presetParser from "../lib/preset-parser.js";
 import util from "../lib/util.js";
 
 export default async ({
@@ -24,7 +23,7 @@ export default async ({
     duration = _.defaultTo(duration, 20000);
     browserUseGPU = _.defaultTo(browserUseGPU, true);
     videoCodec = _.defaultTo(videoCodec, VIDEO_CODEC.NVIDIA.H264);
-    audioCodec = _.defaultTo(videoCodec, AUDIO_CODEC.AAC);
+    audioCodec = _.defaultTo(audioCodec, AUDIO_CODEC.AAC);
 
     assert(util.isURL(url), "url is invalid");
     assert(_.isFinite(width) && _.isFinite(height), "width and height must be number");
@@ -98,6 +97,10 @@ export default async ({
     synthesizer.on("progress", (progress, frameCount) => progressBar.update(frameCount));
     // 监听合成器错误
     synthesizer.on("error", err => console.error(err));
+    synthesizer.addAudio({
+        path: "test.mp3",
+        // loop: true
+    });
     // 启动合成
     synthesizer.start();
     // 合成完成promise
