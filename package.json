@@ -25,12 +25,15 @@
   "dependencies": {
     "async-lock": "^1.4.0",
     "cli-progress": "^3.12.0",
+    "crc-32": "^1.2.2",
     "eventemitter3": "^5.0.1",
     "fluent-ffmpeg": "^2.1.2",
     "fs-extra": "^11.1.1",
     "generic-pool": "^3.9.0",
+    "got": "^13.0.0",
     "linked-list": "^3.1.0",
     "lodash": "^4.17.21",
+    "mp4box": "^0.5.2",
     "puppeteer-core": "^21.1.1",
     "uniqid": "^5.4.0"
   }
