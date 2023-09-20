@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer-core";
 
-import util from "./util.js";
+import util from "../lib/util.js";
 
 export default class Previewer {
 

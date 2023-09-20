@@ -11,6 +11,8 @@ export default class DynamicImage {
     endTime;
     /** @type {boolean} - 是否强制循环 */
     loop;
+    /** @type {number} - 重试下载次数 */
+    retryFetchs;
     /** @type {number} - 帧索引 */
     frameIndex = 0;
     /** @type {number} - 重复索引 */
@@ -40,15 +42,17 @@ export default class DynamicImage {
      * @param {number} [options.startTime=0] - 开始播放时间点（毫秒）
      * @param {number} [options.endTime=Infinity] - 结束播放时间点（毫秒）
      * @param {boolean} [options.loop] - 是否强制循环
+     * @param {number} [options.retryFetchs=2] - 重试下载次数
      */
     constructor(options) {
         if (!options)
             throw new Error("DemuxedVideo options invalid");
-        const { src, startTime, endTime, loop } = options;
+        const { src, startTime, endTime, loop, retryFetchs } = options;
         this.src = src;
         this.startTime = startTime || 0;
         this.endTime = endTime || Infinity;
         this.loop = loop;
+        this.retryFetchs = retryFetchs || 2;
     }
 
     /**
@@ -89,7 +93,7 @@ export default class DynamicImage {
      */
     async load() {
         // 下载图像数据
-        const response = await fetch(this.src);
+        const response = await window.captureCtx.fetch(this.src, this.retryFetchs);
         // 获取MIME类型
         let contentType = response.headers.get("Content-Type") || response.headers.get("content-type");
         if(!contentType)

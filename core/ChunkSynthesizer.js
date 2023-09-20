@@ -4,8 +4,7 @@ import _ from "lodash";
 
 import Synthesizer from "./Synthesizer.js";
 import VideoChunk from "./VideoChunk.js";
-import Transition from "./Transition.js";
-import util from "./util.js";
+import Transition from "../entity/Transition.js";
 
 /**
  * 视频分块合成器

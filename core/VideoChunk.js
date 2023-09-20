@@ -4,8 +4,8 @@ import uniqid from "uniqid";
 import _ from "lodash";
 
 import Synthesizer from "./Synthesizer.js";
-import { BITSTREAM_FILTER } from "./const.js";
-import Transition from "./Transition.js";
+import { BITSTREAM_FILTER } from "../lib/const.js";
+import Transition from "../entity/Transition.js";
 
 /**
  * 视频分块

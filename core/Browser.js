@@ -6,7 +6,7 @@ import _ from "lodash";
 
 import Pool from "./ResourcePool.js";
 import Page from "./Page.js";
-import util from "./util.js";
+import util from "../lib/util.js";
 
 // 异步锁
 const asyncLock = new AsyncLock();
@@ -18,15 +18,15 @@ let browserIndex = 1;
  */
 export default class Browser {
 
-    // 状态枚举
+    /** 浏览器状态枚举 */
     static STATE = {
-        // 未初始化
+        /** 未初始化 */
         UNINITIALIZED: Symbol("UNINITIALIZED"),
-        // 已就绪
+        /** 已就绪 */
         READY: Symbol("READY"),
-        // 不可用
+        /** 不可用 */
         UNAVAILABLED: Symbol("UNAVAILABLED"),
-        // 已关闭
+        /** 已关闭 */
         CLOSED: Symbol("CLOSED")
     };
 

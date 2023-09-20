@@ -7,13 +7,14 @@ import _ from "lodash";
 
 import Browser from "./Browser.js";
 import CaptureContext from "./CaptureContext.js";
-import SvgAnimation from "./SvgAnimation.js";
-import VideoCanvas from "./VideoCanvas.js";
-import DynamicImage from "./DynamicImage.js";
-import LottieCanvas from "./LottieCanvas.js";
-import VideoPreprocessor, { VideoConfig } from "./VideoPreprocessor.js";
-import Font from "./Font.js";
-import util from "./util.js";
+import SvgAnimation from "../media/SvgAnimation.js";
+import VideoCanvas from "../media/VideoCanvas.js";
+import DynamicImage from "../media/DynamicImage.js";
+import LottieCanvas from "../media/LottieCanvas.js";
+import VideoConfig from "../video-preprocessor/VideoConfig.js";
+import VideoPreprocessor from "../video-preprocessor/VideoPreprocessor.js";
+import Font from "../entity/Font.js";
+import util from "../lib/util.js";
 
 /**
  * @typedef {import('puppeteer-core').Viewport} Viewport
@@ -22,9 +23,9 @@ import util from "./util.js";
 // 默认用户UA
 const DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0";
 // Webfont库脚本内容
-const WEBFONT_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/libwebfont.js")).toString();
+const WEBFONT_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/webfont.js")).toString();
 // Lottie动画库脚本内容
-const LOTTIE_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/liblottie.js")).toString();
+const LOTTIE_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/lottie.js")).toString();
 //异步锁
 const asyncLock = new AsyncLock();
 // 页面计数
@@ -35,18 +36,19 @@ let pageIndex = 1;
  */
 export default class Page extends EventEmitter {
 
+    /** 页面状态枚举 */
     static STATE = {
-        // 未初始化
+        /** 未初始化 */
         UNINITIALIZED: Symbol("UNINITIALIZED"),
-        // 已就绪
+        /** 已就绪 */
         READY: Symbol("READY"),
-        // 捕获画面中
+        /** 录制中 */
         CAPTURING: Symbol("CAPTURING"),
-        // 已暂停
+        /** 已暂停 */
         PAUSED: Symbol("PAUSED"),
-        // 不可用
+        /** 不可用 */
         UNAVAILABLED: Symbol("UNAVAILABLED"),
-        // 已关闭
+        /** 已关闭 */
         CLOSED: Symbol("CLOSED")
     };
 
@@ -155,7 +157,7 @@ export default class Page extends EventEmitter {
         // 页面导航到URL
         await this.target.goto(url);
         // 将捕获元素转换为画布
-        const { svgAnimations, videos, dynamicImages, lotties } = await this.#captureElementsToControllers();
+        const { svgAnimations, videos, dynamicImages, lotties } = await this.#captureElementsToMedias();
         // 使用Lottie动画时注入Lottie动画库
         lotties.length > 0 && await this.#injectLottieLibrary();
         // 返回控制器映射
@@ -233,11 +235,11 @@ export default class Page extends EventEmitter {
     }
 
     /**
-     * 将捕获元素转换为可控制的实体
+     * 将捕获元素转换为可控制的媒体对象
      * 
      * @returns {{svgAnimations: SvgAnimation[], videos: VideoCanvas[], dynamicImages: DynamicImage[], lotties: LottieCanvas[]}} - 资源计数映射
      */
-    async #captureElementsToControllers() {
+    async #captureElementsToMedias() {
         return await this.target.evaluate(() => {
             const captureCtx = window.captureCtx;
             const svgs = Array.from(document.querySelectorAll("svg"));

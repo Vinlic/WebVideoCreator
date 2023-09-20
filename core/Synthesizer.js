@@ -10,9 +10,9 @@ import _ from "lodash";
 import {
     SUPPORT_FORMAT, FORMAT_VIDEO_CODEC_MAP,
     FORMAT_AUDIO_CODEC_MAP, VIDEO_CODEC_MAP, AUDIO_CODEC_MAP
-} from "./const.js";
-import Audio from "./Audio.js";
-import util from "./util.js";
+} from "../lib/const.js";
+import Audio from "../entity/Audio.js";
+import util from "../lib/util.js";
 
 /** @typedef {import('fluent-ffmpeg').FfmpegCommand} FfmpegCommand */
 
@@ -21,13 +21,13 @@ import util from "./util.js";
  */
 export default class Synthesizer extends EventEmitter {
 
-    // 合成器状态
+    /** 合成器状态枚举 */
     static STATE = {
-        // 已就绪
+        /** 已就绪 */
         READY: Symbol("READY"),
-        // 合成中
+        /** 合成中 */
         SYNTHESIZING: Symbol("SYNTHESIZING"),
-        // 已完成
+        /** 已完成 */
         COMPLETED: Symbol("COMPLETED")
     };
 

@@ -1,12 +1,12 @@
-import VideoCanvas from "./VideoCanvas.js";
-import DynamicImage from "./DynamicImage.js";
-import LottieCanvas from "./LottieCanvas.js";
-import SvgAnimation from "./SvgAnimation.js";
+import VideoCanvas from "../media/VideoCanvas.js";
+import DynamicImage from "../media/DynamicImage.js";
+import LottieCanvas from "../media/LottieCanvas.js";
+import SvgAnimation from "../media/SvgAnimation.js";
 
 export default class CaptureContext {
 
     // 启动时间点（毫秒）
-    startupTime = Date.now();
+    startupTime = Math.floor(performance.now());
     // 当前时间点（毫秒）
     currentTime = 0;
     // 当前帧指针
@@ -332,6 +332,7 @@ export default class CaptureContext {
         this.buildElementProxy(e, canvas)
         this.videoConfigs.push({
             target: videoCanvas,
+            url: options.src,
             ...options
         });
         this.dispatchMedias.push(videoCanvas);
@@ -489,6 +490,31 @@ export default class CaptureContext {
             nodeValue: { get: () => dest.nodeValue, set: v => dest.nodeValue = v },
             normalize: { get: () => dest.normalize, set: v => dest.normalize = v },
             matches: { get: () => dest.matches, set: v => dest.matches = v }
+        });
+    }
+
+    /**
+     * 拉取响应
+     * 
+     * @param {string} url - 拉取URL
+     * @param {number} [retryCount=2] - 重试次数
+     * @returns {Response} - 响应对象
+     */
+    async fetch(url, retryCount = 2, _retryIndex = 0) {
+        return await new Promise((resolve, reject) => {
+            fetch(url)
+                .then(response => {
+                    if(response.status >= 400)
+                        throw new Error(`Fetch ${url} response error: [${response.status}] ${response.statusText}`);
+                    else
+                        resolve(response);
+                })
+                .catch(err => {
+                    if (_retryIndex >= retryCount)
+                        reject(err);
+                    else
+                        this.fetch(url, retryCount, _retryIndex + 1);
+                });
         });
     }
 

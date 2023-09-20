@@ -1,11 +1,13 @@
-import ResourcePool from "./lib/ResourcePool.js";
-import Synthesizer from "./lib/Synthesizer.js";
-import VideoChunk from "./lib/VideoChunk.js";
-import ChunkSynthesizer from "./lib/ChunkSynthesizer.js";
-import Previewer from "./lib/Previewer.js";
-import Browser from "./lib/Browser.js";
-import Page from "./lib/Page.js";
-import Transition from "./lib/Transition.js";
+import ResourcePool from "./core/ResourcePool.js";
+import Synthesizer from "./core/Synthesizer.js";
+import VideoChunk from "./core/VideoChunk.js";
+import ChunkSynthesizer from "./core/ChunkSynthesizer.js";
+import Previewer from "./core/Previewer.js";
+import Browser from "./core/Browser.js";
+import Page from "./core/Page.js";
+import Transition from "./entity/Transition.js";
+import Font from "./entity/Font.js";
+import Audio from "./entity/Audio.js";
 import examples from "./examples/index.js";
 import presetParser from "./lib/preset-parser.js";
 import util from "./lib/util.js";
@@ -20,6 +22,8 @@ export {
     ChunkSynthesizer,
     Previewer,
     Transition,
+    Font,
+    Audio,
     examples,
     util,
     presetParser,

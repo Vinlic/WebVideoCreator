@@ -2,7 +2,7 @@ import assert from "assert";
 import fs from "fs-extra";
 import _ from "lodash";
 
-import util from "./util.js";
+import util from "../lib/util.js";
 
 /**
  * 音频

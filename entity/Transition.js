@@ -1,7 +1,7 @@
 import assert from "assert";
 import _ from "lodash";
 
-import { TRANSITION } from "./const.js";
+import { TRANSITION } from "../lib/const.js";
 
 const TRANSITION_IDS = Object.values(TRANSITION);
 
