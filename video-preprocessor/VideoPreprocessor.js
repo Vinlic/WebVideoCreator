@@ -1,12 +1,14 @@
 import assert from "assert";
+import EventEmitter from "eventemitter3";
 import _ from "lodash";
 
-import util from "../lib/util.js";
 import DownloadTask from "./task/DownloadTask.js";
 import ProcessTask from "./task/ProcessTask.js";
-import DemuxTask from "./task/DemuxTask.js";
 
-export default class VideoPreprocessor {
+/**
+ * 视频预处理器
+ */
+export default class VideoPreprocessor extends EventEmitter {
 
     /** @type {VideoConfig[]} - 视频配置列表 */
     configs;
@@ -14,61 +16,120 @@ export default class VideoPreprocessor {
     parallelDownloads;
     /** @type {number} - 并行处理数量 */
     parallelProcess;
-    /** @type {number} - 并行解复用数量 */
-    parallelDemuxs;
     /** @type {DownloadTask[]} - 下载队列 */
     downloadQueue = [];
     /** @type {ProcessTask} - 处理队列 */
     processQueue = [];
-    /** @type {DemuxTask} - 解复用队列 */
-    demuxQueue = [];
+    /** @type {Function} - 下载队列恢复回调函数 */
     #downloadQueueResumeCallback;
+    /** @type {Function} - 处理队列恢复回调函数 */
+    #processQueueResumeCallback;
     /** @type {DownloadTask[]} - 下载任务列表 */
     downloadTasks = [];
     /** @type {ProcessTask[]} - 处理任务列表 */
     processTasks = [];
-    /** @type {DemuxTask[]} - 解复用任务列表 */
-    demuxTasks = [];
-   
 
+    /**
+     * 构造函数
+     * 
+     * @param {Object} options - 预处理器选项
+     * @param {VideoConfig[]} configs - 视频配置列表
+     * @param {number} [parallelDownloads=10] - 并行下载数量
+     * @param {number} [parallelProcess=10] - 并行处理数量
+     */
     constructor(options) {
+        super();
         assert(_.isObject(options), "VideoPreprocessor options must be Object");
-        const { configs } = options;
+        const { configs, parallelDownloads, parallelProcess } = options;
         assert(_.isArray(configs), "configs must be VideoConfig[]");
+        assert(_.isUndefined(parallelDownloads) || _.isFinite(parallelDownloads), "parallelDownloads must be number");
+        assert(_.isUndefined(parallelProcess) || _.isFinite(parallelProcess), "parallelProcess must be number");
         this.configs = configs;
+        this.parallelDownloads = _.defaultTo(parallelDownloads, 10);
+        this.parallelProcess = _.defaultTo(parallelProcess, 10);
     }
 
+    /**
+     * 启动处理
+     */
     start() {
         this.configs.forEach(config => this.downloadQueue.push(new DownloadTask(config)));
-        this.dispatchDownloadQueue();
-        this.dispatch();
+        this.#dispatchDownloadQueue();
+        this.#dispatchProcessQueue();
+        this.#dispatchTasks();
     }
 
-    dispatchDownloadQueue() {
+    /**
+     * 发送错误事件
+     * 
+     * @param {Error} err - 错误对象
+     */
+    #emitError(err) {
+        this.emit("error", err);
+    }
+
+    /**
+     * 调度下载队列
+     */
+    #dispatchDownloadQueue() {
         (async () => {
             const task = this.downloadQueue.shift();
             if (!task)
                 return true;
-            if(this.downloadTasks.length >= this.parallelDownloads)
+            if (this.downloadTasks.length >= this.parallelDownloads)
                 await new Promise(resolve => this.#downloadQueueResumeCallback = resolve);
             this.downloadTasks.push(task);
             return false;
         })()
-            .then(stop => !stop && this.dispatchDownloadQueue())
-            .catch(err => console.error("download queue dispatch error:", err));
+            .then(stop => !stop && this.#dispatchDownloadQueue())
+            .catch(err => this.#emitError(err));
     }
 
-    dispatch() {
-        this.downloadTasks = this.downloadTasks.filter(task => {
-            if(task.canRemove())
-                return false;
-            if(task.canStart())
-                task.start();
-            return true;
-        });
-        if(this.downloadTasks.length < this.parallelDownloads)
-            this.#downloadQueueResumeCallback && this.#downloadQueueResumeCallback();
-        setTimeout(this.dispatch.bind(this), 500);
+    /**
+     * 调度处理队列
+     */
+    #dispatchProcessQueue() {
+        (async () => {
+            const task = this.processQueue.shift();
+            if (!task)
+                return true;
+            if (this.processTasks.length >= this.parallelProcess)
+                await new Promise(resolve => this.#processQueueResumeCallback = resolve);
+            this.processTasks.push(task);
+            return false;
+        })()
+            .then(stop => !stop && this.#dispatchProcessQueue())
+            .catch(err => this.#emitError(err));
+    }
+
+    /**
+     * 任务调度
+     */
+    #dispatchTasks() {
+        try {
+            this.downloadTasks = this.downloadTasks.filter(task => {
+                if (task.canRemove())
+                    return false;
+                if (task.canStart())
+                    task.start();
+                return true;
+            });
+            if (this.downloadTasks.length < this.parallelDownloads)
+                this.#downloadQueueResumeCallback && this.#downloadQueueResumeCallback();
+            this.processTasks = this.processTasks.filter(task => {
+                if (task.canRemove())
+                    return false;
+                if (task.canStart())
+                    task.start();
+                return true;
+            });
+            if (this.processTasks.length < this.parallelProcess)
+                this.#processQueueResumeCallback && this.#processQueueResumeCallback();
+            setTimeout(this.#dispatchTasks.bind(this), 500);
+        }
+        catch(err) {
+            this.#emitError(err);
+        }
     }
 
 }
