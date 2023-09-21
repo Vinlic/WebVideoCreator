@@ -464,13 +464,14 @@ export default class Page extends EventEmitter {
      */
     async #preprocessVideo(config) {
         const videoPreprocessor = this.videoPreprocessor;
-        await new Promise((resolve, reject) => {
-            videoPreprocessor.createTask({
+        return await new Promise((resolve, reject) => {
+            videoPreprocessor.process({
                 config,
                 onCompleted: resolve,
                 onError: reject
             });
-        })
+            this.emit("videoPreprocess", config);
+        });
     }
 
     /**
@@ -510,32 +511,24 @@ export default class Page extends EventEmitter {
             const url = request.url();
             const { pathname } = new URL(url);
             if (method == "POST" && pathname == "/video_preprocess") {
-                // const data = util.attempt(() => JSON.parse(request.postData()));
-                // if(_.isError(data)) {
-
-                // }
-                // console.log(data);
-                // this.#preprocessVideo(data)
-                //     .then(data => {
-                //         request.respond({
-                //             status: 200,
-                //             body: data
-                //         });
-                //     })
-                //     .catch(err => {
-                //         console.error(err);
-                //         request.respond({
-                //             status: 500,
-                //             body: `${err.message}\n${err.stack}`
-                //         });
-                //     });
+                const data = _.attempt(() => JSON.parse(request.postData()));
+                if (_.isError(data))
+                    throw new Error("api /video_preprocess only accept JSON data");
+                const buffer = await this.#preprocessVideo(data);
+                request.respond({
+                    status: 200,
+                    body: buffer
+                });
             }
             else
                 request.continue();
         })()
-            .then()
             .catch(err => {
-
+                console.error(err);
+                request.respond({
+                    status: 500,
+                    body: `${err.message}\n${err.stack}`
+                });
             })
     }
 
@@ -616,13 +609,16 @@ export default class Page extends EventEmitter {
     }
 
     /**
-     * 移除监听器
+     * 移除所有监听器
      */
     #removeListeners() {
         this.removeAllListeners("frame");
         this.removeAllListeners("screencastCompleted");
         this.removeAllListeners("consoleLog");
         this.removeAllListeners("consoleError");
+        this.removeAllListeners("resourceAccepted");
+        this.removeAllListeners("resourceRejected");
+        this.removeAllListeners("videoPreprocess");
         this.removeAllListeners("error");
         this.removeAllListeners("crashed");
     }

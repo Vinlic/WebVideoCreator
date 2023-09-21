@@ -4,6 +4,7 @@ import _ from "lodash";
 
 import DownloadTask from "./task/DownloadTask.js";
 import ProcessTask from "./task/ProcessTask.js";
+import VideoConfig from "./VideoConfig.js";
 
 /**
  * 视频预处理器
@@ -42,20 +43,25 @@ export default class VideoPreprocessor extends EventEmitter {
         assert(_.isUndefined(parallelProcess) || _.isFinite(parallelProcess), "parallelProcess must be number");
         this.parallelDownloads = _.defaultTo(parallelDownloads, 10);
         this.parallelProcess = _.defaultTo(parallelProcess, 10);
-    }
-
-    /**
-     * 启动处理
-     */
-    start() {
-        // this.configs.forEach(config => this.downloadQueue.push(new DownloadTask(config)));
+        // 调度下载队列
         this.#dispatchDownloadQueue();
+        // 调度处理队列
         this.#dispatchProcessQueue();
+        // 调度任务
         this.#dispatchTasks();
     }
 
-    createTask() {
-        
+    /**
+     * 发起处理
+     * 
+     * @param {Object} options - 处理选项
+     * @param {VideoConfig} options.config - 视频配置
+     * @param {Function} [options.onCompleted] - 已完成回调
+     * @param {Function} [options.onError] - 错误回调
+     */
+    process(options) {
+        console.log(options.config);
+        options.onCompleted && options.onCompleted(Buffer.from("HelloWorld"));
     }
 
     /**
