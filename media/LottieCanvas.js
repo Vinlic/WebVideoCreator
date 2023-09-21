@@ -89,6 +89,9 @@
     async load() {
         // 下载Lottie数据
         const response = await window.captureCtx.fetch(this.url, this.retryFetchs);
+        // 如果获得null可能响应存在问题，直接销毁对象，具体错误报告由Page.js的响应拦截器处理
+        if(!response)
+            return this.destory();
         // 获取MIME类型
         let contentType = response.headers.get("Content-Type") || response.headers.get("content-type");
         if(!contentType)
@@ -131,6 +134,7 @@
      * @param {number} time - 索引时间点
      */
     async seek(time) {
+        if(this.destoryed) return;
         this.currentTime = time;
         this.frameIndex++;
     }

@@ -219,7 +219,7 @@ export default class ResourcePool {
      * 获取视频预处理器
      */
     get videoPreprocessor() {
-        return this.videoPreprocessor;
+        return this.#videoPreprocessor;
     }
 
 }

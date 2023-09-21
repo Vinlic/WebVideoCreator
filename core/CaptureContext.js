@@ -48,6 +48,8 @@ export default class CaptureContext {
      * 构造函数
      */
     constructor() {
+        // 控制台输出重写
+        this._consoleRewrite();
         // 元素行为重写
         this._elementRewrite();
         // 时间虚拟化重写
@@ -108,7 +110,7 @@ export default class CaptureContext {
                 // 开始捕获下一帧
                 nextFrame.bind(this)();
             })()
-                .catch(err => console.error(`${err.message}\n${err.stack}`));
+                .catch(err => console.error(err));
         }).bind(this)();
     }
 
@@ -213,6 +215,28 @@ export default class CaptureContext {
             attributes: false,
             characterData: false
         });
+    }
+
+    /**
+     * 控制台输出重写
+     */
+    _consoleRewrite() {
+        const getPrintFun = fn => ((...args) =>
+            fn.bind(console)(args.reduce((t, v) => {
+                if (v instanceof Error)
+                    return `${t}\n${v.stack} `;
+                else if (v instanceof Object)
+                    return `${t}${JSON.stringify(v)} `;
+                return `${t}${v.toString()} `;
+            }, "")));
+        console.____log = console.log;
+        console.log = getPrintFun(console.____log);
+        console.____warn = console.warn;
+        console.warn = getPrintFun(console.____warn);
+        console.____error = console.error;
+        console.error = getPrintFun(console.____error);
+        console.____debug = console.debug;
+        console.debug = getPrintFun(console.____debug);
     }
 
     /**
@@ -645,14 +669,15 @@ export default class CaptureContext {
      * 
      * @param {string} url - 拉取URL
      * @param {number} [retryCount=2] - 重试次数
+     * @param {number} [retryDelay=500] - 重试延迟
      * @returns {Response} - 响应对象
      */
-    async fetch(url, retryCount = 2, _retryIndex = 0) {
+    async fetch(url, retryCount = 2, retryDelay = 500, _retryIndex = 0) {
         return await new Promise((resolve, reject) => {
             fetch(url)
                 .then(response => {
                     if (response.status >= 400)
-                        throw new Error(`Fetch ${url} response error: [${response.status}] ${response.statusText}`);
+                        resolve(null);
                     else
                         resolve(response);
                 })
@@ -660,7 +685,7 @@ export default class CaptureContext {
                     if (_retryIndex >= retryCount)
                         reject(err);
                     else
-                        this.fetch(url, retryCount, _retryIndex + 1);
+                        window.____setTimeout(() => this.fetch(url, retryCount, retryDelay, _retryIndex + 1), retryDelay);
                 });
         });
     }

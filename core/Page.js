@@ -1,7 +1,7 @@
 import assert from "assert";
 import AsyncLock from "async-lock";
 import EventEmitter from "eventemitter3";
-import { Page as _Page, CDPSession } from "puppeteer-core";
+import { Page as _Page, CDPSession, HTTPRequest, HTTPResponse } from "puppeteer-core";
 import fs from "fs-extra";
 import _ from "lodash";
 
@@ -14,8 +14,6 @@ import LottieCanvas from "../media/LottieCanvas.js";
 import VideoConfig from "../video-preprocessor/VideoConfig.js";
 import Font from "../entity/Font.js";
 import util from "../lib/util.js";
-
-// const buf = fs.readFileSync("./1msdjkk4lcezeis1.mp4");
 
 /**
  * @typedef {import('puppeteer-core').Viewport} Viewport
@@ -72,6 +70,12 @@ export default class Page extends EventEmitter {
     frameFormat;
     /** @type {number} - 帧图质量（0-100） */
     frameQuality;
+    /** @type {Object[]} - 已接受资源列表 */
+    acceptResources = [];
+    /** @type {Object[]} - 已拒绝资源列表 */
+    rejectResources = [];
+    /** @type {Set} - 资源排重Set */
+    #resourceSet = new Set();
     /** @type {CDPSession} - CDP会话 */
     #cdpSession = null;
     /** @type {boolean} - 是否初始页面 */
@@ -372,12 +376,17 @@ export default class Page extends EventEmitter {
         await this.target.setRequestInterception(true);
         // 页面控制台输出
         this.target.on("console", message => {
+            const type = message.type();
+            const text = message.text();
             // 错误消息处理
-            if (message.type() === "error")
-                this.emit("consoleError", new Error(message.text()));
+            if (type === "error") {
+                if (text.indexOf("Failed to load resource: the server responded with a status of " != -1))
+                    return;
+                this.emit("consoleError", new PageError(text));
+            }
             // 其它消息处理
             else
-                this.emit("consoleLog", message.text());
+                this.emit("consoleLog", text);
         });
         // 页面加载完成事件
         this.target.on("domcontentloaded", async () => {
@@ -385,25 +394,12 @@ export default class Page extends EventEmitter {
             if (this.isCapturing())
                 this.#emitError(new Error("Page context is missing, possibly due to the page being refreshed"))
         });
-        // 页面请求时间
-        this.target.on("request", request => {
-            const method = request.method();
-            const url = request.url();
-            const { pathname } = new URL(url);
-            // console.log(pathname);
-            if (request.url() === 'http://127.0.0.1:8080/your_api_endpoint') {
-                // 注入数据
-                request.respond({
-                    status: 200,
-                    body: buf
-                });
-            } else {
-                console.log(request.url());
-                request.continue();
-            }
-        });
+        // 页面请求处理
+        this.target.on("request", this.#requestHandle.bind(this));
+        // 页面响应处理
+        this.target.on("response", this.#responseHandle.bind(this));
         // 页面错误回调
-        this.target.on("pageerror", err => this.emit("consoleError", err));
+        this.target.on("pageerror", err => this.emit("consoleError", new PageError(err)));
         // 页面崩溃回调
         this.target.once("error", this.#emitCrashed.bind(this));
         // 页面关闭回调
@@ -412,8 +408,6 @@ export default class Page extends EventEmitter {
         await this.target.exposeFunction("screencastCompleted", this.#emitScreencastCompleted.bind(this));
         // 暴露下一帧函数
         await this.target.exposeFunction("captureFrame", this.#captureFrame.bind(this));
-        // 暴露下一帧函数
-        await this.target.exposeFunction("preprocessVideo", this.#preprocessVideo.bind(this));
         // 暴露抛出错误函数
         await this.target.exposeFunction("throwError", (code = -1, message = "") => this.#emitError(new Error(`throw error: [${code}] ${message}`)));
         // 页面加载前进行上下文初始化
@@ -506,6 +500,77 @@ export default class Page extends EventEmitter {
     }
 
     /**
+     * 页面请求处理
+     * 
+     * @param {HTTPRequest} request - 页面请求
+     */
+    #requestHandle(request) {
+        (async () => {
+            const method = request.method();
+            const url = request.url();
+            const { pathname } = new URL(url);
+            if (method == "POST" && pathname == "/video_preprocess") {
+                // const data = util.attempt(() => JSON.parse(request.postData()));
+                // if(_.isError(data)) {
+
+                // }
+                // console.log(data);
+                // this.#preprocessVideo(data)
+                //     .then(data => {
+                //         request.respond({
+                //             status: 200,
+                //             body: data
+                //         });
+                //     })
+                //     .catch(err => {
+                //         console.error(err);
+                //         request.respond({
+                //             status: 500,
+                //             body: `${err.message}\n${err.stack}`
+                //         });
+                //     });
+            }
+            else
+                request.continue();
+        })()
+            .then()
+            .catch(err => {
+
+            })
+    }
+
+    /**
+     * 页面响应处理
+     * 
+     * @param {HTTPResponse} response - HTTP响应
+     */
+    #responseHandle(response) {
+        const status = response.status();
+        const statusText = response.statusText();
+        const method = response.request().method();
+        const url = response.url();
+        const id = `${method}:${url}`;
+        if (this.#resourceSet.has(id))
+            return;
+        this.#resourceSet.add(id);
+        const info = {
+            status,
+            statusText,
+            method,
+            url
+        };
+        if (status < 400)
+            this.acceptResources.push(info);
+        else {
+            this.rejectResources.push(info);
+            if (this.eventNames().indexOf("resourceError") != -1)
+                this.emit("resourceError", new Error(`Fetch response failed: [${method}] ${url} - [${status}] ${statusText}`));
+            else
+                console.error(`Fetch response failed: [${method}] ${url} - [${status}] ${statusText}`);
+        }
+    }
+
+    /**
      * 释放页面资源
      */
     async release() {
@@ -516,6 +581,9 @@ export default class Page extends EventEmitter {
             this.#cdpSession && await this.#endCDPSession();
             // 移除监听器
             this.#removeListeners();
+            this.acceptResources = [];
+            this.rejectResources = [];
+            this.#resourceSet = new Set();
             // 跳转空白页释放页面内存
             await this.target.goto("about:blank");
             // 通知浏览器页面池释放页面资源
@@ -628,3 +696,16 @@ export default class Page extends EventEmitter {
     }
 
 }
+
+class PageError extends Error {
+    name = "PageError";
+    constructor(message) {
+        let stack;
+        if (message instanceof Error) {
+            message = message.message;
+            stack = message.stack;
+        }
+        super(message);
+        stack && (this.stack = stack);
+    }
+};
