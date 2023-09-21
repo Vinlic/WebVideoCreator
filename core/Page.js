@@ -559,14 +559,17 @@ export default class Page extends EventEmitter {
             method,
             url
         };
-        if (status < 400)
+        if (status < 400) {
             this.acceptResources.push(info);
+            this.emit("resourceAccepted", info);
+        }
         else {
             this.rejectResources.push(info);
+            const message = `Fetch response failed: [${method}] ${url} - [${status}] ${statusText}`;
             if (this.eventNames().indexOf("resourceError") != -1)
-                this.emit("resourceError", new Error(`Fetch response failed: [${method}] ${url} - [${status}] ${statusText}`));
+                this.emit("resourceRejected", new Error(message));
             else
-                console.error(`Fetch response failed: [${method}] ${url} - [${status}] ${statusText}`);
+                console.error(message);
         }
     }
 
