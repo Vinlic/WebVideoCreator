@@ -1,3 +1,5 @@
+import VideoConfig from "../video-preprocessor/VideoConfig.js";
+
 export default class VideoCanvas {
 
     /** @type {string} - 视频来源 */
@@ -30,6 +32,15 @@ export default class VideoCanvas {
         if (!options instanceof Object)
             throw new Error("VideoCanvas options must be Object");
         const { url, startTime, endTime, seekStart, seekEnd, autoplay, loop, muted, retryFetchs } = options;
+        this.url = url;
+        this.startTime = startTime || 0;
+        this.endTime = endTime || Infinity;
+        this.seekStart = seekStart || 0;
+        this.seekEnd = seekEnd;
+        this.autoplay = autoplay || false;
+        this.loop = loop || false;
+        this.muted = muted || false;
+        this.retryFetchs = retryFetchs || 2;
     }
 
     /**
@@ -62,11 +73,10 @@ export default class VideoCanvas {
     }
 
     async load() {
-        // console.error({a: 1}, {b: 1});
         console.time();
         const response = await fetch("video_preprocess", {
             method: "POST",
-            body: JSON.stringify(this)
+            body: JSON.stringify(new VideoConfig(this))
         });
         const buffer = await response.arrayBuffer();
         console.log(buffer.byteLength);

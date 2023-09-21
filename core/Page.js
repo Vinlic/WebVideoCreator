@@ -414,6 +414,7 @@ export default class Page extends EventEmitter {
         await this.target.evaluateOnNewDocument(`
             window.CaptureContext=${CaptureContext};
             window.captureCtx=new CaptureContext();
+            window.VideoConfig=${VideoConfig};
             window.SvgAnimation=${SvgAnimation};
             window.VideoCanvas=${VideoCanvas};
             window.DynamicImage=${DynamicImage};

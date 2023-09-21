@@ -21,6 +21,8 @@ export default class VideoConfig {
     loop;
     /** @type {boolean} - 是否静音 */
     muted;
+    /** @type {number} - 重试下载次数 */
+    retryFetchs;
 
     /**
      * 构造函数
@@ -33,6 +35,7 @@ export default class VideoConfig {
      * @param {number} [options.seekEnd] - 裁剪结束时间点（毫秒）
      * @param {boolean} [options.autoplay=false] - 是否自动播放
      * @param {boolean} [options.loop=false] - 是否循环播放
+     * @param {boolean} [options.retryFetchs=2] - 重试下载次数
      * @param {}
      */
     constructor(options) {

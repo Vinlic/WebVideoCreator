@@ -2,7 +2,6 @@ import SvgAnimation from "../media/SvgAnimation.js";
 import VideoCanvas from "../media/VideoCanvas.js";
 import DynamicImage from "../media/DynamicImage.js";
 import LottieCanvas from "../media/LottieCanvas.js";
-import VideoConfig from "../video-preprocessor/VideoConfig.js";
 
 export default class CaptureContext {
 
@@ -39,8 +38,6 @@ export default class CaptureContext {
         /** @type{number} - 目标总帧数 */
         frameCount: 0
     };
-    /** @type {VideoConfig[]} - 视频配置列表 */
-    videoConfigs = [];
     /** @type {SvgAnimation[]|VideoCanvas[]|DynamicImage[]|LottieCanvas[]} - 媒体调度列表 */
     dispatchMedias = [];
 
@@ -464,11 +461,6 @@ export default class CaptureContext {
         this._buildElementProxy(e, canvas)
         // 将目标元素替换为画布
         e.replaceWith(canvas);
-        // 添加到视频配置列表
-        this.videoConfigs.push({
-            target: videoCanvas,
-            ...options
-        });
         // 将对象加入媒体调度列表
         this.dispatchMedias.push(videoCanvas);
         return videoCanvas;
