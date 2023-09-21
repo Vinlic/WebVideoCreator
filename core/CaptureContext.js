@@ -38,20 +38,26 @@ export default class CaptureContext {
     dispatchMedias = [];
 
     constructor() {
-        // 时间虚拟化重写
-        this.timeVirtualizationRewrite();
-        // 支持获取布尔属性
+        // 支持获取html元素布尔属性
         HTMLElement.prototype.getBooleanAttribute = function (name) {
             const value = this.getAttribute(name);
             if (value == null) return null;
             return value == "false" ? false : true;
         }
-        // 支持获取数字属性
+        // 支持获取html元素数字属性
         HTMLElement.prototype.getNumberAttribute = function (name) {
             const value = this.getAttribute(name);
             if (value == null) return null;
             return parseInt(value);
         }
+        // 支持获取svg元素数字属性
+        SVGSVGElement.prototype.getNumberAttribute = function (name) {
+            const value = this.getAttribute(name);
+            if (value == null) return null;
+            return parseInt(value);
+        }
+        // 时间虚拟化重写
+        this.timeVirtualizationRewrite();
     }
 
     /**
@@ -60,6 +66,8 @@ export default class CaptureContext {
     start() {
         // 插入捕获辅助元素
         this.insertCaptureHelper();
+        // 监听媒体插入
+        this.observMediaInsert();
         // 更新开始时间
         this.startTime = Date.now();
         // 计算帧间隔时间
@@ -163,18 +171,37 @@ export default class CaptureContext {
         })();
     }
 
+    observMediaInsert() {
+        const observer = new MutationObserver(mutations => {
+            for (const mutation of mutations) {
+                if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
+                    for(const addedNode of mutation.addedNodes) {
+                        if(addedNode.matches("canvas"))
+                            break;
+                        else if(addedNode.matches("svg"))
+                            this.convertToSvgAnimation(addedNode);
+                        else if(addedNode.matches('img[src$=".gif"],img[src$=".webp"],img[src$=".apng"],img[src*=".gif?"],img[src*=".webp?"],img[src*=".apng?"],img[capture]'))
+                            this.convertToDynamicImage(addedNode);
+                        else if(addedNode.matches('video[src$=".mp4"],video[src$=".webm"],video[src$=".mkv"],video[src*=".mp4?"],video[src*=".webm?"],video[src*=".mkv?"],video[capture]'))
+                            this.convertToVideoCanvas(addedNode);
+                        else if(addedNode.matches("lottie"))
+                            this.convertToLottieCanvas(addedNode);
+                    }
+                }
+            }
+        });
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: false,
+            characterData: false
+        });
+    }
+
     /**
      * 时间虚拟化重写
      */
     timeVirtualizationRewrite() {
-        // 暂存requestAnimationFrame函数
-        window.____requestAnimationFrame = window.requestAnimationFrame;
-        // 重写requestAnimationFrame，传递上下文提供的currentTime确保在非60fps捕获时实现帧率同步
-        window.requestAnimationFrame = fn => {
-            if (this.stopFlag)
-                return;
-            window.____setTimeout(() => fn(this.currentTime), 0);
-        };
         // 暂存setInterval函数
         window.____setInterval = window.setInterval;
         // 重写setInterval函数
@@ -221,6 +248,15 @@ export default class CaptureContext {
                 return true;
             });
         }
+        // 暂存requestAnimationFrame函数
+        window.____requestAnimationFrame = window.requestAnimationFrame;
+        // 重写requestAnimationFrame，传递上下文提供的currentTime确保在非60fps捕获时实现帧率同步
+        window.requestAnimationFrame = fn => {
+            if (this.stopFlag)
+                return;
+            // 下一个事件循环再调用
+            window.____setTimeout(() => fn(this.currentTime), 0);
+        };
         // 暂存Date对象
         window.____Date = Date;
         // 重写Date构造函数
@@ -255,7 +291,8 @@ export default class CaptureContext {
             if (this.currentTime < timestamp + interval)
                 continue;
             this.intervalCallbacks[i][1] = this.currentTime;
-            fn(this.currentTime);
+            // 下一个事件循环再调用
+            window.____setTimeout(() => fn(this.currentTime), 0);
         }
     }
 
@@ -266,7 +303,8 @@ export default class CaptureContext {
         this.timeoutCallbacks = this.timeoutCallbacks.filter(([timerId, timestamp, timeout, fn]) => {
             if (this.currentTime < timestamp + timeout)
                 return true;
-            fn(this.currentTime);
+            // 下一个事件循环再调用
+            window.____setTimeout(() => fn(this.currentTime), 0);
             return false;
         });
     }
@@ -297,44 +335,66 @@ export default class CaptureContext {
             // SVG元素
             target: e,
             // 动画播放开始时间点（毫秒）
-            startTime: parseInt(e.getAttribute("start-time") || e.getAttribute("startTime")),
+            startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
             // 动画播放结束时间点（毫秒）
-            endTime: parseInt(e.getAttribute("end-time") || e.getAttribute("endTime")),
+            endTime: e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime")
         };
+        // 实例化SVG动画对象
         const svgAnimation = new SvgAnimation(options);
+        // 将对象加入媒体调度列表
         this.dispatchMedias.push(svgAnimation);
         return svgAnimation;
     }
 
     /**
-     * 转换为视频画布
+     * 将HTML视频元素转换为视频画布
      * 
      * @param {HTMLVideoElement} e - 视频元素
      */
     convertToVideoCanvas(e) {
+        // 获取seek时间
         const currentTimeAttribute = e.getAttribute("currentTime");
         const options = {
+            // 视频来源
             src: this.currentUrlJoin(e.getAttribute("src")),
+            // 视频宽度
             width: parseInt(e.style.width) || e.getNumberAttribute("width"),
+            // 视频高度
             height: parseInt(e.style.height) || e.getNumberAttribute("height"),
-            startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime"),
+            // 视频开始时间点（毫秒）
+            startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
+            // 视频结束时间点（毫秒）
             endTime: e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime"),
+            // 视频裁剪开始时间点（毫秒）
             seekStart: e.getNumberAttribute("seek-start") || e.getNumberAttribute("seekStart") || (currentTimeAttribute ? parseInt(currentTimeAttribute) * 1000 : null),
+            // 视频裁剪结束时间点（毫秒）
             seekEnd: e.getNumberAttribute("seek-end") || e.getNumberAttribute("seekEnd"),
+            // 视频是否自动播放
             autoplay: e.getBooleanAttribute("autoplay"),
+            // 视频是否循环播放
             loop: e.getBooleanAttribute("loop"),
+            // 视频是否静音
             muted: e.getBooleanAttribute("muted")
         };
+        // 创建画布元素
         const canvas = this.createCanvas(options);
+        // 实例化视频画布实例
         const videoCanvas = new VideoCanvas(options);
+        // 绑定画布元素
         videoCanvas.bind(canvas);
-        e.replaceWith(canvas);
+        // 复制目标元素样式
+        this.copyElementStyle(e, canvas);
+        // 代理目标元素所有属性和行为
         this.buildElementProxy(e, canvas)
+        // 将目标元素替换为画布
+        e.replaceWith(canvas);
+        // 添加到视频配置列表
         this.videoConfigs.push({
             target: videoCanvas,
             url: options.src,
             ...options
         });
+        // 将对象加入媒体调度列表
         this.dispatchMedias.push(videoCanvas);
         return videoCanvas;
     }
@@ -349,15 +409,17 @@ export default class CaptureContext {
             // 图像来源
             src: this.currentUrlJoin(e.getAttribute("src")),
             // 图像宽度
-            width: parseInt(e.style.width) || e.getNumberAttribute("width"),
+            width: parseInt(e.style.width) || e.getNumberAttribute("width") || e.width,
             // 图像高度
-            height: parseInt(e.style.height) || e.getNumberAttribute("height"),
+            height: parseInt(e.style.height) || e.getNumberAttribute("height") || e.height,
             // 图像播放开始时间点（毫秒）
-            startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime"),
+            startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
             // 图像播放结束时间点（毫秒）
             endTime: e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime"),
             // 是否循环播放
-            loop: e.getBooleanAttribute("loop")
+            loop: e.getBooleanAttribute("loop"),
+            // 拉取失败时重试拉取次数
+            retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs")
         };
         // 创建画布元素
         const canvas = this.createCanvas(options);
@@ -365,11 +427,13 @@ export default class CaptureContext {
         const dynamicImage = new DynamicImage(options);
         // 绑定画布元素
         dynamicImage.bind(canvas);
+        // 复制目标元素样式
+        this.copyElementStyle(e, canvas);
+        // 代理目标元素所有属性和行为
+        this.buildElementProxy(e, canvas);
         // 将目标元素替换为画布
         e.replaceWith(canvas);
-        // 代理目标元素所有属性和行为
-        this.buildElementProxy(e, canvas)
-        // 将元素加入媒体调度列表
+        // 将对象加入媒体调度列表
         this.dispatchMedias.push(dynamicImage);
         return dynamicImage;
     }
@@ -381,21 +445,50 @@ export default class CaptureContext {
      */
     convertToLottieCanvas(e) {
         const options = {
-            // Lottie动画
+            // lottie来源
             src: this.currentUrlJoin(e.getAttribute("src")),
+            // 动画宽度
             width: parseInt(e.style.width) || e.getNumberAttribute("width"),
+            // 动画宽度
             height: parseInt(e.style.height) || e.getNumberAttribute("height"),
-            startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime"),
+            // 动画播放开始时间点（毫秒）
+            startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
+            // 动画播放结束时间点（毫秒）
             endTime: e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime"),
-            loop: e.getBooleanAttribute("loop")
+            // 是否循环播放
+            loop: e.getBooleanAttribute("loop"),
+            // 拉取失败时重试拉取次数
+            retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs")
         };
+        // 创建画布元素
         const canvas = this.createCanvas(options);
+        // 实例化Lottie动画实例
         const lottieCanvas = new LottieCanvas(options);
+        // 绑定画布元素
         lottieCanvas.bind(canvas);
-        e.replaceWith(canvas);
+        // 复制目标元素样式
+        this.copyElementStyle(e, canvas);
+        // 代理目标元素所有属性和行为
         this.buildElementProxy(e, canvas)
+        // 将目标元素替换为画布
+        e.replaceWith(canvas);
+        // 将对象加入媒体调度列表
         this.dispatchMedias.push(lottieCanvas);
         return lottieCanvas;
+    }
+
+    /**
+     * 复制元素样式
+     * 
+    * @param {HTMLElement} - 被复制HTML元素
+     * @param {HTMLElement} - 新元素
+     */
+    copyElementStyle(src, dest) {
+        for (var i = 0; i < src.style.length; i++) {
+            var property = src.style[i];
+            var value = src.style.getPropertyValue(property);
+            dest.style.setProperty(property, value);
+        }
     }
 
     /**
@@ -406,6 +499,7 @@ export default class CaptureContext {
      * @param {HTMLElement} - 新元素
      */
     buildElementProxy(src, dest) {
+        // 监听元素
         Object.defineProperties(src, {
             textContent: { get: () => dest.textContent, set: v => dest.textContent = v },
             innerHTML: { get: () => dest.innerHTML, set: v => dest.innerHTML = v },
@@ -504,7 +598,7 @@ export default class CaptureContext {
         return await new Promise((resolve, reject) => {
             fetch(url)
                 .then(response => {
-                    if(response.status >= 400)
+                    if (response.status >= 400)
                         throw new Error(`Fetch ${url} response error: [${response.status}] ${response.statusText}`);
                     else
                         resolve(response);
