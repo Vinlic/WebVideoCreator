@@ -10,8 +10,6 @@ import ProcessTask from "./task/ProcessTask.js";
  */
 export default class VideoPreprocessor extends EventEmitter {
 
-    /** @type {VideoConfig[]} - 视频配置列表 */
-    configs;
     /** @type {number} - 并行下载数量 */
     parallelDownloads;
     /** @type {number} - 并行处理数量 */
@@ -33,18 +31,15 @@ export default class VideoPreprocessor extends EventEmitter {
      * 构造函数
      * 
      * @param {Object} options - 预处理器选项
-     * @param {VideoConfig[]} configs - 视频配置列表
-     * @param {number} [parallelDownloads=10] - 并行下载数量
-     * @param {number} [parallelProcess=10] - 并行处理数量
+     * @param {number} [options.parallelDownloads=10] - 并行下载数量
+     * @param {number} [options.parallelProcess=10] - 并行处理数量
      */
     constructor(options) {
         super();
         assert(_.isObject(options), "VideoPreprocessor options must be Object");
-        const { configs, parallelDownloads, parallelProcess } = options;
-        assert(_.isArray(configs), "configs must be VideoConfig[]");
+        const { parallelDownloads, parallelProcess } = options;
         assert(_.isUndefined(parallelDownloads) || _.isFinite(parallelDownloads), "parallelDownloads must be number");
         assert(_.isUndefined(parallelProcess) || _.isFinite(parallelProcess), "parallelProcess must be number");
-        this.configs = configs;
         this.parallelDownloads = _.defaultTo(parallelDownloads, 10);
         this.parallelProcess = _.defaultTo(parallelProcess, 10);
     }
@@ -53,10 +48,14 @@ export default class VideoPreprocessor extends EventEmitter {
      * 启动处理
      */
     start() {
-        this.configs.forEach(config => this.downloadQueue.push(new DownloadTask(config)));
+        // this.configs.forEach(config => this.downloadQueue.push(new DownloadTask(config)));
         this.#dispatchDownloadQueue();
         this.#dispatchProcessQueue();
         this.#dispatchTasks();
+    }
+
+    createTask() {
+        
     }
 
     /**

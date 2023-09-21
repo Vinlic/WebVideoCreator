@@ -32,8 +32,8 @@ export default class Browser {
 
     /**
      * @typedef {Object} PageOptions
-     * @property {number} width - 页面视窗宽度
-     * @property {number} height - 页面视窗高度
+     * @property {number} [width] - 页面视窗宽度
+     * @property {number} [height] - 页面视窗高度
      * @property {string} [userAgent] - 用户UA
      * @property {number} [beginFrameTimeout=5000] - BeginFrame超时时间（毫秒）
      * @property {string} [frameFormat="jpeg"] - 帧图格式
@@ -80,19 +80,19 @@ export default class Browser {
      * @param {Object} options - 浏览器选项
      * @param {number} options.numPageMax - 页面资源最大数量
      * @param {number} options.numPageMin - 页面资源最小数量
-     * @param {PageOptions} options.pageOptions - 页面选项
      * @param {string} [options.executablePath] - 浏览器入口文件路径
-     * @param {boolean} [options.useGPU=false] - 是否使用GPU加速渲染
+     * @param {boolean} [options.useGPU=true] - 是否使用GPU加速渲染
      * @param {boolean} [options.useAngle=true] - 3D渲染后端是否使用Angle，建议开启
      * @param {boolean} [options.disableDevShm=false] - 是否禁用共享内存，当/dev/shm较小时建议开启此选项
      * @param {string[]} [options.args] - 浏览器启动参数
      * @param {boolean} [options.debug=false] - 浏览器日志是否输出到控制台
+     * @param {PageOptions} [options.pageOptions] - 页面选项
      */
     constructor(parent, options) {
         assert(parent instanceof Pool, "Browser parent must be Pool");
         this.parent = parent;
         assert(_.isObject(options), "Browser options must be object");
-        const { numPageMax, numPageMin, executablePath, useGPU, useAngle, disableDevShm, args, debug, pageOptions = {} } = options;
+        const { numPageMax, numPageMin, executablePath, useGPU, useAngle, disableDevShm, args, debug, pageOptions } = options;
         assert(_.isFinite(numPageMax), "Browser numPageMax must be number");
         assert(_.isFinite(numPageMin), "Browser numPageMin must be number");
         assert(_.isUndefined(executablePath) || _.isBoolean(executablePath), "Browser executablePath must be string");
@@ -101,7 +101,7 @@ export default class Browser {
         assert(_.isUndefined(disableDevShm) || _.isBoolean(disableDevShm), "Browser disableDevShm must be boolean");
         assert(_.isUndefined(args) || _.isArray(args), "Browser args must be array");
         assert(_.isUndefined(debug) || _.isBoolean(debug), "Browser debug must be boolean");
-        assert(_.isObject(pageOptions), "Browser pageOptions must be object");
+        assert(_.isUndefined(pageOptions) || _.isObject(pageOptions), "Browser pageOptions must be object");
         this.numPageMax = numPageMax;
         this.numPageMin = numPageMin;
         this.executablePath = executablePath;
@@ -110,7 +110,7 @@ export default class Browser {
         this.disableDevShm = _.defaultTo(disableDevShm, false);
         this.args = _.defaultTo(args, []);
         this.debug = _.defaultTo(debug, false);
-        this.pageOptions = pageOptions;
+        this.pageOptions = _.defaultTo(pageOptions, {});
     }
 
     /**
@@ -437,6 +437,13 @@ export default class Browser {
             return false;
         this.#firstPage = false;
         return true;
+    }
+
+    /**
+     * 获取视频预处理器
+     */
+    get videoPreprocessor() {
+        return this.parent.videoPreprocessor;
     }
 
 }

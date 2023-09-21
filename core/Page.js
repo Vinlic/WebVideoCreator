@@ -12,9 +12,10 @@ import VideoCanvas from "../media/VideoCanvas.js";
 import DynamicImage from "../media/DynamicImage.js";
 import LottieCanvas from "../media/LottieCanvas.js";
 import VideoConfig from "../video-preprocessor/VideoConfig.js";
-import VideoPreprocessor from "../video-preprocessor/VideoPreprocessor.js";
 import Font from "../entity/Font.js";
 import util from "../lib/util.js";
+
+// const buf = fs.readFileSync("./1msdjkk4lcezeis1.mp4");
 
 /**
  * @typedef {import('puppeteer-core').Viewport} Viewport
@@ -26,7 +27,7 @@ const DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKi
 const WEBFONT_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/webfont.js")).toString();
 // Lottie动画库脚本内容
 const LOTTIE_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/lottie.js")).toString();
-//异步锁
+// 异步锁
 const asyncLock = new AsyncLock();
 // 页面计数
 let pageIndex = 1;
@@ -212,20 +213,6 @@ export default class Page extends EventEmitter {
     }
 
     /**
-     * 等待视频加载完成
-     * 
-     * @param {number} [timeout=600000] - 等待超时时间（毫秒）
-     * @param {Function} progressCallback - 处理进度回调
-     */
-    async waitForVideosLoaded(timeout = 600000, progressCallback) {
-        const videoConfigs = await this.target.evaluate(() => window.captureCtx.videoConfigs);
-        const preprocessor = new VideoPreprocessor({
-            configs: videoConfigs.map(v => new VideoConfig(v)),
-        });
-        await preprocessor.start();
-    }
-
-    /**
      * 注入Webfont库
      */
     async #injectWebfontLibrary() {
@@ -277,7 +264,7 @@ export default class Page extends EventEmitter {
                 await this.setViewport({ width, height, ..._options });
             // 开始CDP会话
             await this.#startCDPSession();
-            // 设置动画播放速度
+            // 设置CSS动画播放速度
             await this.#cdpSession.send("Animation.setPlaybackRate", {
                 // 根据帧率设置播放速率
                 playbackRate: Math.floor(60 / fps)
@@ -381,6 +368,8 @@ export default class Page extends EventEmitter {
         await this.target.setUserAgent(this.userAgent);
         // 禁用CSP策略
         await this.target.setBypassCSP(true);
+        // 拦截请求
+        await this.target.setRequestInterception(true);
         // 页面控制台输出
         this.target.on("console", message => {
             // 错误消息处理
@@ -393,8 +382,25 @@ export default class Page extends EventEmitter {
         // 页面加载完成事件
         this.target.on("domcontentloaded", async () => {
             // 如果处于录制状态作为被动刷新处理
-            if(this.isCapturing())
+            if (this.isCapturing())
                 this.#emitError(new Error("Page context is missing, possibly due to the page being refreshed"))
+        });
+        // 页面请求时间
+        this.target.on("request", request => {
+            const method = request.method();
+            const url = request.url();
+            const { pathname } = new URL(url);
+            // console.log(pathname);
+            if (request.url() === 'http://127.0.0.1:8080/your_api_endpoint') {
+                // 注入数据
+                request.respond({
+                    status: 200,
+                    body: buf
+                });
+            } else {
+                console.log(request.url());
+                request.continue();
+            }
         });
         // 页面错误回调
         this.target.on("pageerror", err => this.emit("consoleError", err));
@@ -406,6 +412,8 @@ export default class Page extends EventEmitter {
         await this.target.exposeFunction("screencastCompleted", this.#emitScreencastCompleted.bind(this));
         // 暴露下一帧函数
         await this.target.exposeFunction("captureFrame", this.#captureFrame.bind(this));
+        // 暴露下一帧函数
+        await this.target.exposeFunction("preprocessVideo", this.#preprocessVideo.bind(this));
         // 暴露抛出错误函数
         await this.target.exposeFunction("throwError", (code = -1, message = "") => this.#emitError(new Error(`throw error: [${code}] ${message}`)));
         // 页面加载前进行上下文初始化
@@ -453,6 +461,22 @@ export default class Page extends EventEmitter {
             this.#emitError(err);
             return false;
         }
+    }
+
+    /**
+     * 预处理视频
+     * 
+     * @param {VideoConfig} config - 视频配置
+     */
+    async #preprocessVideo(config) {
+        const videoPreprocessor = this.videoPreprocessor;
+        await new Promise((resolve, reject) => {
+            videoPreprocessor.createTask({
+                config,
+                onCompleted: resolve,
+                onError: reject
+            });
+        })
     }
 
     /**
@@ -594,6 +618,13 @@ export default class Page extends EventEmitter {
      */
     isClosed() {
         return this.state == Page.STATE.CLOSED;
+    }
+
+    /**
+     * 获取视频预处理器
+     */
+    get videoPreprocessor() {
+        return this.parent.videoPreprocessor;
     }
 
 }

@@ -4,7 +4,7 @@
 export default class DynamicImage {
 
     /** @type {string} - 图像来源 */
-    src;
+    url;
     /** @type {number} - 开始播放时间点（毫秒） */
     startTime;
     /** @type {number} - 结束播放时间（毫秒） */
@@ -38,17 +38,17 @@ export default class DynamicImage {
      * 构造函数
      * 
      * @param {Object} options - 动态图像选项
-     * @param {string} options.src - 图像来源
+     * @param {string} options.url - 图像来源
      * @param {number} [options.startTime=0] - 开始播放时间点（毫秒）
      * @param {number} [options.endTime=Infinity] - 结束播放时间点（毫秒）
      * @param {boolean} [options.loop] - 是否强制循环
      * @param {number} [options.retryFetchs=2] - 重试下载次数
      */
     constructor(options) {
-        if (!options)
-            throw new Error("DemuxedVideo options invalid");
-        const { src, startTime, endTime, loop, retryFetchs } = options;
-        this.src = src;
+        if (!options instanceof Object)
+            throw new Error("DemuxedVideo options must be Object");
+        const { url, startTime, endTime, loop, retryFetchs } = options;
+        this.url = url;
         this.startTime = startTime || 0;
         this.endTime = endTime || Infinity;
         this.loop = loop;
@@ -93,7 +93,7 @@ export default class DynamicImage {
      */
     async load() {
         // 下载图像数据
-        const response = await window.captureCtx.fetch(this.src, this.retryFetchs);
+        const response = await window.captureCtx.fetch(this.url, this.retryFetchs);
         // 获取MIME类型
         let contentType = response.headers.get("Content-Type") || response.headers.get("content-type");
         if(!contentType)

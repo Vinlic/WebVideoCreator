@@ -1,12 +1,18 @@
 import assert from "assert";
 import AsyncLock from "async-lock";
 import genericPool, { Pool as _Pool } from "generic-pool";
+import VideoPreprocessor from "../video-preprocessor/VideoPreprocessor.js";
 import _ from "lodash";
 
 import Browser from "./Browser.js";
 import Page from "./Page.js";
 
+// 异步锁
 const asyncLock = new AsyncLock();
+// 视频预处理器
+const videoPreprocessor = new VideoPreprocessor({
+    
+});
 
 /**
  * 资源池
@@ -15,8 +21,8 @@ export default class ResourcePool {
 
     /**
      * @typedef {Object} PageOptions
-     * @property {number} width - 页面视窗宽度
-     * @property {number} height - 页面视窗高度
+     * @property {number} [width] - 页面视窗宽度
+     * @property {number} [height] - 页面视窗高度
      * @property {string} [userAgent] - 用户UA
      * @property {number} [beginFrameTimeout=5000] - BeginFrame超时时间（毫秒）
      * @property {string} [frameFormat="jpeg"] - 帧图格式
@@ -26,25 +32,35 @@ export default class ResourcePool {
 
     /**
      * @typedef {Object} BrowserOptions
-     * @property {number} options.numPageMax - 页面资源最大数量
-     * @property {number} options.numPageMin - 页面资源最小数量
-     * @property {string} options.executablePath - 浏览器入口文件路径
-     * @property {boolean} [options.useGPU=false] - 是否使用GPU加速渲染
-     * @property {boolean} [options.useAngle=true] - 3D渲染后端是否使用Angle，建议开启
-     * @property {boolean} [options.disableDevShm=false] - 是否禁用共享内存，当/dev/shm较小时建议开启此选项
-     * @property {string[]} [options.args] - 浏览器启动参数
-     * @property {boolean} [options.debug=false] - 浏览器日志是否输出到控制台
-     * @property {PageOptions} [options.pageOptions] - 页面选项
+     * @property {number} numPageMax - 页面资源最大数量
+     * @property {number} numPageMin - 页面资源最小数量
+     * @property {string} [executablePath] - 浏览器入口文件路径
+     * @property {boolean} [useGPU=true] - 是否使用GPU加速渲染
+     * @property {boolean} [useAngle=true] - 3D渲染后端是否使用Angle，建议开启
+     * @property {boolean} [disableDevShm=false] - 是否禁用共享内存，当/dev/shm较小时建议开启此选项
+     * @property {string[]} [args] - 浏览器启动参数
+     * @property {boolean} [debug=false] - 浏览器日志是否输出到控制台
+     * @property {PageOptions} [pageOptions] - 页面选项
+     */
+
+    /**
+     * @typedef {Object} VideoPreprocessorOptions
+     * @property {number} [parallelDownloads=10] - 并行下载数量
+     * @property {number} [parallelProcess=10] - 并行处理数量
      */
 
     /** @type {_Pool} - 浏览器资源池 */
     #browserPool;
+    /** @type {VideoPreprocessor} - 视频预处理器 */
+    #videoPreprocessor;
     /** @type {number} - 浏览器资源最大数量 */
     numBrowserMax;
     /** @type {number} - 浏览器资源最小数量 */
     numBrowserMin;
     /** @type {BrowserOptions} - 浏览器选项 */
     browserOptions = {};
+    /** @type {VideoPreprocessorOptions} - 浏览器选项 */
+    videoPreprocessorOptions = {};
     #warmupped = false;
     #checkMap = {};
 
@@ -54,17 +70,21 @@ export default class ResourcePool {
      * @param {Object} options - 资源池选项
      * @param {number} options.numBrowserMax - 浏览器资源最大数量
      * @param {number} options.numBrowserMin - 浏览器资源最小数量
-     * @param {BrowserOptions} [options.browserOptions] - 浏览器选项
+     * @param {BrowserOptions} [options.browserOptions={}] - 浏览器选项
+     * @param {VideoPreprocessorOptions} [options.videoPreprocessorOptions={}] - 视频预处理器选项
      */
     constructor(options) {
         assert(_.isObject(options), "ResourcePool options must provided");
-        const { numBrowserMax, numBrowserMin, browserOptions = {} } = options;
+        const { numBrowserMax, numBrowserMin, browserOptions, videoPreprocessorOptions } = options;
         assert(_.isFinite(numBrowserMax), "ResourcePool options.numBrowserMax must be number");
         assert(_.isFinite(numBrowserMin), "ResourcePool options.numBrowserMin must be number");
-        assert(_.isObject(browserOptions), "ResourcePool options.browserOptions must be object");
+        assert(_.isUndefined(browserOptions) || _.isObject(browserOptions), "ResourcePool options.browserOptions must be object");
+        assert(_.isUndefined(videoPreprocessorOptions) || _.isObject(videoPreprocessorOptions), "ResourcePool options.browserOptions must be object");
         this.numBrowserMax = numBrowserMax;
         this.numBrowserMin = numBrowserMin;
-        this.browserOptions = browserOptions;
+        this.browserOptions = _.defaultTo(browserOptions, {});
+        this.videoPreprocessorOptions = _.defaultTo(videoPreprocessorOptions, {});
+        this.#videoPreprocessor = new VideoPreprocessor(this.videoPreprocessorOptions);
         this.#createBrowserPool();
         this.#checker();
     }
@@ -193,6 +213,13 @@ export default class ResourcePool {
         })()
             .then(() => setTimeout(this.#checker.bind(this), 5000))
             .catch(err => console.error(err));
+    }
+
+    /**
+     * 获取视频预处理器
+     */
+    get videoPreprocessor() {
+        return this.videoPreprocessor;
     }
 
 }

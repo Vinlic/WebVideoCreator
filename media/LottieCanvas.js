@@ -7,7 +7,7 @@
  export default class LottieCanvas {
 
     /** @type {string} - lottie来源 */
-    src;
+    url;
     /** @type {number} - 开始播放时间 */
     startTime;
     /** @type {number} - 结束播放时间 */
@@ -33,7 +33,7 @@
      * 构造函数
      * 
      * @param {Object} options - Lottie动画选项
-     * @param {string} options.src - 图像来源
+     * @param {string} options.url - 图像来源
      * @param {number} [options.startTime=0] - 开始播放时间点（毫秒）
      * @param {number} [options.endTime=Infinity] - 结束播放时间点（毫秒）
      * @param {boolean} [options.loop] - 是否强制循环
@@ -42,8 +42,8 @@
     constructor(options) {
         if (!options)
             throw new Error("LottieCanvas options invalid");
-        const { src, startTime, endTime, loop, retryFetchs } = options;
-        this.src = src;
+        const { url, startTime, endTime, loop, retryFetchs } = options;
+        this.url = url;
         this.startTime = startTime || 0;
         this.endTime = endTime || Infinity;
         this.loop = loop;
@@ -88,7 +88,7 @@
      */
     async load() {
         // 下载Lottie数据
-        const response = await window.captureCtx.fetch(this.src, this.retryFetchs);
+        const response = await window.captureCtx.fetch(this.url, this.retryFetchs);
         // 获取MIME类型
         let contentType = response.headers.get("Content-Type") || response.headers.get("content-type");
         if(!contentType)

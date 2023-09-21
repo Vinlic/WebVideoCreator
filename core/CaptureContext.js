@@ -406,11 +406,11 @@ export default class CaptureContext {
         const currentTimeAttribute = e.getAttribute("currentTime");
         const options = {
             // 视频来源
-            src: this._currentUrlJoin(e.getAttribute("src")),
+            url: this._currentUrlJoin(e.getAttribute("src")),
             // 视频宽度
-            width: parseInt(e.style.width) || e.getNumberAttribute("width"),
+            width: parseInt(e.style.width) || e.getNumberAttribute("width") || e.width,
             // 视频高度
-            height: parseInt(e.style.height) || e.getNumberAttribute("height"),
+            height: parseInt(e.style.height) || e.getNumberAttribute("height") || e.height,
             // 视频开始时间点（毫秒）
             startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
             // 视频结束时间点（毫秒）
@@ -419,12 +419,14 @@ export default class CaptureContext {
             seekStart: e.getNumberAttribute("seek-start") || e.getNumberAttribute("seekStart") || (currentTimeAttribute ? parseInt(currentTimeAttribute) * 1000 : null),
             // 视频裁剪结束时间点（毫秒）
             seekEnd: e.getNumberAttribute("seek-end") || e.getNumberAttribute("seekEnd"),
-            // 视频是否自动播放
-            autoplay: e.getBooleanAttribute("autoplay"),
             // 视频是否循环播放
             loop: e.getBooleanAttribute("loop"),
+            // 视频是否自动播放
+            autoplay: e.getBooleanAttribute("autoplay"),
             // 视频是否静音
-            muted: e.getBooleanAttribute("muted")
+            muted: e.getBooleanAttribute("muted"),
+            // 拉取失败时重试拉取次数
+            retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs")
         };
         // 创建画布元素
         const canvas = this._createCanvas(options);
@@ -441,7 +443,6 @@ export default class CaptureContext {
         // 添加到视频配置列表
         this.videoConfigs.push({
             target: videoCanvas,
-            url: options.src,
             ...options
         });
         // 将对象加入媒体调度列表
@@ -457,7 +458,7 @@ export default class CaptureContext {
     convertToDynamicImage(e) {
         const options = {
             // 图像来源
-            src: this._currentUrlJoin(e.getAttribute("src")),
+            url: this._currentUrlJoin(e.getAttribute("src")),
             // 图像宽度
             width: parseInt(e.style.width) || e.getNumberAttribute("width") || e.width,
             // 图像高度
@@ -496,7 +497,7 @@ export default class CaptureContext {
     convertToLottieCanvas(e) {
         const options = {
             // lottie来源
-            src: this._currentUrlJoin(e.getAttribute("src")),
+            url: this._currentUrlJoin(e.getAttribute("src")),
             // 动画宽度
             width: parseInt(e.style.width) || e.getNumberAttribute("width"),
             // 动画宽度
@@ -531,14 +532,14 @@ export default class CaptureContext {
      * 复制元素样式
      * 
      * @private
-     * @param {HTMLElement} - 被复制HTML元素
-     * @param {HTMLElement} - 新元素
+     * @param {HTMLElement} source - 被复制HTML元素
+     * @param {HTMLElement} target - 新元素
      */
-    _copyElementStyle(src, dest) {
-        for (var i = 0; i < src.style.length; i++) {
-            var property = src.style[i];
-            var value = src.style.getPropertyValue(property);
-            dest.style.setProperty(property, value);
+    _copyElementStyle(source, target) {
+        for (var i = 0; i < source.style.length; i++) {
+            var property = source.style[i];
+            var value = source.style.getPropertyValue(property);
+            target.style.setProperty(property, value);
         }
     }
 
@@ -547,95 +548,95 @@ export default class CaptureContext {
      * 将对旧元素的所有行为代理到新元素
      * 
      * @private
-     * @param {HTMLElement} - 被代理HTML元素
-     * @param {HTMLElement} - 新元素
+     * @param {HTMLElement} source - 被代理HTML元素
+     * @param {HTMLElement} target - 新元素
      */
-    _buildElementProxy(src, dest) {
+    _buildElementProxy(source, target) {
         // 监听元素
-        Object.defineProperties(src, {
-            textContent: { get: () => dest.textContent, set: v => dest.textContent = v },
-            innerHTML: { get: () => dest.innerHTML, set: v => dest.innerHTML = v },
-            innerText: { get: () => dest.innerText, set: v => dest.innerText = v },
-            setHTML: { get: () => dest.setHTML, set: v => dest.setHTML = v },
-            getInnerHTML: { get: () => dest.getInnerHTML, set: v => dest.getInnerHTML = v },
-            getRootNode: { get: () => dest.getRootNode, set: v => dest.getRootNode = v },
-            value: { get: () => dest.value, set: v => dest.value = v },
-            style: { get: () => dest.style, set: v => dest.style = v },
-            src: { get: () => dest.src, set: v => dest.src = v },
-            classList: { get: () => dest.classList, set: v => dest.classList = v },
-            className: { get: () => dest.className, set: v => dest.className = v },
-            hidden: { get: () => dest.hidden, set: v => dest.hidden = v },
-            animate: { get: () => dest.animate, set: v => dest.animate = v },
-            attributes: { get: () => dest.attributes, set: v => dest.attributes = v },
-            childNodes: { get: () => dest.childNodes, set: v => dest.childNodes = v },
-            children: { get: () => dest.children, set: v => dest.children = v },
-            addEventListener: { get: () => dest.addEventListener, set: v => dest.addEventListener = v },
-            removeEventListener: { get: () => dest.removeEventListener, set: v => dest.removeEventListener = v },
-            append: { get: () => dest.append, set: v => dest.append = v },
-            appendChild: { get: () => dest.appendChild, set: v => dest.appendChild = v },
-            prepend: { get: () => dest.prepend, set: v => dest.prepend = v },
-            replaceChild: { get: () => dest.replaceChild, set: v => dest.replaceChild = v },
-            replaceChildren: { get: () => dest.replaceChildren, set: v => dest.replaceChildren = v },
-            removeChild: { get: () => dest.removeChild, set: v => dest.removeChild = v },
-            blur: { get: () => dest.blur, set: v => dest.blur = v },
-            title: { get: () => dest.title, set: v => dest.title = v },
-            toString: { get: () => dest.toString, set: v => dest.toString = v },
-            autofocus: { get: () => dest.autofocus, set: v => dest.autofocus = v },
-            parentElement: { get: () => dest.parentElement, set: v => dest.parentElement = v },
-            parentNode: { get: () => dest.parentNode, set: v => dest.parentNode = v },
-            clientWidth: { get: () => dest.clientWidth, set: v => dest.clientWidth = v },
-            clientHeight: { get: () => dest.clientHeight, set: v => dest.clientHeight = v },
-            clientTop: { get: () => dest.clientTop, set: v => dest.clientTop = v },
-            clientLeft: { get: () => dest.clientLeft, set: v => dest.clientLeft = v },
-            removeAttribute: { get: () => dest.removeAttribute, set: v => dest.removeAttribute = v },
-            removeAttributeNode: { get: () => dest.removeAttributeNode, set: v => dest.removeAttributeNode = v },
-            removeAttributeNS: { get: () => dest.removeAttributeNS, set: v => dest.removeAttributeNS = v },
-            setAttribute: { get: () => dest.setAttribute, set: v => dest.setAttribute = v },
-            setAttributeNS: { get: () => dest.setAttributeNS, set: v => dest.setAttributeNS = v },
-            setAttributeNode: { get: () => dest.setAttributeNode, set: v => dest.setAttributeNode = v },
-            setAttributeNodeNS: { get: () => dest.setAttributeNodeNS, set: v => dest.setAttributeNodeNS = v },
-            getAttributeNames: { get: () => dest.getAttributeNames, set: v => dest.getAttributeNames = v },
-            getAttribute: { get: () => dest.getAttribute, set: v => dest.getAttribute = v },
-            getAttributeNS: { get: () => dest.getAttributeNS, set: v => dest.getAttributeNS = v },
-            getAttributeNode: { get: () => dest.getAttributeNode, set: v => dest.getAttributeNode = v },
-            getAttributeNodeNS: { get: () => dest.getAttributeNodeNS, set: v => dest.getAttributeNodeNS = v },
-            hasAttribute: { get: () => dest.hasAttribute, set: v => dest.hasAttribute = v },
-            hasAttributeNS: { get: () => dest.hasAttributeNS, set: v => dest.hasAttributeNS = v },
-            hasAttributes: { get: () => dest.hasAttributes, set: v => dest.hasAttributes = v },
-            hasChildNodes: { get: () => dest.hasChildNodes, set: v => dest.hasChildNodes = v },
-            hasOwnProperty: { get: () => dest.hasOwnProperty, set: v => dest.hasOwnProperty = v },
-            offsetParent: { get: () => dest.offsetParent, set: v => dest.offsetParent = v },
-            offsetTop: { get: () => dest.offsetTop, set: v => dest.offsetTop = v },
-            offsetLeft: { get: () => dest.offsetLeft, set: v => dest.offsetLeft = v },
-            offsetWidth: { get: () => dest.offsetWidth, set: v => dest.offsetWidth = v },
-            offsetHeight: { get: () => dest.offsetHeight, set: v => dest.offsetHeight = v },
-            hasChildNodes: { get: () => dest.hasChildNodes, set: v => dest.hasChildNodes = v },
-            getAnimations: { get: () => dest.getAnimations, set: v => dest.getAnimations = v },
-            scroll: { get: () => dest.scroll, set: v => dest.scroll = v },
-            scrollBy: { get: () => dest.scrollBy, set: v => dest.scrollBy = v },
-            scrollIntoView: { get: () => dest.scrollIntoView, set: v => dest.scrollIntoView = v },
-            scrollIntoViewIfNeeded: { get: () => dest.scrollIntoViewIfNeeded, set: v => dest.scrollIntoViewIfNeeded = v },
-            scrollTop: { get: () => dest.scrollTop, set: v => dest.scrollTop = v },
-            scrollLeft: { get: () => dest.scrollLeft, set: v => dest.scrollLeft = v },
-            scrollWidth: { get: () => dest.scrollWidth, set: v => dest.scrollWidth = v },
-            scrollHeight: { get: () => dest.scrollHeight, set: v => dest.scrollHeight = v },
-            dataset: { get: () => dest.dataset, set: v => dest.dataset = v },
-            insert: { get: () => dest.insert, set: v => dest.insert = v },
-            insertBefore: { get: () => dest.insertBefore, set: v => dest.insertBefore = v },
-            before: { get: () => dest.before, set: v => dest.before = v },
-            firstChild: { get: () => dest.firstChild, set: v => dest.firstChild = v },
-            firstElementChild: { get: () => dest.firstElementChild, set: v => dest.firstElementChild = v },
-            lastChild: { get: () => dest.lastChild, set: v => dest.lastChild = v },
-            lastElementChild: { get: () => dest.lastElementChild, set: v => dest.lastElementChild = v },
-            closest: { get: () => dest.closest, set: v => dest.closest = v },
-            valueOf: { get: () => dest.valueOf, set: v => dest.valueOf = v },
-            click: { get: () => dest.click, set: v => dest.click = v },
-            cloneNode: { get: () => dest.cloneNode, set: v => dest.cloneNode = v },
-            nodeName: { get: () => dest.nodeName, set: v => dest.nodeName = v },
-            nodeType: { get: () => dest.nodeType, set: v => dest.nodeType = v },
-            nodeValue: { get: () => dest.nodeValue, set: v => dest.nodeValue = v },
-            normalize: { get: () => dest.normalize, set: v => dest.normalize = v },
-            matches: { get: () => dest.matches, set: v => dest.matches = v }
+        Object.defineProperties(source, {
+            textContent: { get: () => target.textContent, set: v => target.textContent = v },
+            innerHTML: { get: () => target.innerHTML, set: v => target.innerHTML = v },
+            innerText: { get: () => target.innerText, set: v => target.innerText = v },
+            setHTML: { get: () => target.setHTML, set: v => target.setHTML = v },
+            getInnerHTML: { get: () => target.getInnerHTML, set: v => target.getInnerHTML = v },
+            getRootNode: { get: () => target.getRootNode, set: v => target.getRootNode = v },
+            value: { get: () => target.value, set: v => target.value = v },
+            style: { get: () => target.style, set: v => target.style = v },
+            src: { get: () => target.src, set: v => target.src = v },
+            classList: { get: () => target.classList, set: v => target.classList = v },
+            className: { get: () => target.className, set: v => target.className = v },
+            hidden: { get: () => target.hidden, set: v => target.hidden = v },
+            animate: { get: () => target.animate, set: v => target.animate = v },
+            attributes: { get: () => target.attributes, set: v => target.attributes = v },
+            childNodes: { get: () => target.childNodes, set: v => target.childNodes = v },
+            children: { get: () => target.children, set: v => target.children = v },
+            addEventListener: { get: () => target.addEventListener, set: v => target.addEventListener = v },
+            removeEventListener: { get: () => target.removeEventListener, set: v => target.removeEventListener = v },
+            append: { get: () => target.append, set: v => target.append = v },
+            appendChild: { get: () => target.appendChild, set: v => target.appendChild = v },
+            prepend: { get: () => target.prepend, set: v => target.prepend = v },
+            replaceChild: { get: () => target.replaceChild, set: v => target.replaceChild = v },
+            replaceChildren: { get: () => target.replaceChildren, set: v => target.replaceChildren = v },
+            removeChild: { get: () => target.removeChild, set: v => target.removeChild = v },
+            blur: { get: () => target.blur, set: v => target.blur = v },
+            title: { get: () => target.title, set: v => target.title = v },
+            toString: { get: () => target.toString, set: v => target.toString = v },
+            autofocus: { get: () => target.autofocus, set: v => target.autofocus = v },
+            parentElement: { get: () => target.parentElement, set: v => target.parentElement = v },
+            parentNode: { get: () => target.parentNode, set: v => target.parentNode = v },
+            clientWidth: { get: () => target.clientWidth, set: v => target.clientWidth = v },
+            clientHeight: { get: () => target.clientHeight, set: v => target.clientHeight = v },
+            clientTop: { get: () => target.clientTop, set: v => target.clientTop = v },
+            clientLeft: { get: () => target.clientLeft, set: v => target.clientLeft = v },
+            removeAttribute: { get: () => target.removeAttribute, set: v => target.removeAttribute = v },
+            removeAttributeNode: { get: () => target.removeAttributeNode, set: v => target.removeAttributeNode = v },
+            removeAttributeNS: { get: () => target.removeAttributeNS, set: v => target.removeAttributeNS = v },
+            setAttribute: { get: () => target.setAttribute, set: v => target.setAttribute = v },
+            setAttributeNS: { get: () => target.setAttributeNS, set: v => target.setAttributeNS = v },
+            setAttributeNode: { get: () => target.setAttributeNode, set: v => target.setAttributeNode = v },
+            setAttributeNodeNS: { get: () => target.setAttributeNodeNS, set: v => target.setAttributeNodeNS = v },
+            getAttributeNames: { get: () => target.getAttributeNames, set: v => target.getAttributeNames = v },
+            getAttribute: { get: () => target.getAttribute, set: v => target.getAttribute = v },
+            getAttributeNS: { get: () => target.getAttributeNS, set: v => target.getAttributeNS = v },
+            getAttributeNode: { get: () => target.getAttributeNode, set: v => target.getAttributeNode = v },
+            getAttributeNodeNS: { get: () => target.getAttributeNodeNS, set: v => target.getAttributeNodeNS = v },
+            hasAttribute: { get: () => target.hasAttribute, set: v => target.hasAttribute = v },
+            hasAttributeNS: { get: () => target.hasAttributeNS, set: v => target.hasAttributeNS = v },
+            hasAttributes: { get: () => target.hasAttributes, set: v => target.hasAttributes = v },
+            hasChildNodes: { get: () => target.hasChildNodes, set: v => target.hasChildNodes = v },
+            hasOwnProperty: { get: () => target.hasOwnProperty, set: v => target.hasOwnProperty = v },
+            offsetParent: { get: () => target.offsetParent, set: v => target.offsetParent = v },
+            offsetTop: { get: () => target.offsetTop, set: v => target.offsetTop = v },
+            offsetLeft: { get: () => target.offsetLeft, set: v => target.offsetLeft = v },
+            offsetWidth: { get: () => target.offsetWidth, set: v => target.offsetWidth = v },
+            offsetHeight: { get: () => target.offsetHeight, set: v => target.offsetHeight = v },
+            hasChildNodes: { get: () => target.hasChildNodes, set: v => target.hasChildNodes = v },
+            getAnimations: { get: () => target.getAnimations, set: v => target.getAnimations = v },
+            scroll: { get: () => target.scroll, set: v => target.scroll = v },
+            scrollBy: { get: () => target.scrollBy, set: v => target.scrollBy = v },
+            scrollIntoView: { get: () => target.scrollIntoView, set: v => target.scrollIntoView = v },
+            scrollIntoViewIfNeeded: { get: () => target.scrollIntoViewIfNeeded, set: v => target.scrollIntoViewIfNeeded = v },
+            scrollTop: { get: () => target.scrollTop, set: v => target.scrollTop = v },
+            scrollLeft: { get: () => target.scrollLeft, set: v => target.scrollLeft = v },
+            scrollWidth: { get: () => target.scrollWidth, set: v => target.scrollWidth = v },
+            scrollHeight: { get: () => target.scrollHeight, set: v => target.scrollHeight = v },
+            dataset: { get: () => target.dataset, set: v => target.dataset = v },
+            insert: { get: () => target.insert, set: v => target.insert = v },
+            insertBefore: { get: () => target.insertBefore, set: v => target.insertBefore = v },
+            before: { get: () => target.before, set: v => target.before = v },
+            firstChild: { get: () => target.firstChild, set: v => target.firstChild = v },
+            firstElementChild: { get: () => target.firstElementChild, set: v => target.firstElementChild = v },
+            lastChild: { get: () => target.lastChild, set: v => target.lastChild = v },
+            lastElementChild: { get: () => target.lastElementChild, set: v => target.lastElementChild = v },
+            closest: { get: () => target.closest, set: v => target.closest = v },
+            valueOf: { get: () => target.valueOf, set: v => target.valueOf = v },
+            click: { get: () => target.click, set: v => target.click = v },
+            cloneNode: { get: () => target.cloneNode, set: v => target.cloneNode = v },
+            nodeName: { get: () => target.nodeName, set: v => target.nodeName = v },
+            nodeType: { get: () => target.nodeType, set: v => target.nodeType = v },
+            nodeValue: { get: () => target.nodeValue, set: v => target.nodeValue = v },
+            normalize: { get: () => target.normalize, set: v => target.normalize = v },
+            matches: { get: () => target.matches, set: v => target.matches = v }
         });
     }
 

@@ -23,8 +23,8 @@ export default class SvgAnimation {
      * @param {number} [options.endTime=Infinity] - 结束播放时间点（毫秒）
      */
     constructor(options) {
-        if (!options)
-            throw new Error("SvgAnimation options invalid");
+        if (!options instanceof Object)
+            throw new Error("SvgAnimation options must be Object");
         const { target, startTime, endTime } = options;
         this.target = target;
         this.startTime = startTime || 0;
