@@ -1,63 +1,57 @@
+import SvgAnimation from "../media/SvgAnimation.js";
 import VideoCanvas from "../media/VideoCanvas.js";
 import DynamicImage from "../media/DynamicImage.js";
 import LottieCanvas from "../media/LottieCanvas.js";
-import SvgAnimation from "../media/SvgAnimation.js";
+import VideoConfig from "../video-preprocessor/VideoConfig.js";
 
 export default class CaptureContext {
 
-    // 启动时间点（毫秒）
+    /** 媒体选择器 */
+    SVG_SELECTOR = "svg";
+    VIDEO_SELECTOR = 'video[src$=".mp4"],video[src$=".webm"],video[src$=".mkv"],video[src*=".mp4?"],video[src*=".webm?"],video[src*=".mkv?"],video[capture]';
+    DYNAMIC_IMAGE_SELECTOR = 'img[src$=".gif"],img[src$=".webp"],img[src$=".apng"],img[src*=".gif?"],img[src*=".webp?"],img[src*=".apng?"],img[capture]';
+    LOTTIE_SELECTOR = "lottie";
+
+    /** @type {number} - 启动时间点（毫秒） */
     startupTime = Math.floor(performance.now());
-    // 当前时间点（毫秒）
+    /** @type {number} - 当前时间点（毫秒） */
     currentTime = 0;
-    // 当前帧指针
+    /** @type {number} - 当前帧指针 */
     frameIndex = 0;
-    // 帧间隔时间
+    /** @type {number} - 帧间隔时间（毫秒） */
     frameInterval = 0;
-    // 停止标志
+    /** @type {boolean} - 停止标志 */
     stopFlag = false;
-    // 暂停标志
+    /** @type {boolean} - 暂停标志 */
     pauseFlag = false;
-    // 恢复回调
+    /** @type {Function} - 恢复回调 */
     resumeCallback = null;
-    // 间隔回调列表
+    /** @type {Function[]} - 间隔回调列表 */
     intervalCallbacks = [];
-    // 超时回调列表
+    /** @type {Function[]} - 超时回调列表 */
     timeoutCallbacks = [];
-    // 计时器ID
+    /** @type {number} - 计时器自增ID */
     timerId = 0;
-    // 配置
+    /** @type {Object} - 配置对象 */
     config = {
-        // 渲染帧率
+        /** @type{number} - 渲染帧率 */
         fps: 0,
-        // 目标帧率
+        /** @type{number} - 目标总帧数 */
         frameCount: 0
     };
-    // 视频选项列表
+    /** @type {VideoConfig[]} - 视频配置列表 */
     videoConfigs = [];
-    // 调度媒体列表
+    /** @type {SvgAnimation[]|VideoCanvas[]|DynamicImage[]|LottieCanvas[]} - 媒体调度列表 */
     dispatchMedias = [];
 
+    /**
+     * 构造函数
+     */
     constructor() {
-        // 支持获取html元素布尔属性
-        HTMLElement.prototype.getBooleanAttribute = function (name) {
-            const value = this.getAttribute(name);
-            if (value == null) return null;
-            return value == "false" ? false : true;
-        }
-        // 支持获取html元素数字属性
-        HTMLElement.prototype.getNumberAttribute = function (name) {
-            const value = this.getAttribute(name);
-            if (value == null) return null;
-            return parseInt(value);
-        }
-        // 支持获取svg元素数字属性
-        SVGSVGElement.prototype.getNumberAttribute = function (name) {
-            const value = this.getAttribute(name);
-            if (value == null) return null;
-            return parseInt(value);
-        }
+        // 元素行为重写
+        this._elementRewrite();
         // 时间虚拟化重写
-        this.timeVirtualizationRewrite();
+        this._timeVirtualizationRewrite();
     }
 
     /**
@@ -66,8 +60,10 @@ export default class CaptureContext {
     start() {
         // 插入捕获辅助元素
         this.insertCaptureHelper();
+        // 转换元素为媒体元素
+        this._convertElementsToMedias();
         // 监听媒体插入
-        this.observMediaInsert();
+        this._observMediaInsert();
         // 更新开始时间
         this.startTime = Date.now();
         // 计算帧间隔时间
@@ -89,9 +85,9 @@ export default class CaptureContext {
                 // 根据帧间隔推进当前时间
                 this.currentTime += this.frameInterval;
                 // 触发轮询回调列表
-                this.callIntervalCallbacks();
+                this._callIntervalCallbacks();
                 // 触发超时回调列表
-                this.callTimeoutCallbacks();
+                this._callTimeoutCallbacks();
 
                 // 捕获帧图 - 此函数请见Page.js的#envInit的exposeFunction
                 if (!await window.captureFrame()) {
@@ -171,20 +167,41 @@ export default class CaptureContext {
         })();
     }
 
-    observMediaInsert() {
+    /**
+     * 转换元素为媒体对象
+     * 
+     * @private
+     */
+    _convertElementsToMedias() {
+        const svgs = Array.from(document.querySelectorAll(this.SVG_SELECTOR));
+        const videos = Array.from(document.querySelectorAll(this.VIDEO_SELECTOR));
+        const dynamicImages = Array.from(document.querySelectorAll(this.DYNAMIC_IMAGE_SELECTOR));
+        const lotties = Array.from(document.querySelectorAll(this.LOTTIE_SELECTOR));
+        svgs.forEach(e => captureCtx.convertToSvgAnimation(e));
+        videos.forEach(e => captureCtx.convertToVideoCanvas(e));
+        dynamicImages.forEach(e => captureCtx.convertToDynamicImage(e));
+        lotties.forEach(e => captureCtx.convertToLottieCanvas(e));
+    }
+
+    /**
+     * 监听媒体插入
+     * 
+     * @private
+     */
+    _observMediaInsert() {
         const observer = new MutationObserver(mutations => {
             for (const mutation of mutations) {
                 if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-                    for(const addedNode of mutation.addedNodes) {
-                        if(addedNode.matches("canvas"))
+                    for (const addedNode of mutation.addedNodes) {
+                        if (addedNode.matches("canvas"))
                             break;
-                        else if(addedNode.matches("svg"))
+                        else if (addedNode.matches(this.SVG_SELECTOR))
                             this.convertToSvgAnimation(addedNode);
-                        else if(addedNode.matches('img[src$=".gif"],img[src$=".webp"],img[src$=".apng"],img[src*=".gif?"],img[src*=".webp?"],img[src*=".apng?"],img[capture]'))
+                        else if (addedNode.matches(this.DYNAMIC_IMAGE_SELECTOR))
                             this.convertToDynamicImage(addedNode);
-                        else if(addedNode.matches('video[src$=".mp4"],video[src$=".webm"],video[src$=".mkv"],video[src*=".mp4?"],video[src*=".webm?"],video[src*=".mkv?"],video[capture]'))
+                        else if (addedNode.matches(this.VIDEO_SELECTOR))
                             this.convertToVideoCanvas(addedNode);
-                        else if(addedNode.matches("lottie"))
+                        else if (addedNode.matches(this.LOTTIE_SELECTOR))
                             this.convertToLottieCanvas(addedNode);
                     }
                 }
@@ -199,9 +216,35 @@ export default class CaptureContext {
     }
 
     /**
-     * 时间虚拟化重写
+     * 元素行为重写
      */
-    timeVirtualizationRewrite() {
+    _elementRewrite() {
+        // 支持获取html元素布尔属性
+        HTMLElement.prototype.getBooleanAttribute = function (name) {
+            const value = this.getAttribute(name);
+            if (value == null) return null;
+            return value == "false" ? false : true;
+        }
+        // 支持获取html元素数字属性
+        HTMLElement.prototype.getNumberAttribute = function (name) {
+            const value = this.getAttribute(name);
+            if (value == null) return null;
+            return parseInt(value);
+        }
+        // 支持获取svg元素数字属性
+        SVGSVGElement.prototype.getNumberAttribute = function (name) {
+            const value = this.getAttribute(name);
+            if (value == null) return null;
+            return parseInt(value);
+        }
+    }
+
+    /**
+     * 时间虚拟化重写
+     * 
+     * @private
+     */
+    _timeVirtualizationRewrite() {
         // 暂存setInterval函数
         window.____setInterval = window.setInterval;
         // 重写setInterval函数
@@ -272,10 +315,11 @@ export default class CaptureContext {
     /**
      * 拼接完整URL
      * 
+     * @private
      * @param {string} relativeUrl - 相对URL
      * @returns {string} - 绝对URL
      */
-    currentUrlJoin(relativeUrl) {
+    _currentUrlJoin(relativeUrl) {
         if (!relativeUrl || /^(https?:)?\/\//.test(relativeUrl))
             return relativeUrl;
         const currentURL = window.location.href;
@@ -284,8 +328,10 @@ export default class CaptureContext {
 
     /**
      * 触发轮询函数回调
+     * 
+     * @private
      */
-    callIntervalCallbacks() {
+    _callIntervalCallbacks() {
         for (let i = 0; i < this.intervalCallbacks.length; i++) {
             const [timerId, timestamp, interval, fn] = this.intervalCallbacks[i];
             if (this.currentTime < timestamp + interval)
@@ -298,8 +344,10 @@ export default class CaptureContext {
 
     /**
      * 触发超时函数回调
+     * 
+     * @private
      */
-    callTimeoutCallbacks() {
+    _callTimeoutCallbacks() {
         this.timeoutCallbacks = this.timeoutCallbacks.filter(([timerId, timestamp, timeout, fn]) => {
             if (this.currentTime < timestamp + timeout)
                 return true;
@@ -311,8 +359,10 @@ export default class CaptureContext {
 
     /**
      * 创建画布
+     * 
+     * @private
      */
-    createCanvas(options) {
+    _createCanvas(options) {
         const { id, width, height } = options;
         const canvas = document.createElement("canvas");
         canvas.id = id;
@@ -356,7 +406,7 @@ export default class CaptureContext {
         const currentTimeAttribute = e.getAttribute("currentTime");
         const options = {
             // 视频来源
-            src: this.currentUrlJoin(e.getAttribute("src")),
+            src: this._currentUrlJoin(e.getAttribute("src")),
             // 视频宽度
             width: parseInt(e.style.width) || e.getNumberAttribute("width"),
             // 视频高度
@@ -377,15 +427,15 @@ export default class CaptureContext {
             muted: e.getBooleanAttribute("muted")
         };
         // 创建画布元素
-        const canvas = this.createCanvas(options);
+        const canvas = this._createCanvas(options);
         // 实例化视频画布实例
         const videoCanvas = new VideoCanvas(options);
         // 绑定画布元素
         videoCanvas.bind(canvas);
         // 复制目标元素样式
-        this.copyElementStyle(e, canvas);
+        this._copyElementStyle(e, canvas);
         // 代理目标元素所有属性和行为
-        this.buildElementProxy(e, canvas)
+        this._buildElementProxy(e, canvas)
         // 将目标元素替换为画布
         e.replaceWith(canvas);
         // 添加到视频配置列表
@@ -407,7 +457,7 @@ export default class CaptureContext {
     convertToDynamicImage(e) {
         const options = {
             // 图像来源
-            src: this.currentUrlJoin(e.getAttribute("src")),
+            src: this._currentUrlJoin(e.getAttribute("src")),
             // 图像宽度
             width: parseInt(e.style.width) || e.getNumberAttribute("width") || e.width,
             // 图像高度
@@ -422,15 +472,15 @@ export default class CaptureContext {
             retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs")
         };
         // 创建画布元素
-        const canvas = this.createCanvas(options);
+        const canvas = this._createCanvas(options);
         // 实例化动态图像实例
         const dynamicImage = new DynamicImage(options);
         // 绑定画布元素
         dynamicImage.bind(canvas);
         // 复制目标元素样式
-        this.copyElementStyle(e, canvas);
+        this._copyElementStyle(e, canvas);
         // 代理目标元素所有属性和行为
-        this.buildElementProxy(e, canvas);
+        this._buildElementProxy(e, canvas);
         // 将目标元素替换为画布
         e.replaceWith(canvas);
         // 将对象加入媒体调度列表
@@ -446,7 +496,7 @@ export default class CaptureContext {
     convertToLottieCanvas(e) {
         const options = {
             // lottie来源
-            src: this.currentUrlJoin(e.getAttribute("src")),
+            src: this._currentUrlJoin(e.getAttribute("src")),
             // 动画宽度
             width: parseInt(e.style.width) || e.getNumberAttribute("width"),
             // 动画宽度
@@ -461,15 +511,15 @@ export default class CaptureContext {
             retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs")
         };
         // 创建画布元素
-        const canvas = this.createCanvas(options);
+        const canvas = this._createCanvas(options);
         // 实例化Lottie动画实例
         const lottieCanvas = new LottieCanvas(options);
         // 绑定画布元素
         lottieCanvas.bind(canvas);
         // 复制目标元素样式
-        this.copyElementStyle(e, canvas);
+        this._copyElementStyle(e, canvas);
         // 代理目标元素所有属性和行为
-        this.buildElementProxy(e, canvas)
+        this._buildElementProxy(e, canvas)
         // 将目标元素替换为画布
         e.replaceWith(canvas);
         // 将对象加入媒体调度列表
@@ -480,10 +530,11 @@ export default class CaptureContext {
     /**
      * 复制元素样式
      * 
-    * @param {HTMLElement} - 被复制HTML元素
+     * @private
+     * @param {HTMLElement} - 被复制HTML元素
      * @param {HTMLElement} - 新元素
      */
-    copyElementStyle(src, dest) {
+    _copyElementStyle(src, dest) {
         for (var i = 0; i < src.style.length; i++) {
             var property = src.style[i];
             var value = src.style.getPropertyValue(property);
@@ -495,10 +546,11 @@ export default class CaptureContext {
      * 建立元素代理
      * 将对旧元素的所有行为代理到新元素
      * 
+     * @private
      * @param {HTMLElement} - 被代理HTML元素
      * @param {HTMLElement} - 新元素
      */
-    buildElementProxy(src, dest) {
+    _buildElementProxy(src, dest) {
         // 监听元素
         Object.defineProperties(src, {
             textContent: { get: () => dest.textContent, set: v => dest.textContent = v },

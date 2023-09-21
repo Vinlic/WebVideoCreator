@@ -156,17 +156,8 @@ export default class Page extends EventEmitter {
     async goto(url) {
         // 页面导航到URL
         await this.target.goto(url);
-        // 将捕获元素转换为画布
-        const { svgAnimations, videos, dynamicImages, lotties } = await this.#captureElementsToMedias();
-        // 使用Lottie动画时注入Lottie动画库
-        lotties.length > 0 && await this.#injectLottieLibrary();
-        // 返回控制器映射
-        return {
-            svgAnimations,
-            videos,
-            dynamicImages,
-            lotties
-        };
+        // 注入Lottie动画库
+        await this.#injectLottieLibrary();
     }
 
     /**
@@ -232,27 +223,6 @@ export default class Page extends EventEmitter {
             configs: videoConfigs.map(v => new VideoConfig(v)),
         });
         await preprocessor.start();
-    }
-
-    /**
-     * 将捕获元素转换为可控制的媒体对象
-     * 
-     * @returns {{svgAnimations: SvgAnimation[], videos: VideoCanvas[], dynamicImages: DynamicImage[], lotties: LottieCanvas[]}} - 资源计数映射
-     */
-    async #captureElementsToMedias() {
-        return await this.target.evaluate(() => {
-            const captureCtx = window.captureCtx;
-            const svgs = Array.from(document.querySelectorAll("svg"));
-            const videos = Array.from(document.querySelectorAll('video[src$=".mp4"],video[src$=".webm"],video[src$=".mkv"],video[src*=".mp4?"],video[src*=".webm?"],video[src*=".mkv?"],video[capture]'));
-            const dynamicImages = Array.from(document.querySelectorAll('img[src$=".gif"],img[src$=".webp"],img[src$=".apng"],img[src*=".gif?"],img[src*=".webp?"],img[src*=".apng?"],img[capture]'));
-            const lotties = Array.from(document.querySelectorAll("lottie"));
-            return {
-                svgAnimations: svgs.map(e => captureCtx.convertToSvgAnimation(e)).filter(v => v),
-                videos: videos.map(e => captureCtx.convertToVideoCanvas(e)),
-                dynamicImages: dynamicImages.map(e => captureCtx.convertToDynamicImage(e)),
-                lotties: lotties.map(e => captureCtx.convertToLottieCanvas(e))
-            };
-        });
     }
 
     /**
@@ -419,6 +389,12 @@ export default class Page extends EventEmitter {
             // 其它消息处理
             else
                 this.emit("consoleLog", message.text());
+        });
+        // 页面加载完成事件
+        this.target.on("domcontentloaded", async () => {
+            // 如果处于录制状态作为被动刷新处理
+            if(this.isCapturing())
+                this.#emitError(new Error("Page context is missing, possibly due to the page being refreshed"))
         });
         // 页面错误回调
         this.target.on("pageerror", err => this.emit("consoleError", err));
