@@ -414,7 +414,6 @@ export default class Page extends EventEmitter {
         await this.target.evaluateOnNewDocument(`
             window.CaptureContext=${CaptureContext};
             window.captureCtx=new CaptureContext();
-            window.VideoConfig=${VideoConfig};
             window.SvgAnimation=${SvgAnimation};
             window.VideoCanvas=${VideoCanvas};
             window.DynamicImage=${DynamicImage};
@@ -515,7 +514,7 @@ export default class Page extends EventEmitter {
                 const data = _.attempt(() => JSON.parse(request.postData()));
                 if (_.isError(data))
                     throw new Error("api /video_preprocess only accept JSON data");
-                const buffer = await this.#preprocessVideo(data);
+                const buffer = await this.#preprocessVideo(new VideoConfig(data));
                 request.respond({
                     status: 200,
                     body: buffer

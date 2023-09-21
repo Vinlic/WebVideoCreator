@@ -58,7 +58,7 @@ export default class CaptureContext {
      */
     start() {
         // 插入捕获辅助元素
-        this.insertCaptureHelper();
+        this._insertCaptureHelper();
         // 转换元素为媒体元素
         this._convertElementsToMedias();
         // 监听媒体插入
@@ -142,7 +142,7 @@ export default class CaptureContext {
      * 插入捕获辅助元素
      * BeginFrame可能会陷入假死，这个元素会不断旋转确保总是产生新的帧
      */
-    insertCaptureHelper() {
+    _insertCaptureHelper() {
         const captureHelper = document.createElement("capture-helper");
         // 设置几乎看不见的样式
         Object.assign(captureHelper.style, {

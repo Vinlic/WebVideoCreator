@@ -16,9 +16,9 @@ export default class VideoPreprocessor extends EventEmitter {
     /** @type {number} - 并行处理数量 */
     parallelProcess;
     /** @type {DownloadTask[]} - 下载队列 */
-    downloadQueue = [];
+    #downloadQueue = [];
     /** @type {ProcessTask} - 处理队列 */
-    processQueue = [];
+    #processQueue = [];
     /** @type {Function} - 下载队列恢复回调函数 */
     #downloadQueueResumeCallback;
     /** @type {Function} - 处理队列恢复回调函数 */
@@ -60,8 +60,11 @@ export default class VideoPreprocessor extends EventEmitter {
      * @param {Function} [options.onError] - 错误回调
      */
     process(options) {
-        console.log(options.config);
-        options.onCompleted && options.onCompleted(Buffer.from("HelloWorld"));
+        assert(_.isObject(options), "process options must be Object");
+        const { config, onCompleted, onError } = options;
+        console.log(config);
+        this.createDownloadTask(config);
+        onCompleted && onCompleted(Buffer.from("HelloWorld"));
     }
 
     /**
@@ -74,19 +77,48 @@ export default class VideoPreprocessor extends EventEmitter {
     }
 
     /**
+     * 创建下载任务
+     * 
+     * @param {Object} options - 下载任务选项
+     */
+    createDownloadTask(options) {
+        const task = new DownloadTask(options);
+        this.#downloadQueue.push(task);
+        if (this.#downloadQueueResumeCallback) {
+            const fn = this.#downloadQueueResumeCallback;
+            this.#downloadQueueResumeCallback = null;
+            fn();
+        }
+    }
+
+    /**
+     * 创建处理任务
+     * 
+     * @param {Object} options - 处理任务选项
+     */
+    createProcessTask(options) {
+        const task = new ProcessTask(options);
+        this.#processQueue.push(task);
+        if (this.#processQueueResumeCallback) {
+            const fn = this.#processQueueResumeCallback;
+            this.#processQueueResumeCallback = null;
+            fn();
+        }
+    }
+
+    /**
      * 调度下载队列
      */
     #dispatchDownloadQueue() {
         (async () => {
-            const task = this.downloadQueue.shift();
-            if (!task)
-                return true;
-            if (this.downloadTasks.length >= this.parallelDownloads)
+            const task = this.#downloadQueue.shift();
+            if (!task || this.downloadTasks.length >= this.parallelDownloads) {
                 await new Promise(resolve => this.#downloadQueueResumeCallback = resolve);
+                return this.#dispatchDownloadQueue();
+            }
             this.downloadTasks.push(task);
-            return false;
+            this.#dispatchDownloadQueue();
         })()
-            .then(stop => !stop && this.#dispatchDownloadQueue())
             .catch(err => this.#emitError(err));
     }
 
@@ -95,15 +127,14 @@ export default class VideoPreprocessor extends EventEmitter {
      */
     #dispatchProcessQueue() {
         (async () => {
-            const task = this.processQueue.shift();
-            if (!task)
-                return true;
-            if (this.processTasks.length >= this.parallelProcess)
+            const task = this.#processQueue.shift();
+            if (!task || this.processTasks.length >= this.parallelProcess) {
                 await new Promise(resolve => this.#processQueueResumeCallback = resolve);
+                return this.#dispatchProcessQueue();
+            }
             this.processTasks.push(task);
-            return false;
+            this.#dispatchProcessQueue();
         })()
-            .then(stop => !stop && this.#dispatchProcessQueue())
             .catch(err => this.#emitError(err));
     }
 
@@ -119,8 +150,13 @@ export default class VideoPreprocessor extends EventEmitter {
                     task.start();
                 return true;
             });
-            if (this.downloadTasks.length < this.parallelDownloads)
-                this.#downloadQueueResumeCallback && this.#downloadQueueResumeCallback();
+            if (this.downloadTasks.length < this.parallelDownloads) {
+                if (this.#downloadQueueResumeCallback) {
+                    const fn = this.#downloadQueueResumeCallback;
+                    this.#downloadQueueResumeCallback = null;
+                    fn();
+                }
+            }
             this.processTasks = this.processTasks.filter(task => {
                 if (task.canRemove())
                     return false;
@@ -128,11 +164,16 @@ export default class VideoPreprocessor extends EventEmitter {
                     task.start();
                 return true;
             });
-            if (this.processTasks.length < this.parallelProcess)
-                this.#processQueueResumeCallback && this.#processQueueResumeCallback();
-            setTimeout(this.#dispatchTasks.bind(this), 500);
+            if (this.processTasks.length < this.parallelProcess) {
+                if (this.#processQueueResumeCallback) {
+                    const fn = this.#processQueueResumeCallback;
+                    this.#processQueueResumeCallback = null;
+                    fn();
+                }
+            }
+            setTimeout(this.#dispatchTasks.bind(this), 50);
         }
-        catch(err) {
+        catch (err) {
             this.#emitError(err);
         }
     }

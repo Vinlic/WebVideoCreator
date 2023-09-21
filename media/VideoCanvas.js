@@ -73,15 +73,20 @@ export default class VideoCanvas {
     }
 
     async load() {
-        console.time();
-        const response = await fetch("video_preprocess", {
-            method: "POST",
-            body: JSON.stringify(new VideoConfig(this))
-        });
-        const buffer = await response.arrayBuffer();
-        console.log(buffer.byteLength);
-        console.timeEnd();
-        this.loaded = true;
+        try {
+            console.time();
+            const response = await fetch("video_preprocess", {
+                method: "POST",
+                body: JSON.stringify(this)
+            });
+            const buffer = await response.arrayBuffer();
+            console.log(buffer.byteLength);
+            console.timeEnd();
+            this.loaded = true;
+        }
+        catch(err) {
+            console.log(err);
+        }
     }
 
     async seek() {
