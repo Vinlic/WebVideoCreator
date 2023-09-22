@@ -16,9 +16,7 @@ export default class Task extends EventEmitter {
         /** 下载类型任务 */
         DOWNLOAD: Symbol("DOWNLOAD"),
         /** 处理类型任务 */
-        PROCESS: Symbol("PROCESS"),
-        /** 解复用类型任务 */
-        DEMUX: Symbol("DEMUX")
+        PROCESS: Symbol("PROCESS")
     };
     /** 任务状态枚举 */
     static STATE = {
@@ -39,7 +37,7 @@ export default class Task extends EventEmitter {
     /** @type {number} - 任务进度 */
     progress = 0;
     /** @type {number} - 重试次数 */
-    retryCount;
+    retryFetchs;
     /** @type {number} - 重试延迟（毫秒） */
     retryDelay;
     /** @type {Error[]} - 错误列表 */
@@ -57,14 +55,14 @@ export default class Task extends EventEmitter {
      * 构造函数
      * 
      * @param {Object} options - 任务选项
-     * @param {number} [retryCount=2] - 重试次数
+     * @param {number} [retryFetchs=2] - 重试次数
      * @param {number} [retryDelay=1000] - 重试延迟
      */
     constructor(options) {
         super();
         assert(_.isObject(options), "Task options must be Object");
-        const { retryCount, retryDelay } = options;
-        this.retryCount = _.defaultTo(retryCount, 2);
+        const { retryFetchs, retryDelay } = options;
+        this.retryFetchs = _.defaultTo(retryFetchs, 2);
         this.retryDelay = _.defaultTo(retryDelay, 1000);
     }
 
@@ -88,9 +86,9 @@ export default class Task extends EventEmitter {
      * 
      * @protected
      */
-    _emitCompleted() {
+    _emitCompleted(result) {
         this.#setState(Task.STATE.COMPLETED);
-        this.emit("completed");
+        this.emit("completed", result);
     }
 
     /**
@@ -102,7 +100,7 @@ export default class Task extends EventEmitter {
     _emitError(err) {
         this.errors.push(err);
         this.errorTime = performance.now();
-        if (this.errors.length <= this.retryCount) {
+        if (this.errors.length <= this.retryFetchs) {
             // 设置为等待状态，等待调度
             this.#setState(Task.STATE.WAITING);
             return;
@@ -118,7 +116,7 @@ export default class Task extends EventEmitter {
     canStart() {
         if (!this.isWaiting())
             return false;
-        if (this.errors.length > this.retryCount)
+        if (this.errors.length > this.retryFetchs)
             return false;
         if (performance.now() < this.errorTime + this.retryDelay)
             return false;
@@ -128,7 +126,7 @@ export default class Task extends EventEmitter {
     canRemove() {
         if (this.isCompleted())
             return true;
-        if (this.errors.length > this.retryCount)
+        if (this.errors.length > this.retryFetchs)
             return true;
         return false;
     }

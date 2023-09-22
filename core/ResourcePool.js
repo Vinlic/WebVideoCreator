@@ -1,7 +1,7 @@
 import assert from "assert";
 import AsyncLock from "async-lock";
 import genericPool, { Pool as _Pool } from "generic-pool";
-import VideoPreprocessor from "../video-preprocessor/VideoPreprocessor.js";
+import VideoPreprocessor from "../preprocessor/video/VideoPreprocessor.js";
 import _ from "lodash";
 
 import Browser from "./Browser.js";
@@ -9,10 +9,6 @@ import Page from "./Page.js";
 
 // 异步锁
 const asyncLock = new AsyncLock();
-// 视频预处理器
-const videoPreprocessor = new VideoPreprocessor({
-    
-});
 
 /**
  * 资源池

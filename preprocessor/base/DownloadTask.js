@@ -11,9 +11,19 @@ const downloadLock = new AsyncLock();
 
 export default class DownloadTask extends Task {
 
+    /** @type {Task.TYPE} - 任务类型 */
+    type = Task.TYPE.DOWNLOAD;
     /** @type {string} - 资源URL */
     url;
 
+    /**
+     * 构造函数
+     * 
+     * @param {Object} options - 任务选项
+     * @param {string} url - 资源URL
+     * @param {number} [retryFetchs=2] - 重试次数
+     * @param {number} [retryDelay=1000] - 重试延迟
+     */
     constructor(options) {
         super(options);
         const { url } = options;
@@ -21,17 +31,20 @@ export default class DownloadTask extends Task {
         this.url = url;
     }
 
+    /**
+     * 启动任务
+     */
     start() {
         super.start();
         this.#downloadFile(this.url)
-            .then(() => this._emitCompleted())
+            .then(result => this._emitCompleted(result))
             .catch(err => this._emitError(err));
     }
 
     /**
-     * 下载视频文件
+     * 下载文件
      *
-     * @param {string} url 视频来源URL
+     * @param {string} url 资源URL
      */
     async #downloadFile(url) {
         const filePath = path.join(this._tmpDirPath, this.#urlToPath(url));

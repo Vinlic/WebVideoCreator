@@ -11,7 +11,7 @@ import SvgAnimation from "../media/SvgAnimation.js";
 import VideoCanvas from "../media/VideoCanvas.js";
 import DynamicImage from "../media/DynamicImage.js";
 import LottieCanvas from "../media/LottieCanvas.js";
-import VideoConfig from "../video-preprocessor/VideoConfig.js";
+import VideoConfig from "../preprocessor/video/VideoConfig.js";
 import Font from "../entity/Font.js";
 import util from "../lib/util.js";
 
@@ -464,14 +464,8 @@ export default class Page extends EventEmitter {
      */
     async #preprocessVideo(config) {
         const videoPreprocessor = this.videoPreprocessor;
-        return await new Promise((resolve, reject) => {
-            videoPreprocessor.process({
-                config,
-                onCompleted: resolve,
-                onError: reject
-            });
-            this.emit("videoPreprocess", config);
-        });
+        this.emit("videoPreprocess", config);
+        return await videoPreprocessor.process(config);
     }
 
     /**

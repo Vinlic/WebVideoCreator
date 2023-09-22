@@ -1,15 +1,13 @@
 import assert from "assert";
-import EventEmitter from "eventemitter3";
 import _ from "lodash";
 
-import DownloadTask from "./task/DownloadTask.js";
-import ProcessTask from "./task/ProcessTask.js";
-import VideoConfig from "./VideoConfig.js";
+import DownloadTask from "./DownloadTask.js";
+import ProcessTask from "./ProcessTask.js";
 
 /**
- * 视频预处理器
+ * 预处理器
  */
-export default class VideoPreprocessor extends EventEmitter {
+export default class Preprocessor {
 
     /** @type {number} - 并行下载数量 */
     parallelDownloads;
@@ -36,7 +34,6 @@ export default class VideoPreprocessor extends EventEmitter {
      * @param {number} [options.parallelProcess=10] - 并行处理数量
      */
     constructor(options) {
-        super();
         assert(_.isObject(options), "VideoPreprocessor options must be Object");
         const { parallelDownloads, parallelProcess } = options;
         assert(_.isUndefined(parallelDownloads) || _.isFinite(parallelDownloads), "parallelDownloads must be number");
@@ -54,26 +51,22 @@ export default class VideoPreprocessor extends EventEmitter {
     /**
      * 发起处理
      * 
-     * @param {Object} options - 处理选项
-     * @param {VideoConfig} options.config - 视频配置
-     * @param {Function} [options.onCompleted] - 已完成回调
-     * @param {Function} [options.onError] - 错误回调
+     * @param {Object} options - 任务选项
      */
-    process(options) {
-        assert(_.isObject(options), "process options must be Object");
-        const { config, onCompleted, onError } = options;
-        console.log(config);
-        this.createDownloadTask(config);
-        onCompleted && onCompleted(Buffer.from("HelloWorld"));
-    }
-
-    /**
-     * 发送错误事件
-     * 
-     * @param {Error} err - 错误对象
-     */
-    #emitError(err) {
-        this.emit("error", err);
+    async process(options) {
+        const downloadTask = this.createDownloadTask(options);
+        const filePath = await new Promise((resolve, reject) => {
+            downloadTask
+                .once("completed", resolve)
+                .once("error", reject);
+        });
+        const processTask = this.createProcessTask({ filePath, ...options });
+        const result = await new Promise((resolve, reject) => {
+            processTask
+                .once("completed", resolve)
+                .once("error", reject);
+        });
+        return result;
     }
 
     /**
@@ -83,6 +76,15 @@ export default class VideoPreprocessor extends EventEmitter {
      */
     createDownloadTask(options) {
         const task = new DownloadTask(options);
+        this.addDownloadTask(task);
+        return task;
+    }
+
+    /**
+     * 添加处理任务
+     */
+    addDownloadTask(task) {
+        assert(task instanceof DownloadTask, "task must be DownloadTask instance");
         this.#downloadQueue.push(task);
         if (this.#downloadQueueResumeCallback) {
             const fn = this.#downloadQueueResumeCallback;
@@ -98,6 +100,15 @@ export default class VideoPreprocessor extends EventEmitter {
      */
     createProcessTask(options) {
         const task = new ProcessTask(options);
+        this.addProcessTask(task);
+        return task;
+    }
+
+    /**
+     * 添加处理任务
+     */
+    addProcessTask(task) {
+        assert(task instanceof ProcessTask, "task must be ProcessTask instace");
         this.#processQueue.push(task);
         if (this.#processQueueResumeCallback) {
             const fn = this.#processQueueResumeCallback;
@@ -119,7 +130,7 @@ export default class VideoPreprocessor extends EventEmitter {
             this.downloadTasks.push(task);
             this.#dispatchDownloadQueue();
         })()
-            .catch(err => this.#emitError(err));
+            .catch(err => console.error(err));
     }
 
     /**
@@ -135,7 +146,7 @@ export default class VideoPreprocessor extends EventEmitter {
             this.processTasks.push(task);
             this.#dispatchProcessQueue();
         })()
-            .catch(err => this.#emitError(err));
+            .catch(err => console.error(err));
     }
 
     /**
@@ -171,10 +182,10 @@ export default class VideoPreprocessor extends EventEmitter {
                     fn();
                 }
             }
-            setTimeout(this.#dispatchTasks.bind(this), 50);
+            setTimeout(this.#dispatchTasks.bind(this), 0);
         }
         catch (err) {
-            this.#emitError(err);
+            console.error(err);
         }
     }
 

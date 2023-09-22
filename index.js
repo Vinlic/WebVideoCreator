@@ -10,6 +10,7 @@ import Font from "./entity/Font.js";
 import Audio from "./entity/Audio.js";
 import examples from "./examples/index.js";
 import presetParser from "./lib/preset-parser.js";
+import cleaner from "./lib/cleaner.js";
 import util from "./lib/util.js";
 import { VIDEO_CODEC, AUDIO_CODEC, TRANSITION } from "./lib/const.js";
 
@@ -25,6 +26,7 @@ export {
     Font,
     Audio,
     examples,
+    cleaner,
     util,
     presetParser,
     VIDEO_CODEC,

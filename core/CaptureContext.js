@@ -660,11 +660,11 @@ export default class CaptureContext {
      * 拉取响应
      * 
      * @param {string} url - 拉取URL
-     * @param {number} [retryCount=2] - 重试次数
+     * @param {number} [retryFetchs=2] - 重试次数
      * @param {number} [retryDelay=500] - 重试延迟
      * @returns {Response} - 响应对象
      */
-    async fetch(url, retryCount = 2, retryDelay = 500, _retryIndex = 0) {
+    async fetch(url, retryFetchs = 2, retryDelay = 500, _retryIndex = 0) {
         return await new Promise((resolve, reject) => {
             fetch(url)
                 .then(response => {
@@ -674,10 +674,10 @@ export default class CaptureContext {
                         resolve(response);
                 })
                 .catch(err => {
-                    if (_retryIndex >= retryCount)
+                    if (_retryIndex >= retryFetchs)
                         reject(err);
                     else
-                        window.____setTimeout(() => this.fetch(url, retryCount, retryDelay, _retryIndex + 1), retryDelay);
+                        window.____setTimeout(() => this.fetch(url, retryFetchs, retryDelay, _retryIndex + 1), retryDelay);
                 });
         });
     }

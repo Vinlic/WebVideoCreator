@@ -1,4 +1,4 @@
-import VideoConfig from "../video-preprocessor/VideoConfig.js";
+import VideoConfig from "../preprocessor/video/VideoConfig.js";
 
 export default class VideoCanvas {
 
