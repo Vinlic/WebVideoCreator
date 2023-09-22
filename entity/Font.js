@@ -40,7 +40,6 @@ export default class Font {
         this.format = format;
         this.style = style;
         this.weight = _.isNumber(weight) ? parseInt(weight) : weight;
-        this.#tmpDirPath = util.rootPathJoin(`tmp/preprocessor/`);
     }
 
     /**
