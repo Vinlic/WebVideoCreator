@@ -49,7 +49,7 @@ export default class DownloadTask extends Task {
      * @param {string} url 资源URL
      */
     async #downloadFile(url) {
-        const filePath = path.join(this._tmpDirPath, this.#urlToPath(url));
+        const filePath = path.join(this._tmpDirPath, util.urlToPath(url));
         await downloadLock.acquire(util.crc32(url), async () => {
             if (await fs.pathExists(filePath)) return filePath;
             await fs.ensureDir(path.dirname(filePath), { recursive: true });
@@ -60,19 +60,6 @@ export default class DownloadTask extends Task {
             await fs.move(`${filePath}.tmp`, filePath);
         });
         return filePath;
-    }
-
-    /**
-     * URL转本地路径
-     * 
-     * @param {string} value - URL
-     * @returns {string} - 路径
-     */
-    #urlToPath(value) {
-        return value
-            .replace(/(\d+)\.(\d+)\.(\d+)\.(\d+):(\d+)/g, "$1_$2_$3_$4_$5")
-            .replace(/^(http|https):\/\//, "")
-            .replace(/\?.+/, "");
     }
 
 }

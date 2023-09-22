@@ -5,7 +5,7 @@ import util from "../../lib/util.js";
 
 export default class VideoConfig {
 
-    /** @type {string} - 视频来源URL */
+    /** @type {string} - 视频URL */
     url;
     /** @type {number} - 开始播放时间点（毫秒） */
     startTime;
@@ -28,7 +28,8 @@ export default class VideoConfig {
      * 构造函数
      * 
      * @param {Object} options - 视频配置选项
-     * @param {string} options.url - 视频来源
+     * @param {string} options.url - 视频URL
+     * @param {string} [options.format] - 视频格式（mp4/webm）
      * @param {number} [options.startTime=0] - 开始播放时间点（毫秒）
      * @param {number} [options.endTime=Infinity] - 结束播放时间点（毫秒）
      * @param {number} [options.seekStart=0] - 裁剪开始时间点（毫秒）
@@ -40,8 +41,9 @@ export default class VideoConfig {
      */
     constructor(options) {
         assert(_.isObject(options), "VideoConfig options must be Object");
-        const { url, startTime, endTime, seekStart, seekEnd, autoplay, loop, muted } = options;
+        const { url, format, startTime, endTime, seekStart, seekEnd, autoplay, loop, muted, retryFetchs } = options;
         assert(util.isURL(url), "url is invalid");
+        assert(_.isNil(format) || _.isString(format), "format mudt be string");
         assert(_.isNil(startTime) || _.isFinite(startTime), "startTime must be number");
         assert(_.isNil(endTime) || _.isFinite(endTime), "endTime must be number");
         assert(_.isNil(seekStart) || _.isFinite(seekStart), "seekStart must be number");
@@ -49,7 +51,8 @@ export default class VideoConfig {
         assert(_.isNil(autoplay) || _.isBoolean(autoplay), "autoplay must be number");
         assert(_.isNil(loop) || _.isBoolean(loop), "loop must be number");
         assert(_.isNil(muted) || _.isBoolean(muted), "muted must be number");
-        this.url = _.defaultTo(url, undefined);
+        this.url = url;
+        this.format = _.defaultTo(format, util.getURLExtname(this.url));
         this.startTime = _.defaultTo(startTime, 0);
         this.endTime = _.defaultTo(endTime, Infinity);
         this.seekStart = _.defaultTo(seekStart, undefined);
@@ -57,6 +60,7 @@ export default class VideoConfig {
         this.autoplay = _.defaultTo(autoplay, false);
         this.loop = _.defaultTo(loop, false);
         this.muted = _.defaultTo(muted, false);
+        this.retryFetchs = _.defaultTo(retryFetchs, 2);
     }
 
 }

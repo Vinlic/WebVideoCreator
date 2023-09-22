@@ -5,6 +5,8 @@ export default class DynamicImage {
 
     /** @type {string} - 图像来源 */
     url;
+    /** @type {string} - 图像格式（gif/webp/apng） */
+    format;
     /** @type {number} - 开始播放时间点（毫秒） */
     startTime;
     /** @type {number} - 结束播放时间（毫秒） */
@@ -39,6 +41,7 @@ export default class DynamicImage {
      * 
      * @param {Object} options - 动态图像选项
      * @param {string} options.url - 图像来源
+     * @param {string} options.format - 图像格式
      * @param {number} [options.startTime=0] - 开始播放时间点（毫秒）
      * @param {number} [options.endTime=Infinity] - 结束播放时间点（毫秒）
      * @param {boolean} [options.loop] - 是否强制循环
@@ -47,8 +50,9 @@ export default class DynamicImage {
     constructor(options) {
         if (!options instanceof Object)
             throw new Error("DemuxedVideo options must be Object");
-        const { url, startTime, endTime, loop, retryFetchs } = options;
+        const { url, format, startTime, endTime, loop, retryFetchs } = options;
         this.url = url;
+        this.format = format;
         this.startTime = startTime || 0;
         this.endTime = endTime || Infinity;
         this.loop = loop;

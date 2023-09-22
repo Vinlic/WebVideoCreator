@@ -33,8 +33,8 @@ export default class Font {
         assert(_.isString(src), "Font src must be string");
         assert(_.isString(family), "Font family must be string");
         assert(_.isString(format), "Font format must be string");
-        assert(_.isUndefined(style) || _.isString(style), "Font style must be string");
-        assert(_.isUndefined(weight) || _.isFinite(weight) || _.isString(weight), "Font weight must be number or string");
+        assert(_.isNil(style) || _.isString(style), "Font style must be string");
+        assert(_.isNil(weight) || _.isFinite(weight) || _.isString(weight), "Font weight must be number or string");
         this.src = src;
         this.family = family;
         this.format = format;

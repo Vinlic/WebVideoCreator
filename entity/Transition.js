@@ -24,7 +24,7 @@ export default class Transition {
         const { id, duration } = options;
         assert(_.isString(id), "Transition id must be string");
         assert(TRANSITION_IDS.includes(id), `Transition id ${id} may not be supported, please refer to http://trac.ffmpeg.org/wiki/Xfade`);
-        assert(_.isUndefined(duration) || _.isNumber(duration), "Transition duration must be number");
+        assert(_.isNil(duration) || _.isNumber(duration), "Transition duration must be number");
         this.id = id;
         this.duration = _.defaultTo(duration, 500);
     }

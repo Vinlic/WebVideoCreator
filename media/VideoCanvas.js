@@ -2,8 +2,10 @@ import VideoConfig from "../preprocessor/video/VideoConfig.js";
 
 export default class VideoCanvas {
 
-    /** @type {string} - 视频来源 */
+    /** @type {string} - 视频URL */
     url;
+    /** @type {string} - 视频格式 */
+    format;
     /** @type {number} - 开始播放时间点（毫秒） */
     startTime;
     /** @type {number} - 结束播放时间（毫秒） */
@@ -28,11 +30,27 @@ export default class VideoCanvas {
     destoryed = false;
     loaded = false;
 
+    /**
+     * 构造函数
+     * 
+     * @param {Object} options - 视频配置选项
+     * @param {string} options.url - 视频URL
+     * @param {string} [options.format] - 视频格式（mp4/webm）
+     * @param {number} [options.startTime=0] - 开始播放时间点（毫秒）
+     * @param {number} [options.endTime=Infinity] - 结束播放时间点（毫秒）
+     * @param {number} [options.seekStart=0] - 裁剪开始时间点（毫秒）
+     * @param {number} [options.seekEnd] - 裁剪结束时间点（毫秒）
+     * @param {boolean} [options.autoplay=false] - 是否自动播放
+     * @param {boolean} [options.loop=false] - 是否循环播放
+     * @param {boolean} [options.muted=false] - 是否静音
+     * @param {boolean} [options.retryFetchs=2] - 重试下载次数
+     */
     constructor(options) {
         if (!options instanceof Object)
             throw new Error("VideoCanvas options must be Object");
-        const { url, startTime, endTime, seekStart, seekEnd, autoplay, loop, muted, retryFetchs } = options;
+        const { url, format, startTime, endTime, seekStart, seekEnd, autoplay, loop, muted, retryFetchs } = options;
         this.url = url;
+        this.format = format;
         this.startTime = startTime || 0;
         this.endTime = endTime || Infinity;
         this.seekStart = seekStart || 0;

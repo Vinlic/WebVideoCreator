@@ -7,6 +7,7 @@ export default class CaptureContext {
 
     /** 媒体选择器 */
     SVG_SELECTOR = "svg";
+    AUDIO_SELECTOR = 'audio[src$=".mp3"],audio[src$=".ogg"],audio[src$=".acc"],audio[src*=".mp3?"],audio[src*=".ogg?"],audio[src*=".aac?"],audio[capture]';
     VIDEO_SELECTOR = 'video[src$=".mp4"],video[src$=".webm"],video[src$=".mkv"],video[src*=".mp4?"],video[src*=".webm?"],video[src*=".mkv?"],video[capture]';
     DYNAMIC_IMAGE_SELECTOR = 'img[src$=".gif"],img[src$=".webp"],img[src$=".apng"],img[src*=".gif?"],img[src*=".webp?"],img[src*=".apng?"],img[capture]';
     LOTTIE_SELECTOR = "lottie";
@@ -172,11 +173,13 @@ export default class CaptureContext {
      * @private
      */
     _convertElementsToMedias() {
-        const svgs = Array.from(document.querySelectorAll(this.SVG_SELECTOR));
-        const videos = Array.from(document.querySelectorAll(this.VIDEO_SELECTOR));
-        const dynamicImages = Array.from(document.querySelectorAll(this.DYNAMIC_IMAGE_SELECTOR));
-        const lotties = Array.from(document.querySelectorAll(this.LOTTIE_SELECTOR));
+        const svgs = document.querySelectorAll(this.SVG_SELECTOR);
+        const audios = document.querySelectorAll(this.AUDIO_SELECTOR);
+        const videos = document.querySelectorAll(this.VIDEO_SELECTOR);
+        const dynamicImages = document.querySelectorAll(this.DYNAMIC_IMAGE_SELECTOR);
+        const lotties = document.querySelectorAll(this.LOTTIE_SELECTOR);
         svgs.forEach(e => captureCtx.convertToSvgAnimation(e));
+        audios.forEach(e => captureCtx.convertToInnerAudio(e));
         videos.forEach(e => captureCtx.convertToVideoCanvas(e));
         dynamicImages.forEach(e => captureCtx.convertToDynamicImage(e));
         lotties.forEach(e => captureCtx.convertToLottieCanvas(e));
@@ -198,6 +201,8 @@ export default class CaptureContext {
                             this.convertToSvgAnimation(addedNode);
                         else if (addedNode.matches(this.DYNAMIC_IMAGE_SELECTOR))
                             this.convertToDynamicImage(addedNode);
+                        else if (addedNode.matches(this.AUDIO_SELECTOR))
+                            this.convertToInnerAudio(addedNode);
                         else if (addedNode.matches(this.VIDEO_SELECTOR))
                             this.convertToVideoCanvas(addedNode);
                         else if (addedNode.matches(this.LOTTIE_SELECTOR))
@@ -418,6 +423,39 @@ export default class CaptureContext {
     }
 
     /**
+     * 将HTML视频元素转换为内部合成音频
+     * 
+     * @param {HTMLAudioElement} e - 视频元素
+     */
+    convertToInnerAudio(e) {
+        // 获取seek时间
+        const currentTimeAttribute = e.getAttribute("currentTime");
+        const options = {
+            // 音频来源
+            url: this._currentUrlJoin(e.getAttribute("src")),
+            // 音频格式
+            format: e.getAttribute("format"),
+            // 音频开始时间点（毫秒）
+            startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
+            // 音频结束时间点（毫秒）
+            endTime: e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime"),
+            // 音频裁剪开始时间点（毫秒）
+            seekStart: e.getNumberAttribute("seek-start") || e.getNumberAttribute("seekStart") || (currentTimeAttribute ? parseInt(currentTimeAttribute) * 1000 : null),
+            // 音频裁剪结束时间点（毫秒）
+            seekEnd: e.getNumberAttribute("seek-end") || e.getNumberAttribute("seekEnd"),
+            // 音频是否循环播放
+            loop: e.getBooleanAttribute("loop"),
+            // 音频是否自动播放
+            autoplay: e.getBooleanAttribute("autoplay"),
+            // 音频是否静音
+            muted: e.getBooleanAttribute("muted"),
+            // 拉取失败时重试拉取次数
+            retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs")
+        };
+        window.addAudio(options);
+    }
+
+    /**
      * 将HTML视频元素转换为视频画布
      * 
      * @param {HTMLVideoElement} e - 视频元素
@@ -428,6 +466,8 @@ export default class CaptureContext {
         const options = {
             // 视频来源
             url: this._currentUrlJoin(e.getAttribute("src")),
+            // 视频格式
+            format: e.getAttribute("format"),
             // 视频宽度
             width: parseInt(e.style.width) || e.getNumberAttribute("width") || e.width,
             // 视频高度
@@ -475,6 +515,8 @@ export default class CaptureContext {
         const options = {
             // 图像来源
             url: this._currentUrlJoin(e.getAttribute("src")),
+            // 图像格式
+            format: e.getAttribute("format"),
             // 图像宽度
             width: parseInt(e.style.width) || e.getNumberAttribute("width") || e.width,
             // 图像高度

@@ -12,6 +12,7 @@ import VideoCanvas from "../media/VideoCanvas.js";
 import DynamicImage from "../media/DynamicImage.js";
 import LottieCanvas from "../media/LottieCanvas.js";
 import VideoConfig from "../preprocessor/video/VideoConfig.js";
+import Audio from "../entity/Audio.js";
 import Font from "../entity/Font.js";
 import util from "../lib/util.js";
 
@@ -408,6 +409,8 @@ export default class Page extends EventEmitter {
         await this.target.exposeFunction("screencastCompleted", this.#emitScreencastCompleted.bind(this));
         // 暴露下一帧函数
         await this.target.exposeFunction("captureFrame", this.#captureFrame.bind(this));
+        // 暴露添加音频函数
+        await this.target.exposeFunction("addAudio", this.#addAudio.bind(this));
         // 暴露抛出错误函数
         await this.target.exposeFunction("throwError", (code = -1, message = "") => this.#emitError(new Error(`throw error: [${code}] ${message}`)));
         // 页面加载前进行上下文初始化
@@ -455,6 +458,15 @@ export default class Page extends EventEmitter {
             this.#emitError(err);
             return false;
         }
+    }
+
+    /**
+     * 添加音频
+     * 
+     * @param {Audio} options 
+     */
+    #addAudio(options) {
+        this.emit("audioAdd", new Audio(options));
     }
 
     /**
@@ -518,7 +530,6 @@ export default class Page extends EventEmitter {
                 request.continue();
         })()
             .catch(err => {
-                console.error(err);
                 request.respond({
                     status: 500,
                     body: err.stack

@@ -194,7 +194,7 @@ export default class Synthesizer extends EventEmitter {
         (async () => {
             await fs.ensureDir(path.dirname(this.outputPath));
             await fs.ensureDir(this.#tmpDirPath);
-            await this.#initResources();
+            await this.#waitForAudiosLoaded();
             await new Promise((resolve, reject) => {
                 this._createVideoEncoder()
                     .once("start", cmd => this.debug && console.log(cmd))
@@ -209,6 +209,7 @@ export default class Synthesizer extends EventEmitter {
                     .run();
             });
             if (this.audioSynthesis) {
+                await this.#waitForAudiosLoaded();
                 await new Promise((resolve, reject) => {
                     this._createAudioEncoder()
                         .once("start", cmd => this.debug && console.log(cmd))
@@ -219,6 +220,8 @@ export default class Synthesizer extends EventEmitter {
                 });
                 await fs.remove(this._swapFilePath);
             }
+            else
+                await fs.move(this._swapFilePath, this.outputPath);
             this.coverCapture && await this.#captureCover();
             this.#emitCompleted();
             this.#setState(Synthesizer.STATE.COMPLETED);
@@ -259,10 +262,10 @@ export default class Synthesizer extends EventEmitter {
     }
 
     /**
-     * 初始化资源
+     * 等待音频加载完成
      */
-    async #initResources() {
-        await Promise.all(this.audios.map(audio => audio.init()));
+    async #waitForAudiosLoaded() {
+        await Promise.all(this.audios.map(audio => audio.load()));
     }
 
     /**
@@ -316,8 +319,10 @@ export default class Synthesizer extends EventEmitter {
      * @param {Audio} audio - 音频对象
      */
     addAudio(audio) {
+        console.log(audio);
         if (!(audio instanceof Audio))
             audio = new Audio(audio);
+        audio.load();
         this.#audios.push(audio);
     }
 
@@ -381,7 +386,7 @@ export default class Synthesizer extends EventEmitter {
             // 指定输出格式
             .toFormat(format)
             // 指定输出路径
-            .addOutput(audioSynthesis ? _swapFilePath : outputPath);
+            .addOutput(_swapFilePath);
         this.#encoder = vencoder;
         return vencoder;
     }
@@ -412,7 +417,7 @@ export default class Synthesizer extends EventEmitter {
             const { path, url, loop, startTime, endTime, duration, volume, seekStart, seekEnd, fadeInDuration, fadeOutDuration } = audio;
             const _volume = Math.floor(((volume / 100) * (videoVolume / 100)) * 100) / 100;
             const output = `a${index}`;
-            aencoder.addInput(path || url);
+            aencoder.addInput(path ? util.rootPathJoin(path) : url);
             loop && aencoder.inputOption("-stream_loop", "-1");
             !loop && seekStart && aencoder.addInputOption("-ss", util.millisecondsToHmss(seekStart));  //截取开始时间点
             !loop && seekEnd && aencoder.addInputOption("-to", util.millisecondsToHmss(seekEnd));  //截取结束时间点

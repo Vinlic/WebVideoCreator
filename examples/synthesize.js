@@ -70,9 +70,8 @@ export default async ({
     page.on("crashed", err => console.error("page crashed:", err));
     // 设置视窗宽高
     await page.setViewport({ width, height });
-    // 跳转到您希望渲染的页面，您可以考虑创建一个本地的Web服务器提供页面以提升加载速度和安全性
-    await page.goto(url);
-    
+
+
     console.time("\nrender");
     // 实例化合成器实例
     const synthesizer = new Synthesizer({
@@ -97,10 +96,15 @@ export default async ({
     synthesizer.on("progress", (progress, frameCount) => progressBar.update(frameCount));
     // 监听合成器错误
     synthesizer.on("error", err => console.error(err));
-    synthesizer.addAudio({
-        path: "test.mp3",
-        // loop: true
-    });
+
+    page.on("audioAdd", options => synthesizer.addAudio(options));
+    // 跳转到您希望渲染的页面，您可以考虑创建一个本地的Web服务器提供页面以提升加载速度和安全性
+    await page.goto(url);
+
+    // synthesizer.addAudio({
+    //     path: "2.aac",
+    //     // loop: true
+    // });
     // 启动合成
     synthesizer.start();
     // 合成完成promise
@@ -116,7 +120,7 @@ export default async ({
     });
     // 监听并等待录制完成
     await new Promise(resolve => page.once("screencastCompleted", resolve));
-    
+
     // 停止录制
     await page.stopScreencast();
     // 释放页面资源
