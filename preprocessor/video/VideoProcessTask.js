@@ -24,7 +24,6 @@ export default class VideoProcessTask extends ProcessTask {
      * @param {number} [options.retryDelay=1000] - 重试延迟
      */
     constructor(options) {
-        console.log(options);
         super(options);
         const { filePath, seekStart, seekEnd, loop, muted } = options;
         assert(_.isString(filePath), "filePath must be string");
@@ -40,7 +39,7 @@ export default class VideoProcessTask extends ProcessTask {
     }
 
     async process() {
-        
+        // throw new Error("BOOM");
         return Buffer.from("123");
     }
 

@@ -75,14 +75,18 @@ export default class VideoCanvas {
     async load() {
         try {
             console.time();
-            const response = await fetch("video_preprocess", {
+            this.loaded = true;
+            const response = await window.captureCtx.fetch("video_preprocess", {
                 method: "POST",
-                body: JSON.stringify(this)
+                body: JSON.stringify(this),
+                retryFetchs: 0
             });
+            console.timeEnd();
+            if(!response)
+                return;
             const buffer = await response.arrayBuffer();
             console.log(buffer.byteLength);
-            console.timeEnd();
-            this.loaded = true;
+            // this.loaded = true;
         }
         catch(err) {
             console.log(err);

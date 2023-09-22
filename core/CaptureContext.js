@@ -660,15 +660,21 @@ export default class CaptureContext {
      * 拉取响应
      * 
      * @param {string} url - 拉取URL
-     * @param {number} [retryFetchs=2] - 重试次数
-     * @param {number} [retryDelay=500] - 重试延迟
+     * @param {Object} options - 拉取选项
+     * @param {number} [options.method="GET"] - 请求方法
+     * @param {number} [options.body] - 请求体
+     * @param {number} [options.retryFetchs=2] - 重试次数
+     * @param {number} [options.retryDelay=500] - 重试延迟
      * @returns {Response} - 响应对象
      */
-    async fetch(url, retryFetchs = 2, retryDelay = 500, _retryIndex = 0) {
+    async fetch(url, options = {}, _retryIndex = 0) {
+        const { retryFetchs = 2, retryDelay = 500, ...fetchOptions } = options;
         return await new Promise((resolve, reject) => {
-            fetch(url)
-                .then(response => {
-                    if (response.status >= 400)
+            fetch(url, fetchOptions)
+                .then(async response => {
+                    if (response.status >= 500)
+                        throw new Error(`Failed to load resource: [${fetchOptions.method || "GET"}] ${response.url} - [${response.status}] ${response.statusText}\n${await response.text()}`);
+                    else if (response.status >= 400)
                         resolve(null);
                     else
                         resolve(response);
@@ -677,7 +683,7 @@ export default class CaptureContext {
                     if (_retryIndex >= retryFetchs)
                         reject(err);
                     else
-                        window.____setTimeout(() => this.fetch(url, retryFetchs, retryDelay, _retryIndex + 1), retryDelay);
+                        window.____setTimeout(() => this.fetch(url, options, _retryIndex + 1), retryDelay);
                 });
         });
     }

@@ -26,9 +26,11 @@ export default class DownloadTask extends Task {
      */
     constructor(options) {
         super(options);
-        const { url } = options;
+        const { url, retryFetchs } = options;
         assert(util.isURL(url), "url is invalid");
+        assert(_.isUndefined(retryFetchs) || _.isFinite(retryFetchs), "url is invalid");
         this.url = url;
+        this.retryCount = retryFetchs;
     }
 
     /**

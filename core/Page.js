@@ -521,7 +521,7 @@ export default class Page extends EventEmitter {
                 console.error(err);
                 request.respond({
                     status: 500,
-                    body: `${err.message}\n${err.stack}`
+                    body: err.stack
                 });
             })
     }
