@@ -158,7 +158,7 @@ export default class CaptureContext {
             transform: "rotate(0deg)"
         });
         // 加入到body中
-        document.body.appendChild(captureHelper);
+        (document.body || document).appendChild(captureHelper);
         let rotate = 0;
         (function update() {
             rotate = rotate >= 360 ? 0 : (rotate + 0.1);
@@ -211,7 +211,7 @@ export default class CaptureContext {
                 }
             }
         });
-        observer.observe(document.body, {
+        observer.observe(document.body || document, {
             childList: true,
             subtree: true,
             attributes: false,
@@ -229,7 +229,7 @@ export default class CaptureContext {
                     return `${t}\n${v.stack} `;
                 else if (v instanceof Object)
                     return `${t}${JSON.stringify(v)} `;
-                return `${t}${v.toString()} `;
+                return `${t}${v} `;
             }, "")));
         console.____log = console.log;
         console.log = getPrintFun(console.____log);

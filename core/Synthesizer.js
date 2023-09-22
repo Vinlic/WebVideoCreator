@@ -319,7 +319,6 @@ export default class Synthesizer extends EventEmitter {
      * @param {Audio} audio - 音频对象
      */
     addAudio(audio) {
-        console.log(audio);
         if (!(audio instanceof Audio))
             audio = new Audio(audio);
         audio.load();

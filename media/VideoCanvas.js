@@ -86,29 +86,30 @@ export default class VideoCanvas {
         return true;
     }
 
-    isReady() {
-        return this.loaded;
-    }
-
     async load() {
         try {
             console.time();
             this.loaded = true;
             const response = await window.captureCtx.fetch("video_preprocess", {
                 method: "POST",
-                body: JSON.stringify(this),
+                body: JSON.stringify(this._exportConfig()),
                 retryFetchs: 0
             });
             console.timeEnd();
-            if(!response)
+            if (!response)
                 return;
             const buffer = await response.arrayBuffer();
-            console.log(buffer.byteLength);
+            const data = this._unpackData(buffer);
+            console.log(data.buffer.length);
             // this.loaded = true;
         }
-        catch(err) {
+        catch (err) {
             console.log(err);
         }
+    }
+
+    isReady() {
+        return this.loaded;
     }
 
     async seek() {
@@ -131,5 +132,58 @@ export default class VideoCanvas {
 
     }
 
+    /**
+     * 导出视频配置
+     * 
+     * @returns {VideoConfig} - 视频配置
+     */
+    _exportConfig() {
+        return {
+            url: this.url,
+            format: this.format,
+            startTime: this.startTime,
+            endTime: this.endTime,
+            seekStart: this.seekStart,
+            seekEnd: this.seekEnd,
+            autoplay: this.autoplay,
+            loop: this.loop,
+            muted: this.muted,
+            retryFetchs: this.retryFetchs
+        };
+    }
+
+    /**
+     * 解包数据
+     * 从封装的ArrayBuffer中提取原始数据对象
+     * 
+     * @param {ArrayBuffer} packedData - 已封装数据
+     * @returns {Object} - 原始数据对象
+     */
+    _unpackData(packedData) {
+        const dataView = new DataView(packedData);
+        let delimiterIndex = -1;
+        for (let i = 0; i < dataView.byteLength; i++) {
+            if (dataView.getUint8(i) === '!'.charCodeAt(0)) {
+                delimiterIndex = i;
+                break;
+            }
+        }
+        if (delimiterIndex === -1)
+            throw new Error("Invalid data format: header delimiter not found");
+        const lengthBytes = new Uint8Array(dataView.buffer, 0, delimiterIndex);
+        const objLength = parseInt(String.fromCharCode(...lengthBytes));
+        if (isNaN(objLength) || objLength <= 0 || objLength > dataView.byteLength - delimiterIndex - 1)
+            throw new Error("Invalid data format: Invalid data length");
+        const objBytes = new Uint8Array(dataView.buffer, delimiterIndex + 1, objLength);
+        const obj = JSON.parse(new TextDecoder("utf-8").decode(objBytes));
+        const bufferOffset = delimiterIndex + 1 + objLength;
+        for (const key in obj) {
+            if (Array.isArray(obj[key]) && obj[key][0] === "buffer") {
+                const [_, start, end] = obj[key];
+                obj[key] = new Uint8Array(dataView.buffer, bufferOffset + start, end - start);
+            }
+        }
+        return obj;
+    }
 
 }

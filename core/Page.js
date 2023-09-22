@@ -22,10 +22,12 @@ import util from "../lib/util.js";
 
 // 默认用户UA
 const DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0";
+// MP4Box库脚本内容
+const MP4BOX_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/mp4box.js"), "utf-8");
 // Webfont库脚本内容
-const WEBFONT_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/webfont.js")).toString();
+const WEBFONT_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/webfont.js"), "utf-8");
 // Lottie动画库脚本内容
-const LOTTIE_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/lottie.js")).toString();
+const LOTTIE_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/lottie.js"), "utf-8");
 // 异步锁
 const asyncLock = new AsyncLock();
 // 页面计数
@@ -162,8 +164,12 @@ export default class Page extends EventEmitter {
     async goto(url) {
         // 页面导航到URL
         await this.target.goto(url);
-        // 注入Lottie动画库
-        await this.#injectLottieLibrary();
+        await Promise.all([
+            // 注入MP4Box库
+            this.#injectLibrary(MP4BOX_LIBRARY_SCRIPT_CONTENT),
+            // 注入Lottie动画库
+            this.#injectLibrary(LOTTIE_LIBRARY_SCRIPT_CONTENT)
+        ]);
     }
 
     /**
@@ -187,7 +193,7 @@ export default class Page extends EventEmitter {
      */
     async waitForFontsLoaded(timeout = 30000) {
         // 注入Webfont库
-        await this.#injectWebfontLibrary();
+        await this.#injectLibrary(WEBFONT_LIBRARY_SCRIPT_CONTENT);
         await this.target.evaluate(async _timeout => {
             // 获取样式表
             const styleSheets = Array.from(document.styleSheets);
@@ -218,29 +224,12 @@ export default class Page extends EventEmitter {
     }
 
     /**
-     * 注入Webfont库
+     * 注入脚本库
      */
-    async #injectWebfontLibrary() {
-        await this.target.evaluate(async _scriptContent => {
-            const scriptElement = document.createElement("script");
-            scriptElement.type = 'text/javascript';
-            scriptElement.text = _scriptContent;
-            document.body.appendChild(scriptElement);
-        }, WEBFONT_LIBRARY_SCRIPT_CONTENT);
-    }
-
-    /**
-     * 注入Lottie动画库
-     * 
-     * 来源：https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie_canvas.min.js
-     */
-    async #injectLottieLibrary() {
-        await this.target.evaluate(async _scriptContent => {
-            const scriptElement = document.createElement("script");
-            scriptElement.type = 'text/javascript';
-            scriptElement.text = _scriptContent;
-            document.body.appendChild(scriptElement);
-        }, LOTTIE_LIBRARY_SCRIPT_CONTENT);
+    async #injectLibrary(content) {
+        await this.target.addScriptTag({
+            content
+        });
     }
 
     /**

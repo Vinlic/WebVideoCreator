@@ -49,19 +49,50 @@ export default class VideoProcessTask extends ProcessTask {
     async process() {
         // 非静音音频需分离音频文件
         !this.muted && await this.#separateAudioFile();
-        if (this.format == "webm") {
-            const hasAlphaChannel = await util.checkMediaHasAplhaChannel(this.filePath);
-            if (hasAlphaChannel) {
+        // if (this.format == "webm") {
+        //     const hasAlphaChannel = await util.checkMediaHasAplhaChannel(this.filePath);
+        //     if (hasAlphaChannel) {
 
+        //     }
+        //     else {
+        //         return this.#packageData({
+        //             buffer: Buffer.from(await fs.readFile(this.filePath)),
+        //             maskBuffer: null,
+        //             hasAudio: this.hasAudio
+        //         });
+        //     }
+        // }
+        return this.#packData({
+            buffer: Buffer.from(await fs.readFile(this.filePath)),
+            maskBuffer: null,
+            hasAudio: this.hasAudio
+        });
+    }
+
+    /**
+     * 封装数据
+     * 将对象封装为Buffer才能回传浏览器页面处理
+     * 
+     * @param {Object} data - 数据对象
+     * @returns {Buffer} - 已封装Buffer
+     */
+    #packData(data) {
+        const obj = {};
+        const buffers = [];
+        let bufferOffset = 0;
+        for (let key in data) {
+            if (_.isBuffer(data[key])) {
+                obj[key] = ["buffer", bufferOffset, bufferOffset + data[key].length];
+                bufferOffset += data[key].length;
+                buffers.push(data[key]);
             }
-            else {
-
-            }
+            else
+                obj[key] = data[key];
         }
-        else {
-
-        }
-        return Buffer.from("123");
+        const objBuffer = Buffer.from(JSON.stringify(obj))
+        buffers.unshift(objBuffer);
+        buffers.unshift(Buffer.from(`${objBuffer.length}!`));
+        return Buffer.concat(buffers);
     }
 
     async #separateAudioFile() {
@@ -77,7 +108,7 @@ export default class VideoProcessTask extends ProcessTask {
         }
         else
             this.audioFilePath = audioFilePath;
-        if (!this.audioFilePath || !this.#hasSeek())
+        if (!this.audioFilePath || !this.hasCut)
             return;
         const { dir, base } = path.parse(this.audioFilePath);
         const cuttedAudioFilePath = path.join(dir, `cutted_${this.seekStart || 0}_${this.seekEnd || "n"}-${base}`);
@@ -91,8 +122,18 @@ export default class VideoProcessTask extends ProcessTask {
             this.audioFilePath = cuttedAudioFilePath;
     }
 
-    #hasSeek() {
+    /**
+     * 是否裁剪
+     */
+    get hasCut() {
         return this.seekStart > 0 || this.seekEnd > 0;
+    }
+
+    /**
+     * 是否包含音频
+     */
+    get hasAudio() {
+        return !!this.audioFilePath;
     }
 
 }
