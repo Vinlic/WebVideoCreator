@@ -443,6 +443,10 @@ export default class CaptureContext {
             seekStart: e.getNumberAttribute("seek-start") || e.getNumberAttribute("seekStart") || (currentTimeAttribute ? parseInt(currentTimeAttribute) * 1000 : null),
             // 音频裁剪结束时间点（毫秒）
             seekEnd: e.getNumberAttribute("seek-end") || e.getNumberAttribute("seekEnd"),
+            // 音频淡入时长（毫秒）
+            fadeInDuration: e.getNumberAttribute("fade-in-duration") || e.getNumberAttribute("fadeInDuration"),
+            // 音频淡出时长（毫秒）
+            fadeOutDuration: e.getNumberAttribute("fade-out-duration") || e.getNumberAttribute("fadeOutDuration"),
             // 音频是否循环播放
             loop: e.getBooleanAttribute("loop"),
             // 音频是否自动播放
@@ -450,7 +454,9 @@ export default class CaptureContext {
             // 音频是否静音
             muted: e.getBooleanAttribute("muted"),
             // 拉取失败时重试拉取次数
-            retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs")
+            retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs"),
+            // 是否忽略本地缓存
+            ignoreCache: e.getBooleanAttribute("ignore-cache") || e.getBooleanAttribute("ignoreCache")
         };
         window.addAudio(options);
     }
