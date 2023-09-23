@@ -20,17 +20,17 @@ export default class DownloadTask extends Task {
      * 构造函数
      * 
      * @param {Object} options - 任务选项
-     * @param {string} url - 资源URL
-     * @param {number} [retryFetchs=2] - 重试次数
-     * @param {number} [retryDelay=1000] - 重试延迟
+     * @param {string} options.url - 资源URL
+     * @param {number} [options.retryFetchs=2] - 重试次数
+     * @param {number} [options.retryDelay=1000] - 重试延迟
      */
     constructor(options) {
         super(options);
         const { url, retryFetchs } = options;
         assert(util.isURL(url), "url is invalid");
-        assert(_.isUndefined(retryFetchs) || _.isFinite(retryFetchs), "url is invalid");
+        assert(_.isUndefined(retryFetchs) || _.isFinite(retryFetchs), "retryFetchs must be number");
         this.url = url;
-        this.retryCount = retryFetchs;
+        this.retryCount = retryFetchs || 2;
     }
 
     /**
@@ -51,7 +51,7 @@ export default class DownloadTask extends Task {
     async #downloadFile(url) {
         const filePath = path.join(this._tmpDirPath, util.urlToPath(url));
         await downloadLock.acquire(util.crc32(url), async () => {
-            if (await fs.pathExists(filePath)) return filePath;
+            if (!this.ignoreCache && await fs.pathExists(filePath)) return filePath;
             await fs.ensureDir(path.dirname(filePath), { recursive: true });
             const writeStream = fs.createWriteStream(`${filePath}.tmp`);
             await util.download(url, writeStream, {

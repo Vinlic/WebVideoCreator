@@ -48,6 +48,8 @@ export default class Task extends EventEmitter {
     errorTime;
     /** @type {number} - 创建时间点（毫秒） */
     createTime = performance.now();
+    /** @type {boolean} - 是否忽略本地缓存 */
+    ignoreCache;
     /** @type {string} @protected 临时路径 */
     _tmpDirPath = TMP_DIR_PATH;
 
@@ -57,15 +59,23 @@ export default class Task extends EventEmitter {
      * @param {Object} options - 任务选项
      * @param {number} [retryCount=2] - 重试次数
      * @param {number} [retryDelay=1000] - 重试延迟
+     * @param {boolean} [options.ignoreCache=false] - 是否忽略本地缓存
      */
     constructor(options) {
         super();
         assert(_.isObject(options), "Task options must be Object");
-        const { retryCount, retryDelay } = options;
+        const { retryCount, retryDelay, ignoreCache } = options;
+        assert(_.isUndefined(retryCount) || _.isFinite(retryCount), "retryCount must be number");
+        assert(_.isUndefined(retryDelay) || _.isFinite(retryDelay), "retryDelay must be number");
+        assert(_.isUndefined(ignoreCache) || _.isBoolean(ignoreCache), "ignoreCache must be boolean");
         this.retryCount = _.defaultTo(retryCount, 2);
         this.retryDelay = _.defaultTo(retryDelay, 1000);
+        this.ignoreCache = ignoreCache || false;
     }
 
+    /**
+     * 启动任务
+     */
     start() {
         this.#setState(Task.STATE.EXECUTING);
         this.startupTime = performance.now();

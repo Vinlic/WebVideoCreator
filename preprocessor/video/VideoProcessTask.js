@@ -98,7 +98,7 @@ export default class VideoProcessTask extends ProcessTask {
     async #separateAudioFile() {
         const audioFormat = "mp3";
         const audioFilePath = `${this.filePath}.${audioFormat}`;
-        if (!await fs.pathExists(audioFilePath)) {
+        if (this.ignoreCache || !await fs.pathExists(audioFilePath)) {
             const hasAudioTrack = await util.separateVideoAudioTrack(this.filePath, audioFilePath, {
                 audioCodec: "libmp3lame",
                 outputFormat: audioFormat
@@ -112,7 +112,7 @@ export default class VideoProcessTask extends ProcessTask {
             return;
         const { dir, base } = path.parse(this.audioFilePath);
         const cuttedAudioFilePath = path.join(dir, `cutted_${this.seekStart || 0}_${this.seekEnd || "n"}-${base}`);
-        if (!await fs.pathExists(cuttedAudioFilePath)) {
+        if (this.ignoreCache || !await fs.pathExists(cuttedAudioFilePath)) {
             await util.cutAudio(this.audioFilePath, cuttedAudioFilePath, {
                 seekStart: this.seekStart,
                 seekEnd: this.seekEnd

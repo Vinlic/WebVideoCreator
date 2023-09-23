@@ -493,7 +493,9 @@ export default class CaptureContext {
             // 视频是否静音
             muted: e.getBooleanAttribute("muted"),
             // 拉取失败时重试拉取次数
-            retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs")
+            retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs"),
+            // 是否忽略本地缓存
+            ignoreCache: e.getBooleanAttribute("ignore-cache") || e.getBooleanAttribute("ignoreCache")
         };
         // 创建画布元素
         const canvas = this._createCanvas(options);

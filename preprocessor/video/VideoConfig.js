@@ -23,6 +23,8 @@ export default class VideoConfig {
     muted;
     /** @type {number} - 重试下载次数 */
     retryFetchs;
+    /** @type {boolean} - 是否忽略本地缓存 */
+    ignoreCache;
 
     /**
      * 构造函数
@@ -38,10 +40,11 @@ export default class VideoConfig {
      * @param {boolean} [options.loop=false] - 是否循环播放
      * @param {boolean} [options.muted=false] - 是否静音
      * @param {boolean} [options.retryFetchs=2] - 重试下载次数
+     * @param {boolean} [options.ignoreCache=false] - 是否忽略本地缓存
      */
     constructor(options) {
         assert(_.isObject(options), "VideoConfig options must be Object");
-        const { url, format, startTime, endTime, seekStart, seekEnd, autoplay, loop, muted, retryFetchs } = options;
+        const { url, format, startTime, endTime, seekStart, seekEnd, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
         assert(util.isURL(url), "url is invalid");
         assert(_.isNil(format) || _.isString(format), "format mudt be string");
         assert(_.isNil(startTime) || _.isFinite(startTime), "startTime must be number");
@@ -61,6 +64,7 @@ export default class VideoConfig {
         this.loop = _.defaultTo(loop, false);
         this.muted = _.defaultTo(muted, false);
         this.retryFetchs = _.defaultTo(retryFetchs, 2);
+        this.ignoreCache = _.defaultTo(ignoreCache, false);
     }
 
 }

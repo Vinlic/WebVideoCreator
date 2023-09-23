@@ -22,6 +22,8 @@ export default class VideoCanvas {
     muted;
     /** @type {number} - 重试下载次数 */
     retryFetchs;
+    /** @type {boolean} - 是否忽略本地缓存 */
+    ignoreCache;
     /** @type {number} - 帧索引 */
     frameIndex = 0;
     /** @type {number} - 当前播放时间点（毫秒） */
@@ -44,11 +46,12 @@ export default class VideoCanvas {
      * @param {boolean} [options.loop=false] - 是否循环播放
      * @param {boolean} [options.muted=false] - 是否静音
      * @param {boolean} [options.retryFetchs=2] - 重试下载次数
+     * @param {boolean} [options.ignoreCache=false] - 是否忽略本地缓存
      */
     constructor(options) {
         if (!options instanceof Object)
             throw new Error("VideoCanvas options must be Object");
-        const { url, format, startTime, endTime, seekStart, seekEnd, autoplay, loop, muted, retryFetchs } = options;
+        const { url, format, startTime, endTime, seekStart, seekEnd, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
         this.url = url;
         this.format = format;
         this.startTime = startTime || 0;
@@ -59,6 +62,7 @@ export default class VideoCanvas {
         this.loop = loop || false;
         this.muted = muted || false;
         this.retryFetchs = retryFetchs || 2;
+        this.ignoreCache = ignoreCache || false;
     }
 
     /**
@@ -148,7 +152,8 @@ export default class VideoCanvas {
             autoplay: this.autoplay,
             loop: this.loop,
             muted: this.muted,
-            retryFetchs: this.retryFetchs
+            retryFetchs: this.retryFetchs,
+            ignoreCache: this.ignoreCache
         };
     }
 
