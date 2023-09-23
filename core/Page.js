@@ -524,7 +524,7 @@ export default class Page extends EventEmitter {
                 if (_.isError(data))
                     throw new Error("api /video_preprocess only accept JSON data");
                 const buffer = await this.#preprocessVideo(new VideoConfig(data));
-                request.respond({
+                await request.respond({
                     status: 200,
                     body: buffer
                 });
@@ -533,13 +533,13 @@ export default class Page extends EventEmitter {
             else if (method == "GET" && /^\/local_font\//.test(pathname)) {
                 const filePath = path.join(util.rootPathJoin("tmp/local_font/"), pathname.substring(12));
                 if (!await fs.pathExists(filePath)) {
-                    return request.respond({
+                    return await request.respond({
                         status: 404,
                         body: "File not exists"
                     });
                 }
                 else {
-                    request.respond({
+                    await request.respond({
                         status: 200,
                         body: await fs.readFile(filePath),
                         headers: {
@@ -549,23 +549,17 @@ export default class Page extends EventEmitter {
                     });
                 }
             }
-            // 由内部处理的数据只响应空数据，避免占用带宽
-            else if (["mp4", "webm", "mkv", "mp3", "aac", "ogg"].includes(path.extname(pathname).substring(1))) {
-                request.respond({
-                    status: 200,
-                    body: ""
-                });
-            }
             // 其它请求透传
             else
-                request.continue();
+                await request.continue();
         })()
             .catch(err => {
                 // 发生错误响应500
                 request.respond({
                     status: 500,
                     body: err.stack
-                });
+                })
+                    .catch(err => console.error(err));
             })
     }
 
