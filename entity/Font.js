@@ -69,7 +69,7 @@ export default class Font {
         this.weight = _.isNumber(weight) ? parseInt(weight) : weight;
         this.retryFetchs = _.defaultTo(retryFetchs, 2);
         this.ignoreCache = _.defaultTo(ignoreCache, false);
-        this.#tmpDirPath = util.rootPathJoin(`tmp/font/`);
+        this.#tmpDirPath = util.rootPathJoin(`tmp/local_font/`);
     }
 
     /**
@@ -93,37 +93,11 @@ export default class Font {
                 await fs.copy(filePath, destPath);
                 this.#innerURL = path.join("local_font/", dirPath, base).replace(/\\/g, "/");
             }
-            else if(this.url) {
-                this.path = await this.#downloadFile(this.url);
-                this.#innerURL = path.join("local_font/", util.urlToPath(this.url)).replace(/\\/g, "/");
-            }
+            else if(this.url)
+                this.#innerURL = this.url;
 
         })();
         return this.#loadPromise;
-    }
-
-    /**
-     * 下载文件
-     *
-     * @param {string} url 资源URL
-     */
-    async #downloadFile(url) {
-        const filePath = path.join(this.#tmpDirPath, util.urlToPath(url));
-        await downloadLock.acquire(util.crc32(url), async () => {
-            if (!this.ignoreCache && await fs.pathExists(filePath)) return filePath;
-            await fs.ensureDir(path.dirname(filePath), { recursive: true });
-            const writeStream = fs.createWriteStream(`${filePath}.tmp`);
-            await util.download(url, writeStream, {
-                mimesLimit: [
-                    /^font\//,
-                    /^application\/(x-)?font/,
-                    /^application\/vnd.ms-fontobject/
-                ],
-                retryFetchs: this.retryFetchs
-            });
-            await fs.move(`${filePath}.tmp`, filePath);
-        });
-        return filePath;
     }
 
     /**
