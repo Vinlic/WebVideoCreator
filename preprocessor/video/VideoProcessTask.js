@@ -1,4 +1,3 @@
-import path from "path";
 import fs from "fs-extra";
 import assert from "assert";
 import _ from "lodash";
@@ -10,21 +9,34 @@ import Audio from "../../entity/Audio.js";
 import util from "../../lib/util.js";
 import { VIDEO_CODEC } from "../../lib/const.js";
 
+// 处理异步锁
 const processLock = new AsyncLock();
 
 export default class VideoProcessTask extends ProcessTask {
 
+    /** @type {string} - 视频文件路径 */
     filePath;
-    maskFilePath;
-    audioFilePath;
-    convertedFilePath;
-    startTime;
-    endTime;
+    /** @type {string} - 视频格式 */
     format;
+    /** @type {string} - 蒙版视频文件路径 */
+    maskFilePath;
+    /** @type {string} - 音频文件路径 */
+    audioFilePath;
+    /** @type {string} - 已转码文件路径 */
+    transcodedFilePath;
+    /** @type {number} - 开始播放时间点（毫秒） */
+    startTime;
+    /** @type {number} - 结束播放时间点 */
+    endTime;
+    /** @type {number} - 裁剪开始时间点（毫秒） */
     seekStart;
+    /** @type {number} - 裁剪结束时间点（毫秒） */
     seekEnd;
+    /** @type {boolean} - 是否循环播放 */
     loop;
+    /** @type {boolean} - 是否静音 */
     muted;
+    /** @type {string} - 视频编码器 */
     videoCodec;
 
     /**
@@ -90,7 +102,7 @@ export default class VideoProcessTask extends ProcessTask {
             }) : null,
             // video_preprocess响应回传到浏览器的数据
             buffer: this.#packData({
-                buffer: Buffer.from(await fs.readFile(this.convertedFilePath || this.filePath)),
+                buffer: Buffer.from(await fs.readFile(this.transcodedFilePath || this.filePath)),
                 maskBuffer: this.maskFilePath ? Buffer.from(await fs.readFile(this.maskFilePath)) : null,
                 hasAudio: this.hasAudio
             })
@@ -103,8 +115,10 @@ export default class VideoProcessTask extends ProcessTask {
     async #videoMaskExtract() {
         return await processLock.acquire(`videoMaskExtract-${util.crc32(this.filePath)}`, async () => {
             const maskFilePath = `${this.filePath}_mask.mp4`
-            if (await fs.pathExists(maskFilePath))  //如果文件存在则跳过处理
+            if (!this.ignoreCache && await fs.pathExists(maskFilePath)) {
+                this.maskFilePath = maskFilePath;
                 return;
+            }
             const videoCodecName = await util.getMediaVideoCodecName(this.filePath);
             let codec;
             switch (videoCodecName) {
@@ -118,7 +132,7 @@ export default class VideoProcessTask extends ProcessTask {
                     throw new Error(`Video file ${this.filePath} codec name ${videoCodecName} is not supported`);
             }
             await new Promise((resolve, reject) => {
-                ffmpeg(filePath)
+                ffmpeg(this.filePath)
                     .addInputOption(`-c:v ${codec}`)
                     .videoFilter("alphaextract")
                     .addOutputOption(`-c:v ${this.videoCodec}`)
@@ -138,9 +152,11 @@ export default class VideoProcessTask extends ProcessTask {
      */
     async #videoTranscoding() {
         return await processLock.acquire(`videoTranscoding-${util.crc32(this.filePath)}`, async () => {
-            const convertedFilePath = `${this.filePath}.mp4`;
-            if (await fs.pathExists(convertedFilePath))  //如果文件存在则跳过处理
+            const transcodedFilePath = `${this.filePath}_transcoded.mp4`;
+            if (!this.ignoreCache && await fs.pathExists(transcodedFilePath)) {
+                this.transcodedFilePath = transcodedFilePath;
                 return;
+            }
             const videoCodecName = await util.getMediaVideoCodecName(this.filePath);
             let codec;
             switch (videoCodecName) {
@@ -154,18 +170,18 @@ export default class VideoProcessTask extends ProcessTask {
                     throw new Error(`Video file ${this.filePath} codec name ${videoCodecName} is not supported`);
             }
             await new Promise((resolve, reject) => {
-                ffmpeg(filePath)
+                ffmpeg(this.filePath)
                     .addInputOption(`-c:v ${codec}`)
                     .addOutputOption(`-c:v ${this.videoCodec}`)
                     .addOutputOption("-an")
                     .addOutputOption("-crf 18")
-                    .addOutput(convertedFilePath)
+                    .addOutput(transcodedFilePath)
                     .once("start", cmd => logger.info(cmd))
                     .once("end", resolve)
                     .once("error", reject)
                     .run();
             });
-            this.convertedFilePath = convertedFilePath;
+            this.transcodedFilePath = transcodedFilePath;
         });
     }
 

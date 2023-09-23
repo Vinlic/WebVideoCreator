@@ -487,7 +487,7 @@ export default class Page extends EventEmitter {
         const videoPreprocessor = this.videoPreprocessor;
         this.emit("videoPreprocess", config);
         const { audio, buffer } = await videoPreprocessor.process(config);
-        this.emit("audioAdd", audio);
+        audio && this.emit("audioAdd", audio);
         return buffer;
     }
 
