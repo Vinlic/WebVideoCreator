@@ -221,7 +221,7 @@ export default class Synthesizer extends EventEmitter {
                 await fs.remove(this._swapFilePath);
             }
             else
-                await fs.move(this._swapFilePath, this.outputPath);
+                await fs.move(this._swapFilePath, this.outputPath, { overwrite: true });
             this.coverCapture && await this.#captureCover();
             this.#emitCompleted();
             this.#setState(Synthesizer.STATE.COMPLETED);

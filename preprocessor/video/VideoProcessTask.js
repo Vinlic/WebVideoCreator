@@ -4,17 +4,20 @@ import assert from "assert";
 import _ from "lodash";
 
 import ProcessTask from "../base/ProcessTask.js";
+import Audio from "../../entity/Audio.js";
 import util from "../../lib/util.js";
 
 export default class VideoProcessTask extends ProcessTask {
 
     filePath;
-    audioFilePath;
+    startTime;
+    endTime;
     format;
     seekStart;
     seekEnd;
     loop;
     muted;
+    audioFilePath;
 
     /**
      * 构造函数
@@ -31,15 +34,19 @@ export default class VideoProcessTask extends ProcessTask {
      */
     constructor(options) {
         super(options);
-        const { filePath, format, seekStart, seekEnd, loop, muted } = options;
+        const { filePath, format, startTime, endTime, seekStart, seekEnd, loop, muted } = options;
         assert(_.isString(filePath), "filePath must be string");
         assert(_.isString(format) && ["mp4", "webm"].includes(format), "format must be string");
+        assert(_.isUndefined(startTime) || _.isFinite(startTime), "startTime must be number");
+        assert(_.isUndefined(endTime) || _.isFinite(endTime), "endTime must be number");
         assert(_.isUndefined(seekStart) || _.isFinite(seekStart), "seekStart must be number");
         assert(_.isUndefined(seekEnd) || _.isFinite(seekEnd), "seekEnd must be number");
         assert(_.isUndefined(loop) || _.isBoolean(loop), "loop must be number");
         assert(_.isUndefined(muted) || _.isBoolean(muted), "muted must be number");
         this.filePath = filePath;
         this.format = format;
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.seekStart = _.defaultTo(seekStart, 0);
         this.seekEnd = seekEnd;
         this.loop = _.defaultTo(loop, false);
@@ -62,11 +69,21 @@ export default class VideoProcessTask extends ProcessTask {
         //         });
         //     }
         // }
-        return this.#packData({
-            buffer: Buffer.from(await fs.readFile(this.filePath)),
-            maskBuffer: null,
-            hasAudio: this.hasAudio
-        });
+        return {
+            audio: this.audioFilePath ? new Audio({
+                path: this.audioFilePath,
+                startTime: this.startTime,
+                endTime: this.endTime,
+                seekStart: this.seekStart,
+                seekEnd: this.seekEnd,
+                loop: this.loop
+            }) : null,
+            buffer: this.#packData({
+                buffer: Buffer.from(await fs.readFile(this.filePath)),
+                maskBuffer: null,
+                hasAudio: this.hasAudio
+            })
+        }
     }
 
     /**
@@ -108,25 +125,6 @@ export default class VideoProcessTask extends ProcessTask {
         }
         else
             this.audioFilePath = audioFilePath;
-        if (!this.audioFilePath || !this.hasCut)
-            return;
-        const { dir, base } = path.parse(this.audioFilePath);
-        const cuttedAudioFilePath = path.join(dir, `cutted_${this.seekStart || 0}_${this.seekEnd || "n"}-${base}`);
-        if (this.ignoreCache || !await fs.pathExists(cuttedAudioFilePath)) {
-            await util.cutAudio(this.audioFilePath, cuttedAudioFilePath, {
-                seekStart: this.seekStart,
-                seekEnd: this.seekEnd
-            });
-        }
-        else
-            this.audioFilePath = cuttedAudioFilePath;
-    }
-
-    /**
-     * 是否裁剪
-     */
-    get hasCut() {
-        return this.seekStart > 0 || this.seekEnd > 0;
     }
 
     /**

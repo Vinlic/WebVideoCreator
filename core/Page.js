@@ -16,7 +16,6 @@ import VideoConfig from "../preprocessor/video/VideoConfig.js";
 import Audio from "../entity/Audio.js";
 import Font from "../entity/Font.js";
 import util from "../lib/util.js";
-
 /**
  * @typedef {import('puppeteer-core').Viewport} Viewport
  */
@@ -478,7 +477,9 @@ export default class Page extends EventEmitter {
     async #preprocessVideo(config) {
         const videoPreprocessor = this.videoPreprocessor;
         this.emit("videoPreprocess", config);
-        return await videoPreprocessor.process(config);
+        const { audio, buffer } = await videoPreprocessor.process(config);
+        this.emit("audioAdd", audio);
+        return buffer;
     }
 
     /**

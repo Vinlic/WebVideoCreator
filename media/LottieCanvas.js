@@ -35,7 +35,7 @@
      * @param {Object} options - Lottie动画选项
      * @param {string} options.url - 图像来源
      * @param {number} [options.startTime=0] - 开始播放时间点（毫秒）
-     * @param {number} [options.endTime=Infinity] - 结束播放时间点（毫秒）
+     * @param {number} [options.endTime] - 结束播放时间点（毫秒）
      * @param {boolean} [options.loop] - 是否强制循环
      * @param {number} [options.retryFetchs=2] - 重试下载次数
      */
@@ -45,7 +45,7 @@
         const { url, startTime, endTime, loop, retryFetchs } = options;
         this.url = url;
         this.startTime = startTime || 0;
-        this.endTime = endTime || Infinity;
+        this.endTime = endTime;
         this.loop = loop;
         this.retryFetchs = retryFetchs || 2;
     }
@@ -77,7 +77,7 @@
         // 已销毁不可播放
         if(this.destoryed) return false;
         // 如果当前时间超过元素开始结束时间则判定未不可播放
-        const { startTime, endTime } = this;
+        const { startTime, endTime = Infinity } = this;
         if (time < startTime || time >= endTime)
             return false;
         return true;

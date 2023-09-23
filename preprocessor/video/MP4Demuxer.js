@@ -1,13 +1,14 @@
 import EventEmitter from 'eventemitter3';
 import fs from 'fs-extra';
 import MP4Box from 'mp4box';
+import _ from "lodash";
 
-import util from '../lib/util.js';
+import util from '../../lib/util.js';
 
 const { DataStream } = MP4Box;
 
-const CHUNK_SEPARATOR = Buffer.from([0x66, 0xC8, 0xEC, 0xD3, 0xBB]);
-const DATA_SEPARATOR = Buffer.from([0xB6, 0x38, 0x2D, 0x3D, 0x26]);
+const CHUNK_SEPARATOR = Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00]);
+const DATA_SEPARATOR = Buffer.from([0xAA, 0xAA, 0xAA, 0xAA, 0xAA]);
 
 class MP4Source extends EventEmitter {
 
@@ -22,12 +23,12 @@ class MP4Source extends EventEmitter {
 
     async load(source) {
         const readyPromise = new Promise(resolve => this.file.onReady = resolve);
-        if (util.isString(source)) {
+        if (_.isString(source)) {
             if (!await fs.pathExists(source))
                 throw new Error(`file ${source} not found`);
             source = await fs.readFile(source);
         }
-        if (!util.isBuffer(source))
+        if (!_.isBuffer(source))
             throw new TypeError("source must be a buffer or filePath");
         source.buffer.fileStart = 0;
         this.file.appendBuffer(source.buffer);

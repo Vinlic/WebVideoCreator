@@ -33,7 +33,7 @@ export default class VideoConfig {
      * @param {string} options.url - 视频URL
      * @param {string} [options.format] - 视频格式（mp4/webm）
      * @param {number} [options.startTime=0] - 开始播放时间点（毫秒）
-     * @param {number} [options.endTime=Infinity] - 结束播放时间点（毫秒）
+     * @param {number} [options.endTime] - 结束播放时间点（毫秒）
      * @param {number} [options.seekStart=0] - 裁剪开始时间点（毫秒）
      * @param {number} [options.seekEnd] - 裁剪结束时间点（毫秒）
      * @param {boolean} [options.autoplay=false] - 是否自动播放
@@ -57,7 +57,7 @@ export default class VideoConfig {
         this.url = url;
         this.format = _.defaultTo(format, util.getURLExtname(this.url));
         this.startTime = _.defaultTo(startTime, 0);
-        this.endTime = _.defaultTo(endTime, Infinity);
+        this.endTime = _.defaultTo(endTime, undefined);;
         this.seekStart = _.defaultTo(seekStart, undefined);
         this.seekEnd = _.defaultTo(seekEnd, undefined);
         this.autoplay = _.defaultTo(autoplay, false);

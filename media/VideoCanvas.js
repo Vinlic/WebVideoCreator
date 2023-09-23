@@ -39,7 +39,7 @@ export default class VideoCanvas {
      * @param {string} options.url - 视频URL
      * @param {string} [options.format] - 视频格式（mp4/webm）
      * @param {number} [options.startTime=0] - 开始播放时间点（毫秒）
-     * @param {number} [options.endTime=Infinity] - 结束播放时间点（毫秒）
+     * @param {number} [options.endTime] - 结束播放时间点（毫秒）
      * @param {number} [options.seekStart=0] - 裁剪开始时间点（毫秒）
      * @param {number} [options.seekEnd] - 裁剪结束时间点（毫秒）
      * @param {boolean} [options.autoplay=false] - 是否自动播放
@@ -52,12 +52,12 @@ export default class VideoCanvas {
         if (!options instanceof Object)
             throw new Error("VideoCanvas options must be Object");
         const { url, format, startTime, endTime, seekStart, seekEnd, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
-        this.url = url;
-        this.format = format;
+        this.url = url || undefined;
+        this.format = format || undefined;
         this.startTime = startTime || 0;
-        this.endTime = endTime || Infinity;
+        this.endTime = endTime || undefined;
         this.seekStart = seekStart || 0;
-        this.seekEnd = seekEnd;
+        this.seekEnd = seekEnd || undefined;
         this.autoplay = autoplay || false;
         this.loop = loop || false;
         this.muted = muted || false;

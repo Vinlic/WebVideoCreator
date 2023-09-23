@@ -20,7 +20,7 @@ export default class SvgAnimation {
      * @param {Object} options - SVG动画选项
      * @param {string} options.target - SVG元素
      * @param {number} [options.startTime=0] - 开始播放时间点（毫秒）
-     * @param {number} [options.endTime=Infinity] - 结束播放时间点（毫秒）
+     * @param {number} [options.endTime] - 结束播放时间点（毫秒）
      */
     constructor(options) {
         if (!options instanceof Object)
@@ -28,7 +28,7 @@ export default class SvgAnimation {
         const { target, startTime, endTime } = options;
         this.target = target;
         this.startTime = startTime || 0;
-        this.endTime = endTime || Infinity;
+        this.endTime = endTime;
     }
 
     /**
@@ -41,7 +41,7 @@ export default class SvgAnimation {
         // 已销毁不可播放
         if(this.destoryed) return false;
         // 如果当前时间超过元素开始结束时间则判定为不可播放
-        const { startTime, endTime } = this;
+        const { startTime, endTime = Infinity } = this;
         if (time < startTime || time >= endTime)
             return false;
         return true;
