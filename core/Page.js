@@ -1,4 +1,5 @@
 import assert from "assert";
+import path from "path";
 import AsyncLock from "async-lock";
 import EventEmitter from "eventemitter3";
 import { Page as _Page, CDPSession, HTTPRequest, HTTPResponse } from "puppeteer-core";
@@ -25,7 +26,7 @@ const DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKi
 // MP4Box库脚本内容
 const MP4BOX_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/mp4box.js"), "utf-8");
 // Webfont库脚本内容
-const WEBFONT_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/webfont.js"), "utf-8");
+const WEBFONT_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/fontfaceobserver.js"), "utf-8");
 // Lottie动画库脚本内容
 const LOTTIE_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/lottie.js"), "utf-8");
 // 异步锁
@@ -73,6 +74,8 @@ export default class Page extends EventEmitter {
     frameFormat;
     /** @type {number} - 帧图质量（0-100） */
     frameQuality;
+    /** @type {Font[]} - 已注册字体集 */
+    fonts = [];
     /** @type {Object[]} - 已接受资源列表 */
     acceptResources = [];
     /** @type {Object[]} - 已拒绝资源列表 */
@@ -162,6 +165,8 @@ export default class Page extends EventEmitter {
      * @returns {Object} - 控制器映射
      */
     async goto(url) {
+        // 清除资源
+        this.#clearResources();
         // 页面导航到URL
         await this.target.goto(url);
         await Promise.all([
@@ -173,17 +178,16 @@ export default class Page extends EventEmitter {
     }
 
     /**
-     * 注册多个字体
+     * 注册字体
      * 
-     * @param {Font[]} fonts - 字体对象列表
+     * @param {Font} font - 字体对象
      */
-    async registerFonts(fonts = []) {
-        // 将所有字体声明拼接为样式
-        const styles = fonts.reduce((style, font) => style + font.toFontFace(), "");
-        // 添加样式标签到页面
-        styles && await this.target.addStyleTag({
-            content: styles
-        });
+    async registerFont(font) {
+        if (!(font instanceof Font))
+            font = new Font(font);
+        // 开始加载字体
+        font.load();
+        this.fonts.push(font);
     }
 
     /**
@@ -194,10 +198,18 @@ export default class Page extends EventEmitter {
     async waitForFontsLoaded(timeout = 30000) {
         // 注入Webfont库
         await this.#injectLibrary(WEBFONT_LIBRARY_SCRIPT_CONTENT);
+        // 等待字体加载完成
+        await Promise.all(this.fonts.map(font => font.load()));
+        // 将所有字体声明拼接为样式
+        const styles = this.fonts.reduce((style, font) => style + font.toFontFace(), "");
+        // 添加样式标签到页面
+        styles && await this.target.addStyleTag({
+            content: styles
+        });
         await this.target.evaluate(async _timeout => {
             // 获取样式表
             const styleSheets = Array.from(document.styleSheets);
-            // 获取所有字体集
+            // 获取所有引入的字体集
             const fontFamilys = [];
             styleSheets.forEach((styleSheet) => {
                 const rules = styleSheet.cssRules || styleSheet.rules;
@@ -210,16 +222,16 @@ export default class Page extends EventEmitter {
                     }
                 });
             });
-            // 等待加载完成
-            fontFamilys.length && await new Promise(resolve => {
-                WebFont.load({
-                    custom: {
-                        families: fontFamilys
-                    },
-                    active: () => resolve(),
-                    timeout: _timeout
-                });
-            });
+            // 无字体则跳过加载
+            if(fontFamilys.length == 0)
+                return;
+            // 等待字体加载完成
+            let timer;
+            await Promise.race([
+                Promise.all(fontFamilys.map(family => new FontFaceObserver(family).load())),
+                new Promise((_, reject) => timer = window.____setTimeout(reject, _timeout))
+            ]);
+            window.____clearTimeout(timer);
         }, timeout);
     }
 
@@ -505,6 +517,7 @@ export default class Page extends EventEmitter {
             const method = request.method();
             const url = request.url();
             const { pathname } = new URL(url);
+            // 视频预处理API
             if (method == "POST" && pathname == "/video_preprocess") {
                 const data = _.attempt(() => JSON.parse(request.postData()));
                 if (_.isError(data))
@@ -514,6 +527,26 @@ export default class Page extends EventEmitter {
                     status: 200,
                     body: buffer
                 });
+            }
+            // 从本地拉取字体
+            else if(method == "GET" && /^\/local_font\//.test(pathname)) {
+                const filePath = path.join(util.rootPathJoin("tmp/font/"), pathname.substring(12));
+                if(!await fs.pathExists(filePath)) {
+                    return request.respond({
+                        status: 404,
+                        body: "File not exists"
+                    });
+                }
+                else {
+                    request.respond({
+                        status: 200,
+                        body: await fs.readFile(filePath),
+                        headers: {
+                            // 要求浏览器缓存字体
+                            "Cache-Control": "max-age=31536000"
+                        }
+                    });
+                }
             }
             else
                 request.continue();
@@ -571,8 +604,8 @@ export default class Page extends EventEmitter {
             this.#cdpSession && await this.#endCDPSession();
             // 移除监听器
             this.#removeListeners();
-            this.acceptResources = [];
-            this.rejectResources = [];
+            // 清除资源
+            this.#clearResources();
             this.#resourceSet = new Set();
             // 跳转空白页释放页面内存
             await this.target.goto("about:blank");
@@ -600,6 +633,15 @@ export default class Page extends EventEmitter {
             this.target.close();
             this.target = null;
         });
+    }
+
+    /**
+     * 清除资源
+     */
+    #clearResources() {
+        this.fonts = [];
+        this.acceptResources = [];
+        this.rejectResources = [];
     }
 
     /**

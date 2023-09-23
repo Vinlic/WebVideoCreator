@@ -56,7 +56,10 @@ export default class DownloadTask extends Task {
             const writeStream = fs.createWriteStream(`${filePath}.tmp`);
             await util.download(url, writeStream, {
                 onProgress: v => this._updateProgress(v),
-                mimesLimit: [/^video\//, /^application\/octet-stream/]
+                mimesLimit: [
+                    /^video\//,
+                    /^application\/octet-stream/
+                ]
             });
             await fs.move(`${filePath}.tmp`, filePath);
         });

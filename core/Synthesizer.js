@@ -73,14 +73,14 @@ export default class Synthesizer extends EventEmitter {
     volume;
     /** @type {numer} - 并行写入帧数 */
     parallelWriteFrames;
+    /** @type {Audio[]} - 音频列表 */
+    audios = [];
     /** @type {numer} - 是否输出调试信息 */
     debug;
     /** @type {string} @protected - 交换文件路径 */
     _swapFilePath;
     /** @type {string} - 临时路径 */
     #tmpDirPath;
-    /** @type {Audio[]} - 音频列表 */
-    #audios = [];
     /** @type {number} @protected - 帧计数 */
     _frameCount = 0;
     /** @type {number} - 目标帧数 */
@@ -321,8 +321,9 @@ export default class Synthesizer extends EventEmitter {
     addAudio(audio) {
         if (!(audio instanceof Audio))
             audio = new Audio(audio);
+        // 开始加载音频
         audio.load();
-        this.#audios.push(audio);
+        this.audios.push(audio);
     }
 
     // /**
@@ -609,21 +610,12 @@ export default class Synthesizer extends EventEmitter {
     }
 
     /**
-     * 获取音频列表
-     * 
-     * @returns {Audio[]} - 音频列表
-     */
-    get audios() {
-        return this.#audios;
-    }
-
-    /**
      * 获取是否合成音频
      * 
      * @returns {boolean} - 是否合成音频
      */
     get audioSynthesis() {
-        return !this._isVideoChunk() && this.#audios.length > 0;
+        return !this._isVideoChunk() && this.audios.length > 0;
     }
 
     /**

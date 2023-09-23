@@ -71,7 +71,6 @@ export default async ({
     // 设置视窗宽高
     await page.setViewport({ width, height });
 
-
     console.time("\nrender");
     // 实例化合成器实例
     const synthesizer = new Synthesizer({
@@ -100,6 +99,14 @@ export default async ({
     page.on("audioAdd", options => synthesizer.addAudio(options));
     // 跳转到您希望渲染的页面，您可以考虑创建一个本地的Web服务器提供页面以提升加载速度和安全性
     await page.goto(url);
+
+    // await page.registerFont({
+    //     family: "Barlow_Condensed_Black",
+    //     path: "Barlow_Condensed_Black.woff2",
+    //     format: "woff2"
+    // });
+
+    await page.waitForFontsLoaded();
 
     // synthesizer.addAudio({
     //     path: "2.aac",

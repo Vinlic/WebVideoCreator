@@ -92,7 +92,7 @@ export default class Audio {
     }
 
     /**
-     * 资源初始化
+     * 资源加载
      */
     async load() {
         if (this.#loadPromise)
@@ -131,7 +131,10 @@ export default class Audio {
             await fs.ensureDir(path.dirname(filePath), { recursive: true });
             const writeStream = fs.createWriteStream(`${filePath}.tmp`);
             await util.download(url, writeStream, {
-                mimesLimit: [/^audio\//, /^application\/octet-stream/],
+                mimesLimit: [
+                    /^audio\//,
+                    /^application\/octet-stream/
+                ],
                 retryFetchs: this.retryFetchs
             });
             await fs.move(`${filePath}.tmp`, filePath);
