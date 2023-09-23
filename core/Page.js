@@ -223,7 +223,7 @@ export default class Page extends EventEmitter {
                 });
             });
             // 无字体则跳过加载
-            if(fontFamilys.length == 0)
+            if (fontFamilys.length == 0)
                 return;
             // 等待字体加载完成
             let timer;
@@ -517,6 +517,7 @@ export default class Page extends EventEmitter {
             const method = request.method();
             const url = request.url();
             const { pathname } = new URL(url);
+            // console.log(pathname);
             // 视频预处理API
             if (method == "POST" && pathname == "/video_preprocess") {
                 const data = _.attempt(() => JSON.parse(request.postData()));
@@ -529,9 +530,9 @@ export default class Page extends EventEmitter {
                 });
             }
             // 从本地拉取字体
-            else if(method == "GET" && /^\/local_font\//.test(pathname)) {
+            else if (method == "GET" && /^\/local_font\//.test(pathname)) {
                 const filePath = path.join(util.rootPathJoin("tmp/local_font/"), pathname.substring(12));
-                if(!await fs.pathExists(filePath)) {
+                if (!await fs.pathExists(filePath)) {
                     return request.respond({
                         status: 404,
                         body: "File not exists"
@@ -548,10 +549,19 @@ export default class Page extends EventEmitter {
                     });
                 }
             }
+            // 由内部处理的数据只响应空数据，避免占用带宽
+            else if (["mp4", "webm", "mkv", "mp3", "aac", "ogg"].includes(path.extname(pathname).substring(1))) {
+                request.respond({
+                    status: 200,
+                    body: ""
+                });
+            }
+            // 其它请求透传
             else
                 request.continue();
         })()
             .catch(err => {
+                // 发生错误响应500
                 request.respond({
                     status: 500,
                     body: err.stack
