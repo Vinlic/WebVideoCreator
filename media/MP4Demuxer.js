@@ -1,12 +1,29 @@
+import MP4Box, { ISOFile } from "mp4box";
+
+/**
+ * MP4文件接收器
+ */
 export class MP4FileSink {
 
+    /** @type {ISOFile} - 文件对象 */
     file;
+    /** @type {number} - 数据偏移量 */
     offset = 0;
 
+    /**
+     * 构造函数
+     * 
+     * @param {ISOFile} file - MP4Box file对象
+     */
     constructor(file) {
         this.file = file;
     }
 
+    /**
+     * 流写入数据
+     * 
+     * @param {Uint8Array} chunk - 数据块
+     */
     write(chunk) {
         const buffer = new ArrayBuffer(chunk.byteLength);
         new Uint8Array(buffer).set(chunk);
@@ -15,21 +32,37 @@ export class MP4FileSink {
         this.file.appendBuffer(buffer);
     }
 
+    /**
+     * 流关闭
+     */
     close() {
         this.file.flush();
     }
 
 }
 
+// 浏览器中的别名
 const ____MP4FileSink = MP4FileSink;
 
+/**
+ * MP4解复用器
+ */
 export default class MP4Demuxer {
 
+    /** @type {string} - 资源URL */
     url;
+    /** @type {ISOFile} - 文件对象 */
     file;
+    /** @type {Function} - 配置回调函数 */
     _configCallback;
+    /** @type {Function} - 视频块回调函数 */
     _chunkCallback;
 
+    /**
+     * 构造函数
+     * 
+     * @param {string} url - 资源URL
+     */
     constructor(url) {
         this.url = url;
         this.file = MP4Box.createFile();
@@ -37,30 +70,55 @@ export default class MP4Demuxer {
         this.file.onSamples = this._onSamples.bind(this);
     }
 
+    /**
+     * 监听配置
+     * 
+     * @param {Function} fn - 配置回调函数 
+     */
     onConfig(fn) {
         this._configCallback = fn;
     }
 
+    /**
+     * 监听视频块
+     * 
+     * @param {Function} fn - 视频块回调函数
+     */
     onChunk(fn) {
         this._chunkCallback = fn;
     }
 
+    /**
+     * 监听错误
+     * 
+     * @param {Function} fn - 错误回调函数
+     */
     onError(fn) {
         this.file.onError = fn;
     }
 
+    /**
+     * 加载文件
+     */
     async load() {
         const fileSink = new ____MP4FileSink(this.file);
         const response = await fetch(this.url);
-        response.body.pipeTo(new WritableStream(fileSink, { highWaterMark: 2 }));
+        await response.body.pipeTo(new WritableStream(fileSink, { highWaterMark: 2 }));
     }
 
+    /**
+     * 文件已就绪
+     * 
+     * @param {Object} info - 视频信息
+     */
     _onReady(info) {
+        // 选取第一条视频轨道
         const track = info.videoTracks[0];
+        // 兼容编码映射
         const COMPLATIBLE_CODEC_MAP = {
             "avc1.64003c": "avc1.640033"
         };
-        // 回调配置
+        // 配置信息回调用于配置视频解码器
         this._configCallback && this._configCallback({
             codec: track.codec.startsWith('vp08') ? 'vp8' : (COMPLATIBLE_CODEC_MAP[track.codec] || track.codec),
             codedWidth: track.video ? track.video.width : track.track_width,
@@ -69,12 +127,20 @@ export default class MP4Demuxer {
             bitrate: track.bitrate,
             duration: (track.movie_duration / track.movie_timescale) * 1000
         });
-        // 开始解复用
+        // 开始文件解复用
         this.file.setExtractionOptions(track.id);
         this.file.start();
     }
 
+    /**
+     * 获得样本
+     * 
+     * @param {number} track_id - 轨道ID
+     * @param {Object} ref - 引用
+     * @param {Object[]} samples - 样本列表
+     */
     _onSamples(track_id, ref, samples) {
+        // 将所有样本回调
         for (const sample of samples) {
             this._chunkCallback && this._chunkCallback(new EncodedVideoChunk({
                 type: sample.is_sync ? "key" : "delta",
@@ -85,6 +151,12 @@ export default class MP4Demuxer {
         }
     }
 
+    /**
+     * 获取描述信息
+     * 
+     * @param {Object} track - 轨道对象
+     * @returns {Uint8Array} - 描述信息
+     */
     _getDescription(track) {
         const trak = this.file.getTrackById(track.id);
         for (const entry of trak.mdia.minf.stbl.stsd.entries) {
