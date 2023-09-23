@@ -12,6 +12,7 @@ import SvgAnimation from "../media/SvgAnimation.js";
 import VideoCanvas from "../media/VideoCanvas.js";
 import DynamicImage from "../media/DynamicImage.js";
 import LottieCanvas from "../media/LottieCanvas.js";
+import MP4Demuxer, { MP4FileSink } from "../media/MP4Demuxer.js";
 import VideoConfig from "../preprocessor/video/VideoConfig.js";
 import Audio from "../entity/Audio.js";
 import Font from "../entity/Font.js";
@@ -424,6 +425,8 @@ export default class Page extends EventEmitter {
         await this.target.exposeFunction("throwError", (code = -1, message = "") => this.#emitError(new Error(`throw error: [${code}] ${message}`)));
         // 页面加载前进行上下文初始化
         await this.target.evaluateOnNewDocument(`
+            window.____MP4FileSink=${MP4FileSink};
+            window.____MP4Demuxer=${MP4Demuxer};
             window.____SvgAnimation=${SvgAnimation};
             window.____VideoCanvas=${VideoCanvas};
             window.____DynamicImage=${DynamicImage};

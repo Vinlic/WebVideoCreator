@@ -1,4 +1,5 @@
 import VideoConfig from "../preprocessor/video/VideoConfig.js";
+import MP4Demuxer from "./MP4Demuxer.js";
 
 export default class VideoCanvas {
 
