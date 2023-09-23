@@ -326,6 +326,15 @@ export default class Synthesizer extends EventEmitter {
         this.audios.push(audio);
     }
 
+    /**
+     * 添加多个音频
+     * 
+     * @param {Audio[]} audios - 音频对象列表
+     */
+    addAudios(audios) {
+        audios.forEach(audio => this.addAudio(audio));
+    }
+
     // /**
     //  * 添加覆盖在顶层的视频
     //  * 

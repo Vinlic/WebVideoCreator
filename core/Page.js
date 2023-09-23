@@ -25,7 +25,7 @@ const DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKi
 // MP4Box库脚本内容
 const MP4BOX_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/mp4box.js"), "utf-8");
 // Webfont库脚本内容
-const WEBFONT_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/fontfaceobserver.js"), "utf-8");
+const FONTFACE_OBSERVER_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/fontfaceobserver.js"), "utf-8");
 // Lottie动画库脚本内容
 const LOTTIE_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/lottie.js"), "utf-8");
 // 异步锁
@@ -190,13 +190,22 @@ export default class Page extends EventEmitter {
     }
 
     /**
+     * 注册多个字体
+     * 
+     * @param {Font[]} fonts - 字体对象列表
+     */
+    async registerFonts(fonts = []) {
+        fonts.forEach(font => this.registerFont(font));
+    }
+
+    /**
      * 等待字体加载完成
      * 
      * @param {number} [timeout=30000] - 等待超时时间（毫秒）
      */
     async waitForFontsLoaded(timeout = 30000) {
         // 注入Webfont库
-        await this.#injectLibrary(WEBFONT_LIBRARY_SCRIPT_CONTENT);
+        await this.#injectLibrary(FONTFACE_OBSERVER_SCRIPT_CONTENT);
         // 等待字体加载完成
         await Promise.all(this.fonts.map(font => font.load()));
         // 将所有字体声明拼接为样式
