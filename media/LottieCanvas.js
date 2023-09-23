@@ -43,10 +43,10 @@
         if (!options)
             throw new Error("LottieCanvas options invalid");
         const { url, startTime, endTime, loop, retryFetchs } = options;
-        this.url = url;
+        this.url = url || undefined;
         this.startTime = startTime || 0;
-        this.endTime = endTime;
-        this.loop = loop;
+        this.endTime = endTime || undefined;
+        this.loop = loop == null ? undefined : loop;
         this.retryFetchs = retryFetchs || 2;
     }
     

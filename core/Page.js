@@ -424,12 +424,12 @@ export default class Page extends EventEmitter {
         await this.target.exposeFunction("throwError", (code = -1, message = "") => this.#emitError(new Error(`throw error: [${code}] ${message}`)));
         // 页面加载前进行上下文初始化
         await this.target.evaluateOnNewDocument(`
-            window.CaptureContext=${CaptureContext};
-            window.captureCtx=new CaptureContext();
-            window.SvgAnimation=${SvgAnimation};
-            window.VideoCanvas=${VideoCanvas};
-            window.DynamicImage=${DynamicImage};
-            window.LottieCanvas=${LottieCanvas};
+            window.____SvgAnimation=${SvgAnimation};
+            window.____VideoCanvas=${VideoCanvas};
+            window.____DynamicImage=${DynamicImage};
+            window.____LottieCanvas=${LottieCanvas};
+            window.____CaptureContext=${CaptureContext};
+            window.captureCtx=new ____CaptureContext();
         `);
     }
 

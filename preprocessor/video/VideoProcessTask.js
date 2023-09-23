@@ -2,14 +2,22 @@ import path from "path";
 import fs from "fs-extra";
 import assert from "assert";
 import _ from "lodash";
+import ffmpeg from "fluent-ffmpeg";
+import AsyncLock from "async-lock";
 
 import ProcessTask from "../base/ProcessTask.js";
 import Audio from "../../entity/Audio.js";
 import util from "../../lib/util.js";
+import { VIDEO_CODEC } from "../../lib/const.js";
+
+const processLock = new AsyncLock();
 
 export default class VideoProcessTask extends ProcessTask {
 
     filePath;
+    maskFilePath;
+    audioFilePath;
+    convertedFilePath;
     startTime;
     endTime;
     format;
@@ -17,7 +25,7 @@ export default class VideoProcessTask extends ProcessTask {
     seekEnd;
     loop;
     muted;
-    audioFilePath;
+    videoCodec;
 
     /**
      * 构造函数
@@ -31,10 +39,11 @@ export default class VideoProcessTask extends ProcessTask {
      * @param {boolean} [options.muted=false] - 是否静音
      * @param {number} [options.retryFetchs=2] - 重试次数
      * @param {number} [options.retryDelay=1000] - 重试延迟
+     * @param {string} [options.videoCodec="libx264"] - 视频编码器
      */
     constructor(options) {
         super(options);
-        const { filePath, format, startTime, endTime, seekStart, seekEnd, loop, muted } = options;
+        const { filePath, format, startTime, endTime, seekStart, seekEnd, loop, muted, videoCodec } = options;
         assert(_.isString(filePath), "filePath must be string");
         assert(_.isString(format) && ["mp4", "webm"].includes(format), "format must be string");
         assert(_.isUndefined(startTime) || _.isFinite(startTime), "startTime must be number");
@@ -43,6 +52,7 @@ export default class VideoProcessTask extends ProcessTask {
         assert(_.isUndefined(seekEnd) || _.isFinite(seekEnd), "seekEnd must be number");
         assert(_.isUndefined(loop) || _.isBoolean(loop), "loop must be number");
         assert(_.isUndefined(muted) || _.isBoolean(muted), "muted must be number");
+        assert(_.isUndefined(videoCodec) || _.isString(videoCodec), "videoCodec must be string");
         this.filePath = filePath;
         this.format = format;
         this.startTime = startTime;
@@ -51,25 +61,25 @@ export default class VideoProcessTask extends ProcessTask {
         this.seekEnd = seekEnd;
         this.loop = _.defaultTo(loop, false);
         this.muted = _.defaultTo(muted, false);
+        this.videoCodec = _.defaultTo(videoCodec, VIDEO_CODEC.CPU.H264);
     }
 
+    /**
+     * 处理视频
+     */
     async process() {
         // 非静音音频需分离音频文件
         !this.muted && await this.#separateAudioFile();
-        // if (this.format == "webm") {
-        //     const hasAlphaChannel = await util.checkMediaHasAplhaChannel(this.filePath);
-        //     if (hasAlphaChannel) {
-
-        //     }
-        //     else {
-        //         return this.#packageData({
-        //             buffer: Buffer.from(await fs.readFile(this.filePath)),
-        //             maskBuffer: null,
-        //             hasAudio: this.hasAudio
-        //         });
-        //     }
-        // }
+        if (this.format == "webm") {
+            // 视频转码为H264
+            await this.#videoTranscoding();
+            // 检查是否具有透明通道
+            const hasAlphaChannel = await util.checkMediaHasAplhaChannel(this.filePath);
+            // 具备透明通道将分离出蒙版视频
+            hasAlphaChannel && await this.#videoMaskExtract();
+        }
         return {
+            // 添加到合成器的音频对象
             audio: this.audioFilePath ? new Audio({
                 path: this.audioFilePath,
                 startTime: this.startTime,
@@ -78,12 +88,105 @@ export default class VideoProcessTask extends ProcessTask {
                 seekEnd: this.seekEnd,
                 loop: this.loop
             }) : null,
+            // video_preprocess响应回传到浏览器的数据
             buffer: this.#packData({
-                buffer: Buffer.from(await fs.readFile(this.filePath)),
-                maskBuffer: null,
+                buffer: Buffer.from(await fs.readFile(this.convertedFilePath || this.filePath)),
+                maskBuffer: this.maskFilePath ? Buffer.from(await fs.readFile(this.maskFilePath)) : null,
                 hasAudio: this.hasAudio
             })
         }
+    }
+
+    /**
+     * 透明视频蒙版提取
+     */
+    async #videoMaskExtract() {
+        return await processLock.acquire(`videoMaskExtract-${util.crc32(this.filePath)}`, async () => {
+            const maskFilePath = `${this.filePath}_mask.mp4`
+            if (await fs.pathExists(maskFilePath))  //如果文件存在则跳过处理
+                return;
+            const videoCodecName = await util.getMediaVideoCodecName(this.filePath);
+            let codec;
+            switch (videoCodecName) {
+                case "vp8":
+                    codec = "libvpx";
+                    break;
+                case "vp9":
+                    codec = "libvpx-vp9";
+                    break;
+                default:
+                    throw new Error(`Video file ${this.filePath} codec name ${videoCodecName} is not supported`);
+            }
+            await new Promise((resolve, reject) => {
+                ffmpeg(filePath)
+                    .addInputOption(`-c:v ${codec}`)
+                    .videoFilter("alphaextract")
+                    .addOutputOption(`-c:v ${this.videoCodec}`)
+                    .addOutputOption("-an")
+                    .addOutput(maskFilePath)
+                    .once("start", cmd => console.log(cmd))
+                    .once("end", resolve)
+                    .once("error", reject)
+                    .run();
+            });
+            this.maskFilePath = maskFilePath;
+        });
+    }
+
+    /**
+     * 视频转码
+     */
+    async #videoTranscoding() {
+        return await processLock.acquire(`videoTranscoding-${util.crc32(this.filePath)}`, async () => {
+            const convertedFilePath = `${this.filePath}.mp4`;
+            if (await fs.pathExists(convertedFilePath))  //如果文件存在则跳过处理
+                return;
+            const videoCodecName = await util.getMediaVideoCodecName(this.filePath);
+            let codec;
+            switch (videoCodecName) {
+                case "vp8":
+                    codec = "libvpx";
+                    break;
+                case "vp9":
+                    codec = "libvpx-vp9";
+                    break;
+                default:
+                    throw new Error(`Video file ${this.filePath} codec name ${videoCodecName} is not supported`);
+            }
+            await new Promise((resolve, reject) => {
+                ffmpeg(filePath)
+                    .addInputOption(`-c:v ${codec}`)
+                    .addOutputOption(`-c:v ${this.videoCodec}`)
+                    .addOutputOption("-an")
+                    .addOutputOption("-crf 18")
+                    .addOutput(convertedFilePath)
+                    .once("start", cmd => logger.info(cmd))
+                    .once("end", resolve)
+                    .once("error", reject)
+                    .run();
+            });
+            this.convertedFilePath = convertedFilePath;
+        });
+    }
+
+    /**
+     * 分离视频的音频
+     */
+    async #separateAudioFile() {
+        return await processLock.acquire(`separateAudioFile-${util.crc32(this.filePath)}`, async () => {
+            const audioFormat = "mp3";
+            const audioFilePath = `${this.filePath}.${audioFormat}`;
+            if (this.ignoreCache || !await fs.pathExists(audioFilePath)) {
+                const hasAudioTrack = await util.separateVideoAudioTrack(this.filePath, audioFilePath, {
+                    audioCodec: "libmp3lame",
+                    outputFormat: audioFormat
+                });
+                if (hasAudioTrack)
+                    this.audioFilePath = audioFilePath;
+            }
+            else
+                this.audioFilePath = audioFilePath;
+        });
     }
 
     /**
@@ -110,21 +213,6 @@ export default class VideoProcessTask extends ProcessTask {
         buffers.unshift(objBuffer);
         buffers.unshift(Buffer.from(`${objBuffer.length}!`));
         return Buffer.concat(buffers);
-    }
-
-    async #separateAudioFile() {
-        const audioFormat = "mp3";
-        const audioFilePath = `${this.filePath}.${audioFormat}`;
-        if (this.ignoreCache || !await fs.pathExists(audioFilePath)) {
-            const hasAudioTrack = await util.separateVideoAudioTrack(this.filePath, audioFilePath, {
-                audioCodec: "libmp3lame",
-                outputFormat: audioFormat
-            });
-            if (hasAudioTrack)
-                this.audioFilePath = audioFilePath;
-        }
-        else
-            this.audioFilePath = audioFilePath;
     }
 
     /**

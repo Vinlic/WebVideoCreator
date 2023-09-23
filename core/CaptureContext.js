@@ -1,7 +1,7 @@
-import SvgAnimation from "../media/SvgAnimation.js";
-import VideoCanvas from "../media/VideoCanvas.js";
-import DynamicImage from "../media/DynamicImage.js";
-import LottieCanvas from "../media/LottieCanvas.js";
+import ____SvgAnimation from "../media/SvgAnimation.js";
+import ____VideoCanvas from "../media/VideoCanvas.js";
+import ____DynamicImage from "../media/DynamicImage.js";
+import ____LottieCanvas from "../media/LottieCanvas.js";
 
 export default class CaptureContext {
 
@@ -416,7 +416,7 @@ export default class CaptureContext {
             endTime: e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime")
         };
         // 实例化SVG动画对象
-        const svgAnimation = new SvgAnimation(options);
+        const svgAnimation = new ____SvgAnimation(options);
         // 将对象加入媒体调度列表
         this.dispatchMedias.push(svgAnimation);
         return svgAnimation;
@@ -500,7 +500,7 @@ export default class CaptureContext {
         // 创建画布元素
         const canvas = this._createCanvas(options);
         // 实例化视频画布实例
-        const videoCanvas = new VideoCanvas(options);
+        const videoCanvas = new ____VideoCanvas(options);
         // 绑定画布元素
         videoCanvas.bind(canvas);
         // 复制目标元素样式
@@ -541,7 +541,7 @@ export default class CaptureContext {
         // 创建画布元素
         const canvas = this._createCanvas(options);
         // 实例化动态图像实例
-        const dynamicImage = new DynamicImage(options);
+        const dynamicImage = new ____DynamicImage(options);
         // 绑定画布元素
         dynamicImage.bind(canvas);
         // 复制目标元素样式
@@ -580,7 +580,7 @@ export default class CaptureContext {
         // 创建画布元素
         const canvas = this._createCanvas(options);
         // 实例化Lottie动画实例
-        const lottieCanvas = new LottieCanvas(options);
+        const lottieCanvas = new ____LottieCanvas(options);
         // 绑定画布元素
         lottieCanvas.bind(canvas);
         // 复制目标元素样式

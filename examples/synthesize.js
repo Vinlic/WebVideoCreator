@@ -53,6 +53,9 @@ export default async ({
             numPageMin: 1,
             // 页面资源最大数量
             numPageMax: 5
+        },
+        videoPreprocessorOptions: {
+            videoCodec
         }
     });
 

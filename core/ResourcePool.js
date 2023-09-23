@@ -43,6 +43,7 @@ export default class ResourcePool {
      * @typedef {Object} VideoPreprocessorOptions
      * @property {number} [parallelDownloads=10] - 并行下载数量
      * @property {number} [parallelProcess=10] - 并行处理数量
+     * @property {string} [videoCodec="libx264"] - 视频编码器（必须为H264编码器）
      */
 
     /** @type {_Pool} - 浏览器资源池 */

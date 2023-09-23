@@ -51,11 +51,11 @@ export default class DynamicImage {
         if (!options instanceof Object)
             throw new Error("DemuxedVideo options must be Object");
         const { url, format, startTime, endTime, loop, retryFetchs } = options;
-        this.url = url;
-        this.format = format;
+        this.url = url || undefined;
+        this.format = format || undefined;
         this.startTime = startTime || 0;
-        this.endTime = endTime;
-        this.loop = loop;
+        this.endTime = endTime || undefined;
+        this.loop = loop == null ? undefined : loop;
         this.retryFetchs = retryFetchs || 2;
     }
 

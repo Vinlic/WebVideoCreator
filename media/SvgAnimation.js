@@ -28,7 +28,7 @@ export default class SvgAnimation {
         const { target, startTime, endTime } = options;
         this.target = target;
         this.startTime = startTime || 0;
-        this.endTime = endTime;
+        this.endTime = endTime || undefined;
     }
 
     /**

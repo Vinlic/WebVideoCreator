@@ -103,17 +103,17 @@ export default class Synthesizer extends EventEmitter {
      * @param {number} options.fps - 视频合成帧率
      * @param {number} options.duration - 视频时长
      * @param {string} [options.outputPath] - 导出视频路径
-     * @param {string} [options.format] - 导出视频格式
+     * @param {string} [options.format] - 导出视频格式（mp4/webm）
      * @param {string} [options.attachCoverPath] - 附加到视频首帧的封面路径
      * @param {string} [options.coverCapture=false] - 是否捕获封面并输出
      * @param {number} [options.coverCaptureTime] - 封面捕获时间点（毫秒）
      * @param {string} [options.coverCaptureFormat="jpg"] - 封面捕获格式（jpg/png/bmp）
      * @param {string} [options.liveUrl] - 直播推流地址
-     * @param {string} [options.videoCodec] - 视频编码器
-     * @param {number} [options.videoQuality] - 视频质量（0-100）
+     * @param {string} [options.videoCodec="libx264"] - 视频编码器
+     * @param {number} [options.videoQuality=80] - 视频质量（0-100）
      * @param {string} [options.videoBitrate] - 视频码率（设置码率将忽略videoQuality）
-     * @param {string} [options.pixelFormat] - 像素格式（yuv420p/yuv444p/rgb24）
-     * @param {string} [options.audioCodec] - 音频编码器
+     * @param {string} [options.pixelFormat="yuv420p"] - 像素格式（yuv420p/yuv444p/rgb24）
+     * @param {string} [options.audioCodec="aac"] - 音频编码器
      * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.volume] - 视频音量（0-100）
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
@@ -351,9 +351,8 @@ export default class Synthesizer extends EventEmitter {
      * @returns {FfmpegCommand} - 编码器
      */
     _createVideoEncoder() {
-        const { width, height, fps, outputPath, format, videoCodec,
-            videoBitrate, videoQuality, pixelFormat, audioSynthesis,
-            attachCoverPath, _swapFilePath } = this;
+        const { width, height, fps, format, videoCodec, videoBitrate,
+            videoQuality, pixelFormat, attachCoverPath, _swapFilePath } = this;
         const vencoder = ffmpeg();
         // 设置视频码率将忽略质量设置
         if (videoBitrate)
