@@ -93,6 +93,7 @@ export default class VideoProcessTask extends ProcessTask {
         }
         let buffer;
         let maskBuffer = null;
+        // 当存在seek时进行裁剪
         if(this.hasClip) {
             buffer = await this.#videoClip(this.outputFilePath);
             if(this.maskFilePath)
@@ -117,7 +118,8 @@ export default class VideoProcessTask extends ProcessTask {
             buffer: this.#packData({
                 buffer,
                 maskBuffer,
-                hasAudio: this.hasAudio
+                hasAudio: this.hasAudio,
+                hasClip: this.hasClip
             })
         }
     }
@@ -130,7 +132,7 @@ export default class VideoProcessTask extends ProcessTask {
         this.seekStart && cliper.addInputOption("-ss", util.millisecondsToHmss(this.seekStart));
         this.seekEnd && cliper.addInputOption("-to", util.millisecondsToHmss(this.seekEnd));
         const buffers = [];
-        const stream = new PassThrough({ highWaterMark: 1024 });
+        const stream = new PassThrough();
         const receivePromise = new Promise((resolve, reject) => {
             stream.on("data", data => buffers.push(data));
             stream.once("error", reject)
@@ -139,15 +141,10 @@ export default class VideoProcessTask extends ProcessTask {
         await new Promise((resolve, reject) => {
             cliper
                 .addOutputOption("-c:v", "copy")
-                .addOutputOption("-c:a", "copy")
                 .addOutputOption("-an")
                 .addOutputOption('-movflags frag_keyframe+empty_moov')
                 .toFormat("mp4")
-                .once("start", cmd => console.log(cmd))
-                .once("error", (err, stdout, stderr) => {
-                    console.error(stdout, stderr);
-                    reject(err);
-                })
+                .once("error", reject)
                 .once("end", resolve)
                 .pipe(stream, { end: true });
         });
@@ -184,7 +181,6 @@ export default class VideoProcessTask extends ProcessTask {
                     .addOutputOption("-an")
                     .outputOption("-movflags +faststart")
                     .addOutput(maskFilePath)
-                    .once("start", cmd => console.log(cmd))
                     .once("end", resolve)
                     .once("error", reject)
                     .run();

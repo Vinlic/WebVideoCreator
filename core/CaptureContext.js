@@ -440,7 +440,7 @@ export default class CaptureContext {
             // 音频结束时间点（毫秒）
             endTime: e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime"),
             // 音频裁剪开始时间点（毫秒）
-            seekStart: e.getNumberAttribute("seek-start") || e.getNumberAttribute("seekStart") || (currentTimeAttribute ? parseInt(currentTimeAttribute) * 1000 : null),
+            seekStart: e.getNumberAttribute("seek-start") || e.getNumberAttribute("seekStart") || (currentTimeAttribute ? parseInt(currentTimeAttribute * 1000) : null),
             // 音频裁剪结束时间点（毫秒）
             seekEnd: e.getNumberAttribute("seek-end") || e.getNumberAttribute("seekEnd"),
             // 音频淡入时长（毫秒）
@@ -483,7 +483,7 @@ export default class CaptureContext {
             // 视频结束时间点（毫秒）
             endTime: e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime"),
             // 视频裁剪开始时间点（毫秒）
-            seekStart: e.getNumberAttribute("seek-start") || e.getNumberAttribute("seekStart") || (currentTimeAttribute ? parseInt(currentTimeAttribute) * 1000 : null),
+            seekStart: e.getNumberAttribute("seek-start") || e.getNumberAttribute("seekStart") || (currentTimeAttribute ? parseInt(currentTimeAttribute * 1000) : null),
             // 视频裁剪结束时间点（毫秒）
             seekEnd: e.getNumberAttribute("seek-end") || e.getNumberAttribute("seekEnd"),
             // 视频是否循环播放
@@ -702,7 +702,9 @@ export default class CaptureContext {
             nodeType: { get: () => target.nodeType, set: v => target.nodeType = v },
             nodeValue: { get: () => target.nodeValue, set: v => target.nodeValue = v },
             normalize: { get: () => target.normalize, set: v => target.normalize = v },
-            matches: { get: () => target.matches, set: v => target.matches = v }
+            matches: { get: () => target.matches, set: v => target.matches = v },
+            play: { get: () => () => {} },
+            pause: { get: () => () => {} }
         });
     }
 
