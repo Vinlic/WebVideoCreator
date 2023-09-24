@@ -107,12 +107,8 @@ export default class Audio {
             else if (this.url)
                 this.path = await this.#downloadFile(this.url);
             this.duration = await util.getMediaDuration(this.path);
-            if (this.endTime) {
-                if (this.startTime > this.endTime)
-                    throw new Error(`Audio startTime(${this.startTime}) > endTime(${this.endTime})`);
-                if (this.endTime - this.startTime > this.duration)
-                    throw new Error(`Audio endTime(${this.endTime}) - startTime(${this.startTime}) > duration(${this.duration})`);
-            }
+            if (this.endTime > 0 && this.startTime > this.endTime)
+                throw new Error(`Audio startTime (${this.startTime}) > endTime (${this.endTime})`);
             if (this.seekEnd && (this.seekStart || 0) > this.seekEnd)
                 throw new Error(`Audio seekStart(${this.seekStart}) > seekEnd(${this.seekEnd})`);
         })();
