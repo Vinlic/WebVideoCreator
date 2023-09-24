@@ -101,7 +101,6 @@ export default class VideoCanvas {
         // 设置抗锯齿开关
         this.canvasCtx.imageSmoothingEnabled = imageSmoothingEnabled;
     }
-
     canPlay(time) {
         if (this.destoryed) return;
         const { startTime, endTime } = this;
@@ -126,7 +125,12 @@ export default class VideoCanvas {
                 maskBuffer
             } = this._unpackData(await response.arrayBuffer());
             this.demuxer = new ____MP4Demuxer();
+            const waitConfigPromise = new Promise((resolve, reject) => {
+                this.demuxer.onConfig(resolve);
+                this.demuxer.onError(reject);
+            });
             this.demuxer.load(buffer);
+            console.log(await waitConfigPromise);
         }
         catch (err) {
             console.log(err);
@@ -213,7 +217,7 @@ export default class VideoCanvas {
         for (const key in obj) {
             if (Array.isArray(obj[key]) && obj[key][0] === "buffer") {
                 const [_, start, end] = obj[key];
-                obj[key] = new Uint8Array(dataView.buffer, bufferOffset + start, end - start);
+                obj[key] = new Uint8Array(dataView.buffer.slice(bufferOffset + start, bufferOffset + end));
             }
         }
         return obj;

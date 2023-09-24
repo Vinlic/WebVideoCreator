@@ -49,6 +49,17 @@ export default class VideoChunk extends Synthesizer {
     }
 
     /**
+     * 添加音频
+     * 
+     * @param {Audio} audio - 音频对象
+     */
+    addAudio(audio) {
+        if (!(audio instanceof Audio))
+            audio = new Audio(audio);
+        this.audios.push(audio);
+    }
+
+    /**
      * 设置分块索引，用于乱序插入ChunkSynthesizer时保持顺序
      * 
      * @param {number} - 分块index
