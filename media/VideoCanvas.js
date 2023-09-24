@@ -1,5 +1,5 @@
 import VideoConfig from "../preprocessor/video/VideoConfig.js";
-import MP4Demuxer from "./MP4Demuxer.js";
+import ____MP4Demuxer from "./MP4Demuxer.js";
 
 export default class VideoCanvas {
 
@@ -31,16 +31,17 @@ export default class VideoCanvas {
     currentTime = 0;
     /** @type {boolean} - 是否已销毁 */
     destoryed = false;
-    loaded = false;
+    /** @type {____MP4Demuxer} - 解复用器 */
+    demuxer = null;
 
     /**
      * 构造函数
      * 
      * @param {Object} options - 视频配置选项
      * @param {string} options.url - 视频URL
+     * @param {number} options.startTime - 开始播放时间点（毫秒）
+     * @param {number} options.endTime - 结束播放时间点（毫秒）
      * @param {string} [options.format] - 视频格式（mp4/webm）
-     * @param {number} [options.startTime=0] - 开始播放时间点（毫秒）
-     * @param {number} [options.endTime] - 结束播放时间点（毫秒）
      * @param {number} [options.seekStart=0] - 裁剪开始时间点（毫秒）
      * @param {number} [options.seekEnd] - 裁剪结束时间点（毫秒）
      * @param {boolean} [options.autoplay=false] - 是否自动播放
@@ -53,12 +54,12 @@ export default class VideoCanvas {
         if (!options instanceof Object)
             throw new Error("VideoCanvas options must be Object");
         const { url, format, startTime, endTime, seekStart, seekEnd, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
-        this.url = url || undefined;
-        this.format = format || undefined;
-        this.startTime = startTime || 0;
-        this.endTime = endTime || undefined;
+        this.url = url;
+        this.format = format;
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.seekStart = seekStart || 0;
-        this.seekEnd = seekEnd || undefined;
+        this.seekEnd = seekEnd;
         this.autoplay = autoplay || false;
         this.loop = loop || false;
         this.muted = muted || false;
@@ -94,7 +95,6 @@ export default class VideoCanvas {
     async load() {
         try {
             console.time();
-            this.loaded = true;
             const response = await window.captureCtx.fetch("video_preprocess", {
                 method: "POST",
                 body: JSON.stringify(this._exportConfig()),
@@ -102,11 +102,13 @@ export default class VideoCanvas {
             });
             console.timeEnd();
             if (!response)
-                return;
-            const buffer = await response.arrayBuffer();
-            const data = this._unpackData(buffer);
-            console.log(data.buffer.length);
-            // this.loaded = true;
+                return this.destory();
+            const {
+                buffer,
+                maskBuffer
+            } = this._unpackData(await response.arrayBuffer());
+            this.demuxer = new ____MP4Demuxer();
+            this.demuxer.load(buffer);
         }
         catch (err) {
             console.log(err);
@@ -114,10 +116,12 @@ export default class VideoCanvas {
     }
 
     isReady() {
-        return this.loaded;
+        return !!this.demuxer;
     }
 
     async seek() {
+        // 已销毁不可索引
+        if(this.destoryed) return;
 
     }
 
@@ -125,8 +129,11 @@ export default class VideoCanvas {
 
     }
 
-    canDestory() {
-        return false;
+    canDestory(time) {
+        // 已销毁则避免重复销毁
+        if(this.destoryed) return false;
+        // 返回当前时间是否大于结束实际
+        return time >= this.endTime;
     }
 
     reset() {
@@ -134,7 +141,9 @@ export default class VideoCanvas {
     }
 
     destory() {
-
+        this.demuxer = null;
+        this.reset();
+        this.destoryed = true;
     }
 
     /**

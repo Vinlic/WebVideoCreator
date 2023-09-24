@@ -1,56 +1,10 @@
-import MP4Box, { ISOFile } from "mp4box";
-
-/**
- * MP4文件接收器
- */
-export class MP4FileSink {
-
-    /** @type {ISOFile} - 文件对象 */
-    file;
-    /** @type {number} - 数据偏移量 */
-    offset = 0;
-
-    /**
-     * 构造函数
-     * 
-     * @param {ISOFile} file - MP4Box file对象
-     */
-    constructor(file) {
-        this.file = file;
-    }
-
-    /**
-     * 流写入数据
-     * 
-     * @param {Uint8Array} chunk - 数据块
-     */
-    write(chunk) {
-        const buffer = new ArrayBuffer(chunk.byteLength);
-        new Uint8Array(buffer).set(chunk);
-        buffer.fileStart = this.offset;
-        this.offset += buffer.byteLength;
-        this.file.appendBuffer(buffer);
-    }
-
-    /**
-     * 流关闭
-     */
-    close() {
-        this.file.flush();
-    }
-
-}
-
-// 浏览器中的别名
-const ____MP4FileSink = MP4FileSink;
+import ____MP4Box, { ISOFile } from "mp4box";
 
 /**
  * MP4解复用器
  */
 export default class MP4Demuxer {
 
-    /** @type {string} - 资源URL */
-    url;
     /** @type {ISOFile} - 文件对象 */
     file;
     /** @type {Function} - 配置回调函数 */
@@ -60,12 +14,9 @@ export default class MP4Demuxer {
 
     /**
      * 构造函数
-     * 
-     * @param {string} url - 资源URL
      */
-    constructor(url) {
-        this.url = url;
-        this.file = MP4Box.createFile();
+    constructor() {
+        this.file = ____MP4Box.createFile();
         this.file.onReady = this._onReady.bind(this);
         this.file.onSamples = this._onSamples.bind(this);
     }
@@ -100,10 +51,10 @@ export default class MP4Demuxer {
     /**
      * 加载文件
      */
-    async load() {
-        const fileSink = new ____MP4FileSink(this.file);
-        const response = await fetch(this.url);
-        await response.body.pipeTo(new WritableStream(fileSink, { highWaterMark: 2 }));
+    async load(buffer) {
+        buffer.buffer.fileStart = 0;
+        this.file.appendBuffer(buffer.buffer);
+        this.file.flush();
     }
 
     /**

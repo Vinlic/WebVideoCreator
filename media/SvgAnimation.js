@@ -19,8 +19,8 @@ export default class SvgAnimation {
      * 
      * @param {Object} options - SVG动画选项
      * @param {string} options.target - SVG元素
-     * @param {number} [options.startTime=0] - 开始播放时间点（毫秒）
-     * @param {number} [options.endTime] - 结束播放时间点（毫秒）
+     * @param {number} options.startTime - 开始播放时间点（毫秒）
+     * @param {number} options.endTime - 结束播放时间点（毫秒）
      */
     constructor(options) {
         if (!options instanceof Object)
@@ -28,7 +28,7 @@ export default class SvgAnimation {
         const { target, startTime, endTime } = options;
         this.target = target;
         this.startTime = startTime || 0;
-        this.endTime = endTime || undefined;
+        this.endTime = endTime;
     }
 
     /**

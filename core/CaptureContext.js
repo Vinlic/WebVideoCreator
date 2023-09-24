@@ -34,10 +34,12 @@ export default class CaptureContext {
     timerId = 0;
     /** @type {Object} - 配置对象 */
     config = {
-        /** @type{number} - 渲染帧率 */
-        fps: 0,
-        /** @type{number} - 目标总帧数 */
-        frameCount: 0
+        /** @type {number} - 渲染帧率 */
+        fps: null,
+        /** @type {number} - 总时长 */
+        duration: null,
+        /** @type {number} - 目标总帧数 */
+        frameCount: null
     };
     /** @type {SvgAnimation[]|VideoCanvas[]|DynamicImage[]|LottieCanvas[]} - 媒体调度列表 */
     dispatchMedias = [];
@@ -58,6 +60,8 @@ export default class CaptureContext {
      * 开始捕获
      */
     start() {
+        // 检查配置
+        this._checkConfig();
         // 插入捕获辅助元素
         this._insertCaptureHelper();
         // 转换元素为媒体元素
@@ -104,7 +108,6 @@ export default class CaptureContext {
                     // 完成录制回调 - 此函数请见Page.js的#envInit的exposeFunction
                     return window.screencastCompleted();
                 }
-
                 // 开始捕获下一帧
                 nextFrame.bind(this)();
             })()
@@ -118,7 +121,7 @@ export default class CaptureContext {
      * @param {number} value - 捕获帧率
      */
     setFPS(value) {
-        this.config.fps = Number(value);
+        this.config.fps = parseInt(value);
     }
 
     /**
@@ -127,6 +130,7 @@ export default class CaptureContext {
      * @param {number} value - 捕获时长（毫秒）
      */
     setDuration(value) {
+        this.config.duration = value;
         this.config.frameCount = Math.floor(value / 1000 * fps);
     }
 
@@ -137,6 +141,20 @@ export default class CaptureContext {
      */
     setFrameCount(value) {
         this.config.frameCount = value;
+        this.config.duration = value / fps;
+    }
+
+    /**
+     * 检查配置
+     */
+    _checkConfig() {
+        const { fps, duration, frameCount } = this.config;
+        if (isNaN(fps) || fps <= 0)
+            throw new Error(`config fps ${fps} is invalid`);
+        if (isNaN(duration) || duration <= 0)
+            throw new Error(`config duration ${duration} is invalid`);
+        if (isNaN(frameCount) || frameCount <= 0)
+            throw new Error(`config frameCount ${frameCount} is invalid`);
     }
 
     /**
@@ -248,20 +266,20 @@ export default class CaptureContext {
         // 支持获取html元素布尔属性
         HTMLElement.prototype.getBooleanAttribute = function (name) {
             const value = this.getAttribute(name);
-            if (value == null) return null;
+            if (value == null) return undefined;
             return value == "false" ? false : true;
         }
         // 支持获取html元素数字属性
         HTMLElement.prototype.getNumberAttribute = function (name) {
             const value = this.getAttribute(name);
-            if (value == null) return null;
-            return parseInt(value);
+            if (value == null) return undefined;
+            return Number(value);
         }
         // 支持获取svg元素数字属性
         SVGSVGElement.prototype.getNumberAttribute = function (name) {
             const value = this.getAttribute(name);
-            if (value == null) return null;
-            return parseInt(value);
+            if (value == null) return undefined;
+            return Number(value);
         }
     }
 
@@ -413,7 +431,7 @@ export default class CaptureContext {
             // 动画播放开始时间点（毫秒）
             startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
             // 动画播放结束时间点（毫秒）
-            endTime: e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime")
+            endTime: Math.min(e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime") || Infinity, this.config.duration)
         };
         // 实例化SVG动画对象
         const svgAnimation = new ____SvgAnimation(options);
@@ -429,18 +447,18 @@ export default class CaptureContext {
      */
     convertToInnerAudio(e) {
         // 获取seek时间
-        const currentTimeAttribute = e.getAttribute("currentTime");
+        const currentTimeAttribute = e.getNumberAttribute("currentTime");
         const options = {
             // 音频来源
-            url: this._currentUrlJoin(e.getAttribute("src")),
+            url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
             // 音频格式
-            format: e.getAttribute("format"),
+            format: e.getAttribute("format") || undefined,
             // 音频开始时间点（毫秒）
             startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
             // 音频结束时间点（毫秒）
-            endTime: e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime"),
+            endTime: Math.min(e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime") || Infinity, this.config.duration),
             // 音频裁剪开始时间点（毫秒）
-            seekStart: e.getNumberAttribute("seek-start") || e.getNumberAttribute("seekStart") || (currentTimeAttribute ? parseInt(currentTimeAttribute * 1000) : null),
+            seekStart: e.getNumberAttribute("seek-start") || e.getNumberAttribute("seekStart") || (currentTimeAttribute ? currentTimeAttribute * 1000 : undefined),
             // 音频裁剪结束时间点（毫秒）
             seekEnd: e.getNumberAttribute("seek-end") || e.getNumberAttribute("seekEnd"),
             // 音频淡入时长（毫秒）
@@ -468,12 +486,12 @@ export default class CaptureContext {
      */
     convertToVideoCanvas(e) {
         // 获取seek时间
-        const currentTimeAttribute = e.getAttribute("currentTime");
+        const currentTimeAttribute = e.getNumberAttribute("currentTime");
         const options = {
             // 视频来源
-            url: this._currentUrlJoin(e.getAttribute("src")),
+            url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
             // 视频格式
-            format: e.getAttribute("format"),
+            format: e.getAttribute("format") || undefined,
             // 视频宽度
             width: parseInt(e.style.width) || e.getNumberAttribute("width") || e.width,
             // 视频高度
@@ -481,9 +499,9 @@ export default class CaptureContext {
             // 视频开始时间点（毫秒）
             startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
             // 视频结束时间点（毫秒）
-            endTime: e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime"),
+            endTime: Math.min(e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime") || Infinity, this.config.duration),
             // 视频裁剪开始时间点（毫秒）
-            seekStart: e.getNumberAttribute("seek-start") || e.getNumberAttribute("seekStart") || (currentTimeAttribute ? parseInt(currentTimeAttribute * 1000) : null),
+            seekStart: e.getNumberAttribute("seek-start") || e.getNumberAttribute("seekStart") || (currentTimeAttribute ? currentTimeAttribute * 1000 : undefined),
             // 视频裁剪结束时间点（毫秒）
             seekEnd: e.getNumberAttribute("seek-end") || e.getNumberAttribute("seekEnd"),
             // 视频是否循环播放
@@ -522,9 +540,9 @@ export default class CaptureContext {
     convertToDynamicImage(e) {
         const options = {
             // 图像来源
-            url: this._currentUrlJoin(e.getAttribute("src")),
+            url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
             // 图像格式
-            format: e.getAttribute("format"),
+            format: e.getAttribute("format") || undefined,
             // 图像宽度
             width: parseInt(e.style.width) || e.getNumberAttribute("width") || e.width,
             // 图像高度
@@ -532,7 +550,7 @@ export default class CaptureContext {
             // 图像播放开始时间点（毫秒）
             startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
             // 图像播放结束时间点（毫秒）
-            endTime: e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime"),
+            endTime: Math.min(e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime") || Infinity, this.config.duration),
             // 是否循环播放
             loop: e.getBooleanAttribute("loop"),
             // 拉取失败时重试拉取次数
@@ -563,7 +581,7 @@ export default class CaptureContext {
     convertToLottieCanvas(e) {
         const options = {
             // lottie来源
-            url: this._currentUrlJoin(e.getAttribute("src")),
+            url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
             // 动画宽度
             width: parseInt(e.style.width) || e.getNumberAttribute("width"),
             // 动画宽度
@@ -571,7 +589,7 @@ export default class CaptureContext {
             // 动画播放开始时间点（毫秒）
             startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
             // 动画播放结束时间点（毫秒）
-            endTime: e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime"),
+            endTime: Math.min(e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime") || Infinity, this.config.duration),
             // 是否循环播放
             loop: e.getBooleanAttribute("loop"),
             // 拉取失败时重试拉取次数
@@ -703,8 +721,8 @@ export default class CaptureContext {
             nodeValue: { get: () => target.nodeValue, set: v => target.nodeValue = v },
             normalize: { get: () => target.normalize, set: v => target.normalize = v },
             matches: { get: () => target.matches, set: v => target.matches = v },
-            play: { get: () => () => {} },
-            pause: { get: () => () => {} }
+            play: { get: () => () => { } },
+            pause: { get: () => () => { } }
         });
     }
 

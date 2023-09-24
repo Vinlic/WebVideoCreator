@@ -430,7 +430,7 @@ export default class Synthesizer extends EventEmitter {
             !loop && seekStart && aencoder.addInputOption("-ss", util.millisecondsToHmss(seekStart));  //截取开始时间点
             !loop && seekEnd && aencoder.addInputOption("-to", util.millisecondsToHmss(seekEnd));  //截取结束时间点
             const fadeIn = fadeInDuration ? `,afade=t=in:st=${startTime / 1000}:d=${fadeInDuration / 1000}` : "";
-            const fadeOut = fadeOutDuration ? `,afade=t=out:st=${((loop ? duration : (endTime || duration)) - fadeOutDuration) / 1000}:d=${fadeOutDuration / 1000}` : "";
+            const fadeOut = fadeOutDuration ? `,afade=t=out:st=${((loop ? duration : (Math.min(endTime, duration) || duration)) - fadeOutDuration) / 1000}:d=${fadeOutDuration / 1000}` : "";
             outputs += `[${output}]`;
             return result + `[${1 + index}]adelay=${startTime}|${startTime},volume=${_volume}${fadeIn}${fadeOut}[${output}];`;
         }, "") + `${outputs}amix=inputs=${audios.length}:normalize=0`;

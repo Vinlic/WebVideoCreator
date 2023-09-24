@@ -12,7 +12,7 @@ import SvgAnimation from "../media/SvgAnimation.js";
 import VideoCanvas from "../media/VideoCanvas.js";
 import DynamicImage from "../media/DynamicImage.js";
 import LottieCanvas from "../media/LottieCanvas.js";
-import MP4Demuxer, { MP4FileSink } from "../media/MP4Demuxer.js";
+import MP4Demuxer from "../media/MP4Demuxer.js";
 import VideoConfig from "../preprocessor/video/VideoConfig.js";
 import Audio from "../entity/Audio.js";
 import Font from "../entity/Font.js";
@@ -271,6 +271,8 @@ export default class Page extends EventEmitter {
             // 指定时长时将计算总帧数
             if (_.isFinite(duration))
                 frameCount = util.durationToFrameCount(duration, fps);
+            else if(_.isFinite(frameCount))
+                duration = util.frameCountToDuration(frameCount, fps);
             // 页面进入捕获中状态
             this.#setState(Page.STATE.CAPTURING);
             // 当当前视图与设定不一致时进行调整
@@ -286,9 +288,10 @@ export default class Page extends EventEmitter {
             });
             // 如果设置帧率或者总帧数将覆盖页面中设置的帧率和总帧数
             await this.target.evaluate(async config => {
+                console.log(config);
                 Object.assign(window.captureCtx.config, config);
                 window.captureCtx.start();
-            }, { fps, frameCount });
+            }, _.pickBy({ fps, duration, frameCount }, _.isFinite));
         });
     }
 
@@ -391,7 +394,7 @@ export default class Page extends EventEmitter {
             const text = message.text();
             // 错误消息处理
             if (type === "error") {
-                if (text.indexOf("Failed to load resource: the server responded with a status of " != -1))
+                if (text.indexOf("Failed to load resource: the server responded with a status of ") != -1)
                     return;
                 this.emit("consoleError", new PageError(text));
             }
@@ -425,7 +428,6 @@ export default class Page extends EventEmitter {
         await this.target.exposeFunction("throwError", (code = -1, message = "") => this.#emitError(new Error(`throw error: [${code}] ${message}`)));
         // 页面加载前进行上下文初始化
         await this.target.evaluateOnNewDocument(`
-            window.____MP4FileSink=${MP4FileSink};
             window.____MP4Demuxer=${MP4Demuxer};
             window.____SvgAnimation=${SvgAnimation};
             window.____VideoCanvas=${VideoCanvas};

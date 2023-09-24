@@ -42,8 +42,8 @@ export default class DynamicImage {
      * @param {Object} options - 动态图像选项
      * @param {string} options.url - 图像来源
      * @param {string} options.format - 图像格式
-     * @param {number} [options.startTime=0] - 开始播放时间点（毫秒）
-     * @param {number} [options.endTime] - 结束播放时间点（毫秒）
+     * @param {number} options.startTime - 开始播放时间点（毫秒）
+     * @param {number} options.endTime - 结束播放时间点（毫秒）
      * @param {boolean} [options.loop] - 是否强制循环
      * @param {number} [options.retryFetchs=2] - 重试下载次数
      */
@@ -51,11 +51,11 @@ export default class DynamicImage {
         if (!options instanceof Object)
             throw new Error("DemuxedVideo options must be Object");
         const { url, format, startTime, endTime, loop, retryFetchs } = options;
-        this.url = url || undefined;
-        this.format = format || undefined;
+        this.url = url;
+        this.format = format;
         this.startTime = startTime || 0;
-        this.endTime = endTime || undefined;
-        this.loop = loop == null ? undefined : loop;
+        this.endTime = endTime;
+        this.loop = loop;
         this.retryFetchs = retryFetchs || 2;
     }
 
@@ -86,7 +86,7 @@ export default class DynamicImage {
         // 已销毁不可播放
         if(this.destoryed) return false;
         // 如果当前时间超过元素开始结束时间则判定未不可播放
-        const { startTime, endTime = Infinity } = this;
+        const { startTime, endTime } = this;
         if (time < startTime || time >= endTime)
             return false;
         return true;
@@ -135,6 +135,7 @@ export default class DynamicImage {
      * @param {number} time - 索引时间点
      */
     async seek(time) {
+        // 已销毁不可索引
         if(this.destoryed) return;
         // 如果当前图像不循环且播放结束则不再索引
         if(!this.loop && this.isEnd()) return;

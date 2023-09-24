@@ -128,9 +128,14 @@ export default class VideoProcessTask extends ProcessTask {
      * 视频裁剪
      */
     async #videoClip(filePath) {
-        const cliper = ffmpeg(filePath)
+        const cliper = ffmpeg(filePath);
+        let seekEnd = this.seekEnd;
+        const duration = (seekEnd || Infinity) - (this.seekStart || 0);
+        const endTime = this.startTime + duration;
+        if(endTime != Infinity && endTime > this.endTime)
+            seekEnd = seekEnd - (this.endTime - endTime);
         this.seekStart && cliper.addInputOption("-ss", util.millisecondsToHmss(this.seekStart));
-        this.seekEnd && cliper.addInputOption("-to", util.millisecondsToHmss(this.seekEnd));
+        seekEnd && cliper.addInputOption("-to", util.millisecondsToHmss(this.seekEnd));
         const buffers = [];
         const stream = new PassThrough();
         const receivePromise = new Promise((resolve, reject) => {
