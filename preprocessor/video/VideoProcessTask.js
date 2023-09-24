@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import assert from "assert";
 import _ from "lodash";
 import ffmpeg from "fluent-ffmpeg";
+import { PassThrough } from "stream";
 import AsyncLock from "async-lock";
 
 import ProcessTask from "../base/ProcessTask.js";
@@ -90,6 +91,18 @@ export default class VideoProcessTask extends ProcessTask {
             // 具备透明通道将分离出蒙版视频
             hasAlphaChannel && await this.#videoMaskExtract();
         }
+        let buffer;
+        let maskBuffer = null;
+        if(this.hasClip) {
+            buffer = await this.#videoClip(this.outputFilePath);
+            if(this.maskFilePath)
+                maskBuffer = await this.#videoClip(this.maskFilePath);
+        }
+        else {
+            buffer = await fs.readFile(this.outputFilePath);
+            if(this.maskFilePath)
+                maskBuffer = await fs.readFile(this.maskFilePath);
+        }
         return {
             // 添加到合成器的音频对象
             audio: this.audioFilePath ? new Audio({
@@ -102,11 +115,43 @@ export default class VideoProcessTask extends ProcessTask {
             }) : null,
             // video_preprocess响应回传到浏览器的数据
             buffer: this.#packData({
-                buffer: Buffer.from(await fs.readFile(this.transcodedFilePath || this.filePath)),
-                maskBuffer: this.maskFilePath ? Buffer.from(await fs.readFile(this.maskFilePath)) : null,
+                buffer,
+                maskBuffer,
                 hasAudio: this.hasAudio
             })
         }
+    }
+
+    /**
+     * 视频裁剪
+     */
+    async #videoClip(filePath) {
+        const cliper = ffmpeg(filePath)
+        this.seekStart && cliper.addInputOption("-ss", util.millisecondsToHmss(this.seekStart));
+        this.seekEnd && cliper.addInputOption("-to", util.millisecondsToHmss(this.seekEnd));
+        const buffers = [];
+        const stream = new PassThrough({ highWaterMark: 1024 });
+        const receivePromise = new Promise((resolve, reject) => {
+            stream.on("data", data => buffers.push(data));
+            stream.once("error", reject)
+            stream.once("end", () => resolve(Buffer.concat(buffers)));
+        });
+        await new Promise((resolve, reject) => {
+            cliper
+                .addOutputOption("-c:v", "copy")
+                .addOutputOption("-c:a", "copy")
+                .addOutputOption("-an")
+                .addOutputOption('-movflags frag_keyframe+empty_moov')
+                .toFormat("mp4")
+                .once("start", cmd => console.log(cmd))
+                .once("error", (err, stdout, stderr) => {
+                    console.error(stdout, stderr);
+                    reject(err);
+                })
+                .once("end", resolve)
+                .pipe(stream, { end: true });
+        });
+        return await receivePromise;
     }
 
     /**
@@ -137,6 +182,7 @@ export default class VideoProcessTask extends ProcessTask {
                     .videoFilter("alphaextract")
                     .addOutputOption(`-c:v ${this.videoCodec}`)
                     .addOutputOption("-an")
+                    .outputOption("-movflags +faststart")
                     .addOutput(maskFilePath)
                     .once("start", cmd => console.log(cmd))
                     .once("end", resolve)
@@ -175,6 +221,7 @@ export default class VideoProcessTask extends ProcessTask {
                     .addOutputOption(`-c:v ${this.videoCodec}`)
                     .addOutputOption("-an")
                     .addOutputOption("-crf 18")
+                    .outputOption("-movflags +faststart")
                     .addOutput(transcodedFilePath)
                     .once("start", cmd => logger.info(cmd))
                     .once("end", resolve)
@@ -231,11 +278,22 @@ export default class VideoProcessTask extends ProcessTask {
         return Buffer.concat(buffers);
     }
 
+    get outputFilePath() {
+        return this.transcodedFilePath || this.filePath;
+    }
+
     /**
      * 是否包含音频
      */
     get hasAudio() {
         return !!this.audioFilePath;
+    }
+
+    /**
+     * 是否裁剪
+     */
+    get hasClip() {
+        return this.seekStart > 0 || this.seekEnd > 0;
     }
 
 }

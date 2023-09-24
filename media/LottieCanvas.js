@@ -103,7 +103,7 @@
         // 转换为json对象
         const animationData = await response.json();
         // 调用Lottie动画库加载动画 - 动画库由Page.js注入
-        this.animation = lottie.loadAnimation({
+        this.animation = ____lottie.loadAnimation({
             // 是否循环播放动画
             loop: this.loop,
             // 动画JSON数据

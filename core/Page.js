@@ -171,9 +171,9 @@ export default class Page extends EventEmitter {
         await this.target.goto(url);
         await Promise.all([
             // 注入MP4Box库
-            this.#injectLibrary(MP4BOX_LIBRARY_SCRIPT_CONTENT),
+            this.#injectLibrary(MP4BOX_LIBRARY_SCRIPT_CONTENT + ";window.____MP4Box = MP4Box"),
             // 注入Lottie动画库
-            this.#injectLibrary(LOTTIE_LIBRARY_SCRIPT_CONTENT)
+            this.#injectLibrary(LOTTIE_LIBRARY_SCRIPT_CONTENT + ";window.____lottie = lottie")
         ]);
     }
 
@@ -206,7 +206,7 @@ export default class Page extends EventEmitter {
      */
     async waitForFontsLoaded(timeout = 30000) {
         // 注入Webfont库
-        await this.#injectLibrary(FONTFACE_OBSERVER_SCRIPT_CONTENT);
+        await this.#injectLibrary(FONTFACE_OBSERVER_SCRIPT_CONTENT + ";window.____FontFaceObserver = FontFaceObserver");
         // 等待字体加载完成
         await Promise.all(this.fonts.map(font => font.load()));
         // 将所有字体声明拼接为样式
@@ -237,7 +237,7 @@ export default class Page extends EventEmitter {
             // 等待字体加载完成
             let timer;
             await Promise.race([
-                Promise.all(fontFamilys.map(family => new FontFaceObserver(family).load())),
+                Promise.all(fontFamilys.map(family => new ____FontFaceObserver(family).load())),
                 new Promise((_, reject) => timer = window.____setTimeout(reject, _timeout))
             ]);
             window.____clearTimeout(timer);
