@@ -94,7 +94,7 @@ export default class CaptureContext {
                 this._callTimeoutCallbacks();
 
                 // 捕获帧图 - 此函数请见Page.js的#envInit的exposeFunction
-                if (!await window.captureFrame()) {
+                if (!await ____captureFrame()) {
                     this.stopFlag = true;
                     return;
                 }
@@ -106,7 +106,7 @@ export default class CaptureContext {
                 if (++this.frameIndex >= this.config.frameCount) {
                     this.stopFlag = true;
                     // 完成录制回调 - 此函数请见Page.js的#envInit的exposeFunction
-                    return window.screencastCompleted();
+                    return ____screencastCompleted();
                 }
                 // 开始捕获下一帧
                 nextFrame.bind(this)();
@@ -181,7 +181,7 @@ export default class CaptureContext {
         (function update() {
             rotate = rotate >= 360 ? 0 : (rotate + 0.1);
             captureHelper.style.transform = `rotate(${rotate}deg)`;
-            window.setTimeout(update, 0);
+            setTimeout(update, 0);
         })();
     }
 
@@ -382,7 +382,7 @@ export default class CaptureContext {
                 continue;
             this.intervalCallbacks[i][1] = this.currentTime;
             // 下一个事件循环再调用
-            window.____setTimeout(() => fn(this.currentTime), 0);
+            ____setTimeout(() => fn(this.currentTime), 0);
         }
     }
 
@@ -396,7 +396,7 @@ export default class CaptureContext {
             if (this.currentTime < timestamp + timeout)
                 return true;
             // 下一个事件循环再调用
-            window.____setTimeout(() => fn(this.currentTime), 0);
+            ____setTimeout(() => fn(this.currentTime), 0);
             return false;
         });
     }
@@ -476,7 +476,7 @@ export default class CaptureContext {
             // 是否忽略本地缓存
             ignoreCache: e.getBooleanAttribute("ignore-cache") || e.getBooleanAttribute("ignoreCache")
         };
-        window.addAudio(options);
+        ____addAudio(options);
     }
 
     /**
@@ -753,7 +753,7 @@ export default class CaptureContext {
                     if (_retryIndex >= retryFetchs)
                         reject(err);
                     else
-                        window.____setTimeout(() => this.fetch(url, options, _retryIndex + 1), retryDelay);
+                        ____setTimeout(() => this.fetch(url, options, _retryIndex + 1), retryDelay);
                 });
         });
     }

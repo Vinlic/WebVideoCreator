@@ -1,3 +1,7 @@
+import innerUtil from "../lib/inner-util.js";
+
+const ____util = innerUtil();
+
 /**
  * 动态图像
  */
@@ -41,22 +45,28 @@ export default class DynamicImage {
      * 
      * @param {Object} options - 动态图像选项
      * @param {string} options.url - 图像来源
-     * @param {string} options.format - 图像格式
      * @param {number} options.startTime - 开始播放时间点（毫秒）
      * @param {number} options.endTime - 结束播放时间点（毫秒）
+     * @param {string} [options.format] - 图像格式
      * @param {boolean} [options.loop] - 是否强制循环
      * @param {number} [options.retryFetchs=2] - 重试下载次数
      */
     constructor(options) {
-        if (!options instanceof Object)
-            throw new Error("DemuxedVideo options must be Object");
+        const u = ____util;
+        u.assert(u.isObject(options), "DynamicImage options must be Object");
         const { url, format, startTime, endTime, loop, retryFetchs } = options;
+        u.assert(u.isString(url), "url must be string");
+        u.assert(u.isNumber(startTime), "startTime must be number");
+        u.assert(u.isNumber(endTime), "endTime must be number");
+        u.assert(u.isUndefined(format) || u.isString(format), "format must be string");
+        u.assert(u.isUndefined(loop) || u.isBoolean(loop), "loop must be boolean");
+        u.assert(u.isUndefined(retryFetchs) || u.isNumber(retryFetchs), "retryFetchs must be number");
         this.url = url;
-        this.format = format;
-        this.startTime = startTime || 0;
+        this.startTime = startTime;
         this.endTime = endTime;
+        this.format = format;
         this.loop = loop;
-        this.retryFetchs = retryFetchs || 2;
+        this.retryFetchs = u.defaultTo(retryFetchs, 2);
     }
 
     /**
@@ -97,7 +107,7 @@ export default class DynamicImage {
      */
     async load() {
         // 下载图像数据
-        const response = await window.captureCtx.fetch(this.url, this.retryFetchs);
+        const response = await captureCtx.fetch(this.url, this.retryFetchs);
         // 如果获得null可能响应存在问题，直接销毁对象，具体错误报告由Page.js的响应拦截器处理
         if(!response)
             return this.destory();
@@ -162,7 +172,7 @@ export default class DynamicImage {
                     // 重置帧索引
                     this.reset();
                     // 等待30毫秒后再触发resolve，避免后续疯狂递归
-                    window.____setTimeout(resolve, 30);
+                    ____setTimeout(resolve, 30);
                 }
                 // 其它错误抛出
                 else

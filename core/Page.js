@@ -16,7 +16,9 @@ import MP4Demuxer from "../media/MP4Demuxer.js";
 import VideoConfig from "../preprocessor/video/VideoConfig.js";
 import Audio from "../entity/Audio.js";
 import Font from "../entity/Font.js";
+import innerUtil from "../lib/inner-util.js";
 import util from "../lib/util.js";
+
 /**
  * @typedef {import('puppeteer-core').Viewport} Viewport
  */
@@ -238,9 +240,9 @@ export default class Page extends EventEmitter {
             let timer;
             await Promise.race([
                 Promise.all(fontFamilys.map(family => new ____FontFaceObserver(family).load())),
-                new Promise((_, reject) => timer = window.____setTimeout(reject, _timeout))
+                new Promise((_, reject) => timer = ____setTimeout(reject, _timeout))
             ]);
-            window.____clearTimeout(timer);
+            ____clearTimeout(timer);
         }, timeout);
     }
 
@@ -288,9 +290,8 @@ export default class Page extends EventEmitter {
             });
             // 如果设置帧率或者总帧数将覆盖页面中设置的帧率和总帧数
             await this.target.evaluate(async config => {
-                console.log(config);
-                Object.assign(window.captureCtx.config, config);
-                window.captureCtx.start();
+                Object.assign(captureCtx.config, config);
+                captureCtx.start();
             }, _.pickBy({ fps, duration, frameCount }, _.isFinite));
         });
     }
@@ -300,7 +301,7 @@ export default class Page extends EventEmitter {
      */
     async pauseScreencast() {
         assert(this.isCapturing(), "Page state is not capturing, unable to pause");
-        await this.target.evaluate(async () => window.captureCtx.pauseFlag = true);
+        await this.target.evaluate(async () => captureCtx.pauseFlag = true);
         this.#setState(Page.STATE.PAUSED);
     }
 
@@ -310,11 +311,11 @@ export default class Page extends EventEmitter {
     async resumeScreencast() {
         assert(this.isPaused(), "Page state is not paused, unable to resume");
         await this.target.evaluate(async () => {
-            if (window.captureCtx.resumeCallback) {
-                window.captureCtx.resumeCallback();
-                window.captureCtx.resumeCallback = null;
+            if (captureCtx.resumeCallback) {
+                captureCtx.resumeCallback();
+                captureCtx.resumeCallback = null;
             }
-            window.captureCtx.pauseFlag = false;
+            captureCtx.pauseFlag = false;
         });
         this.#setState(Page.STATE.CAPTURING);
     }
@@ -324,7 +325,7 @@ export default class Page extends EventEmitter {
      */
     async stopScreencast() {
         await asyncLock.acquire("stopScreencast", async () => {
-            await this.target.evaluate(async () => window.captureCtx.stopFlag = true);
+            await this.target.evaluate(async () => captureCtx.stopFlag = true);
             await this.#endCDPSession();
             this.#setState(Page.STATE.READY);
         });
@@ -341,7 +342,7 @@ export default class Page extends EventEmitter {
      * @returns {CaptureContextConfig} - 配置对象
      */
     async getCaptureContextConfig() {
-        return await this.target.evaluate(() => window.captureCtx.config);
+        return await this.target.evaluate(() => captureCtx.config);
     }
 
     /**
@@ -419,15 +420,16 @@ export default class Page extends EventEmitter {
         // 页面关闭回调
         this.target.once("close", this.close.bind(this));
         // 暴露录制完成函数
-        await this.target.exposeFunction("screencastCompleted", this.#emitScreencastCompleted.bind(this));
+        await this.target.exposeFunction("____screencastCompleted", this.#emitScreencastCompleted.bind(this));
         // 暴露下一帧函数
-        await this.target.exposeFunction("captureFrame", this.#captureFrame.bind(this));
+        await this.target.exposeFunction("____captureFrame", this.#captureFrame.bind(this));
         // 暴露添加音频函数
-        await this.target.exposeFunction("addAudio", this.#addAudio.bind(this));
+        await this.target.exposeFunction("____addAudio", this.#addAudio.bind(this));
         // 暴露抛出错误函数
-        await this.target.exposeFunction("throwError", (code = -1, message = "") => this.#emitError(new Error(`throw error: [${code}] ${message}`)));
+        await this.target.exposeFunction("____throwError", (code = -1, message = "") => this.#emitError(new Error(`throw error: [${code}] ${message}`)));
         // 页面加载前进行上下文初始化
         await this.target.evaluateOnNewDocument(`
+            window.____util=(${innerUtil})();
             window.____MP4Demuxer=${MP4Demuxer};
             window.____SvgAnimation=${SvgAnimation};
             window.____VideoCanvas=${VideoCanvas};

@@ -1,8 +1,9 @@
+import innerUtil from "../lib/inner-util.js";
+
+const ____util = innerUtil();
+
 /**
  * Lottie画布
- * 
- * 需依赖lottie-web的canvas版本，请使用script标签加载以下js脚本
- * https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie_canvas.min.js
  */
  export default class LottieCanvas {
 
@@ -40,14 +41,19 @@
      * @param {number} [options.retryFetchs=2] - 重试下载次数
      */
     constructor(options) {
-        if (!options)
-            throw new Error("LottieCanvas options invalid");
+        const u = ____util;
+        u.assert(u.isObject(options), "LottieCanvas options must be Object");
         const { url, startTime, endTime, loop, retryFetchs } = options;
+        u.assert(u.isString(url), "url must be string");
+        u.assert(u.isNumber(startTime), "startTime must be number");
+        u.assert(u.isNumber(endTime), "endTime must be number");
+        u.assert(u.isUndefined(loop) || u.isBoolean(loop), "loop must be boolean");
+        u.assert(u.isUndefined(retryFetchs) || u.isNumber(retryFetchs), "retryFetchs must be number");
         this.url = url;
-        this.startTime = startTime || 0;
+        this.startTime = startTime;
         this.endTime = endTime;
         this.loop = loop;
-        this.retryFetchs = retryFetchs || 2;
+        this.retryFetchs = u.defaultTo(retryFetchs, 2);
     }
     
     /**
@@ -88,7 +94,7 @@
      */
     async load() {
         // 下载Lottie数据
-        const response = await window.captureCtx.fetch(this.url, this.retryFetchs);
+        const response = await captureCtx.fetch(this.url, this.retryFetchs);
         // 如果获得null可能响应存在问题，直接销毁对象，具体错误报告由Page.js的响应拦截器处理
         if(!response)
             return this.destory();

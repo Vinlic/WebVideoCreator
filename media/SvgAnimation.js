@@ -1,3 +1,7 @@
+import innerUtil from "../lib/inner-util.js";
+
+const ____util = innerUtil();
+
 /**
  * SVG动画
  */
@@ -18,16 +22,19 @@ export default class SvgAnimation {
      * 构造函数
      * 
      * @param {Object} options - SVG动画选项
-     * @param {string} options.target - SVG元素
+     * @param {SVGSVGElement} options.target - SVG元素
      * @param {number} options.startTime - 开始播放时间点（毫秒）
      * @param {number} options.endTime - 结束播放时间点（毫秒）
      */
     constructor(options) {
-        if (!options instanceof Object)
-            throw new Error("SvgAnimation options must be Object");
+        const u = ____util;
+        u.assert(u.isObject(options), "SvgAnimation options must be Object");
         const { target, startTime, endTime } = options;
+        u.assert(target instanceof SVGSVGElement, "target must be SVGSVGElement");
+        u.assert(u.isNumber(startTime), "startTime must be number");
+        u.assert(u.isNumber(endTime), "endTime must be number");
         this.target = target;
-        this.startTime = startTime || 0;
+        this.startTime = startTime;
         this.endTime = endTime;
     }
 

@@ -1,6 +1,13 @@
 import VideoConfig from "../preprocessor/video/VideoConfig.js";
 import ____MP4Demuxer from "./MP4Demuxer.js";
 
+import innerUtil from "../lib/inner-util.js";
+
+const ____util = innerUtil();
+
+/**
+ * 视频画布
+ */
 export default class VideoCanvas {
 
     /** @type {string} - 视频URL */
@@ -44,27 +51,38 @@ export default class VideoCanvas {
      * @param {string} [options.format] - 视频格式（mp4/webm）
      * @param {number} [options.seekStart=0] - 裁剪开始时间点（毫秒）
      * @param {number} [options.seekEnd] - 裁剪结束时间点（毫秒）
-     * @param {boolean} [options.autoplay=false] - 是否自动播放
+     * @param {boolean} [options.autoplay] - 是否自动播放
      * @param {boolean} [options.loop=false] - 是否循环播放
      * @param {boolean} [options.muted=false] - 是否静音
      * @param {boolean} [options.retryFetchs=2] - 重试下载次数
      * @param {boolean} [options.ignoreCache=false] - 是否忽略本地缓存
      */
     constructor(options) {
-        if (!options instanceof Object)
-            throw new Error("VideoCanvas options must be Object");
-        const { url, format, startTime, endTime, seekStart, seekEnd, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
+        const u = ____util;
+        u.assert(u.isObject(options), "VideoCanvas options must be Object");
+        const { url, startTime, endTime, format, seekStart, seekEnd, autoplay, loop, muted, retryFetchs, ignoreCache } = options;        
+        u.assert(u.isString(url), "url must be string");
+        u.assert(u.isNumber(startTime), "startTime must be number");
+        u.assert(u.isNumber(endTime), "endTime must be number");
+        u.assert(u.isUndefined(format) || u.isString(format), "format must be string");
+        u.assert(u.isUndefined(seekStart) || u.isNumber(seekStart), "seekStart must be number");
+        u.assert(u.isUndefined(seekEnd) || u.isNumber(seekEnd), "seekEnd must be number");
+        u.assert(u.isUndefined(autoplay) || u.isBoolean(autoplay), "autoplay must be boolean");
+        u.assert(u.isUndefined(loop) || u.isBoolean(loop), "loop must be boolean");
+        u.assert(u.isUndefined(muted) || u.isBoolean(muted), "muted must be boolean");
+        u.assert(u.isUndefined(retryFetchs) || u.isNumber(retryFetchs), "retryFetchs must be number");
+        u.assert(u.isUndefined(ignoreCache) || u.isBoolean(ignoreCache), "ignoreCache must be boolean");
         this.url = url;
-        this.format = format;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.seekStart = seekStart || 0;
+        this.format = format;
+        this.seekStart = u.defaultTo(seekStart, 0);
         this.seekEnd = seekEnd;
-        this.autoplay = autoplay || false;
-        this.loop = loop || false;
-        this.muted = muted || false;
-        this.retryFetchs = retryFetchs || 2;
-        this.ignoreCache = ignoreCache || false;
+        this.autoplay = autoplay;
+        this.loop = u.defaultTo(loop, false);
+        this.muted = u.defaultTo(muted, false);
+        this.retryFetchs = u.defaultTo(retryFetchs, 2);
+        this.ignoreCache = u.defaultTo(ignoreCache, false);
     }
 
     /**
@@ -95,7 +113,7 @@ export default class VideoCanvas {
     async load() {
         try {
             console.time();
-            const response = await window.captureCtx.fetch("video_preprocess", {
+            const response = await captureCtx.fetch("video_preprocess", {
                 method: "POST",
                 body: JSON.stringify(this._exportConfig()),
                 retryFetchs: 0
