@@ -32,14 +32,26 @@ export default class VideoCanvas {
     retryFetchs;
     /** @type {boolean} - 是否忽略本地缓存 */
     ignoreCache;
+    /** @type {Object} - 视频信息配置对象 */
+    config;
     /** @type {number} - 帧索引 */
     frameIndex = 0;
     /** @type {number} - 当前播放时间点（毫秒） */
     currentTime = 0;
+    /** @type {VideoFrame[]} - 已解码视频帧队列 */
+    frames = [];
+    /** @type {VideoFrame[]} - 已解码蒙版视频帧队列 */
+    maskFrames = [];
     /** @type {boolean} - 是否已销毁 */
     destoryed = false;
-    /** @type {____MP4Demuxer} - 解复用器 */
+    /** @type {VideoDecoder} - 视频解码器 */
+    decoder = null;
+    /** @type {VideoDecoder} - 蒙版视频解码器 */
+    maskDecoder = null;
+    /** @type {____MP4Demuxer} - 视频解复用器 */
     demuxer = null;
+    /** @type {____MP4Demuxer} - 蒙版视频解复用器 */
+    maskDemuxer = null;
 
     /**
      * 构造函数
@@ -60,7 +72,7 @@ export default class VideoCanvas {
     constructor(options) {
         const u = ____util;
         u.assert(u.isObject(options), "VideoCanvas options must be Object");
-        const { url, startTime, endTime, format, seekStart, seekEnd, autoplay, loop, muted, retryFetchs, ignoreCache } = options;        
+        const { url, startTime, endTime, format, seekStart, seekEnd, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
         u.assert(u.isString(url), "url must be string");
         u.assert(u.isNumber(startTime), "startTime must be number");
         u.assert(u.isNumber(endTime), "endTime must be number");
@@ -124,13 +136,31 @@ export default class VideoCanvas {
                 buffer,
                 maskBuffer
             } = this._unpackData(await response.arrayBuffer());
-            this.demuxer = new ____MP4Demuxer();
-            const waitConfigPromise = new Promise((resolve, reject) => {
-                this.demuxer.onConfig(resolve);
-                this.demuxer.onError(reject);
+            const {
+                demuxer,
+                decoder,
+                config
+            } = await this._createDecoder(buffer, {
+                onFrame: frame => console.log(1),
+                onError: err => console.error(err)
             });
-            this.demuxer.load(buffer);
-            console.log(await waitConfigPromise);
+            this.demuxer = demuxer;
+            this.decoder = decoder;
+            this.config = config;
+            if (maskBuffer) {
+                const {
+                    demuxer: maskDemuxer,
+                    decoder: maskDecoder,
+                    config
+                } = await this._createDecoder(buffer, {
+                    onFrame: frame => console.log(2),
+                    onError: err => console.error(err)
+                });
+                this.maskDemuxer = maskDemuxer;
+                this.maskDecoder = maskDecoder;
+                ____util.assert(config.frameCount == this.config.frameCount, `Mask video frameCount (${config.frameCount}) is inconsistent with the original video frameCount (${this.config.frameCount})`);
+                ____util.assert(config.fps == this.config.fps, `Mask video fps (${config.fps}) is inconsistent with the original video fps (${this.config.fps})`);
+            }
         }
         catch (err) {
             console.log(err);
@@ -138,12 +168,12 @@ export default class VideoCanvas {
     }
 
     isReady() {
-        return !!this.demuxer;
+        return !!this.decoder;
     }
 
     async seek() {
         // 已销毁不可索引
-        if(this.destoryed) return;
+        if (this.destoryed) return;
 
     }
 
@@ -153,7 +183,7 @@ export default class VideoCanvas {
 
     canDestory(time) {
         // 已销毁则避免重复销毁
-        if(this.destoryed) return false;
+        if (this.destoryed) return false;
         // 返回当前时间是否大于结束实际
         return time >= this.endTime;
     }
@@ -163,9 +193,52 @@ export default class VideoCanvas {
     }
 
     destory() {
+        this.decoder && this.decoder.close();
+        this.decoder = null;
         this.demuxer = null;
         this.reset();
         this.destoryed = true;
+    }
+
+    async _createDecoder(buffer, options = {}) {
+        const u = ____util;
+        const { onFrame, onError } = options;
+        u.assert(u.isUint8Array(buffer), "buffer must be Uint8Array");
+        u.assert(u.isFunction(onFrame), "onFrame must be Function");
+        u.assert(u.isFunction(onError), "onError must be Function");
+        const decoder = new VideoDecoder({
+            output: onFrame.bind(this),
+            error: onError.bind(this)
+        });
+        const demuxer = new ____MP4Demuxer();
+        const waitConfigPromise = Promise.race([
+            new Promise((resolve, reject) => {
+                demuxer.onConfig(config => {
+                    decoder.configure({
+                        // 视频信息配置
+                        ...config,
+                        // 指示优先使用硬件加速解码
+                        hardwareAcceleration: "prefer-hardware",
+                        // 关闭延迟优化，让解码器批量处理解码，降低负载
+                        optimizeForLatency: false
+                    });
+                    resolve(config);
+                });
+                demuxer.onError(reject);
+            }),
+            new Promise((_, reject) => ____setTimeout(() => reject(new Error("Video buffer demux timeout")), 60000))
+        ]);
+        demuxer.onChunk(chunk => decoder.decode(chunk));
+        demuxer.load(buffer);
+        // 等待解码配置
+        const config = await waitConfigPromise;
+        // 检查视频解码器是否支持当前配置
+        await VideoDecoder.isConfigSupported(config);
+        return {
+            config,
+            decoder,
+            demuxer
+        };
     }
 
     /**
