@@ -27,7 +27,7 @@ export default class DynamicImage {
     currentTime = 0;
     /** @type {HTMLCanvasElement} - 画布元素 */
     canvas = null;
-    /** @type {CanvasRenderingContext2D}  - 画布2D渲染s上下文*/
+    /** @type {CanvasRenderingContext2D}  - 画布2D渲染上下文*/
     canvasCtx = null;
     /** @type {number} - 上一帧时间戳（毫秒） */
     lastFrameTimestamp = null;

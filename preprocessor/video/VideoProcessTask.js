@@ -118,6 +118,7 @@ export default class VideoProcessTask extends ProcessTask {
             buffer: this.#packData({
                 buffer,
                 maskBuffer,
+                hasMask: !!this.maskFilePath,
                 hasAudio: this.hasAudio,
                 hasClip: this.hasClip
             })

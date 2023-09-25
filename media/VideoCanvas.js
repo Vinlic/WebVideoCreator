@@ -36,12 +36,26 @@ export default class VideoCanvas {
     config;
     /** @type {number} - 帧索引 */
     frameIndex = 0;
+    /** @type {number} - 已解码帧索引 */
+    decodedFrameIndex = 0;
+    /** @type {number} - 已解码蒙版帧索引 */
+    decodedMaskFrameIndex = 0;
     /** @type {number} - 当前播放时间点（毫秒） */
     currentTime = 0;
     /** @type {VideoFrame[]} - 已解码视频帧队列 */
     frames = [];
     /** @type {VideoFrame[]} - 已解码蒙版视频帧队列 */
     maskFrames = [];
+    /** @type {HTMLCanvasElement} - 画布元素 */
+    canvas = null;
+    /** @type {CanvasRenderingContext2D}  - 画布2D渲染上下文*/
+    canvasCtx = null;
+    /** @type {OffscreenCanvas} - 离屏画布对象 */
+    offscreenCanvas;
+    /** @type {OffscreenCanvasRenderingContext2D} - 离屏2D画布渲染上下文 */
+    offscreenCanvasCtx;
+    /** @type {number} - 偏移时间量 */
+    offsetTime = 0;
     /** @type {boolean} - 是否已销毁 */
     destoryed = false;
     /** @type {VideoDecoder} - 视频解码器 */
@@ -52,6 +66,14 @@ export default class VideoCanvas {
     demuxer = null;
     /** @type {____MP4Demuxer} - 蒙版视频解复用器 */
     maskDemuxer = null;
+    /** @type {number} - 等待视频帧下标 */
+    waitFrameIndex = null;
+    /** @type {number} - 等待蒙版视频帧下标 */
+    waitMaskFrameIndex = null;
+    /** @type {____MP4Demuxer} - 等待视频帧回调 */
+    waitFrameCallback = null;
+    /** @type {____MP4Demuxer} - 等待蒙版视频帧回调 */
+    waitMaskFrameCallback = null;
 
     /**
      * 构造函数
@@ -104,15 +126,19 @@ export default class VideoCanvas {
      * @param {Object} [options] - 画布选项
      * @param {boolean} [options.alpha=true] - 是否支持透明通道
      * @param {boolean} [options.imageSmoothingEnabled=true] - 是否开启抗锯齿
+     * @param {boolean} [options.imageSmoothingEnabled="high"] - 抗锯齿强度
      */
     bind(canvas, options = {}) {
-        const { alpha = true, imageSmoothingEnabled = true } = options;
+        const { alpha = true, imageSmoothingEnabled = true, imageSmoothingQuality = "high" } = options;
         this.canvas = canvas;
         // 获取画布2D上下文
         this.canvasCtx = this.canvas.getContext("2d", { alpha });
         // 设置抗锯齿开关
         this.canvasCtx.imageSmoothingEnabled = imageSmoothingEnabled;
+        // 设置抗锯齿强度
+        this.canvasCtx.imageSmoothingQuality = imageSmoothingQuality;
     }
+
     canPlay(time) {
         if (this.destoryed) return;
         const { startTime, endTime } = this;
@@ -121,6 +147,9 @@ export default class VideoCanvas {
         return true;
     }
 
+    /**
+     * 加载视频
+     */
     async load() {
         try {
             console.time();
@@ -134,32 +163,42 @@ export default class VideoCanvas {
                 return this.destory();
             const {
                 buffer,
-                maskBuffer
+                maskBuffer,
+                hasMask
             } = this._unpackData(await response.arrayBuffer());
             const {
                 demuxer,
                 decoder,
                 config
             } = await this._createDecoder(buffer, {
-                onFrame: frame => console.log(1),
+                hasMask,
+                onFrame: this._emitNewFrame.bind(this),
                 onError: err => console.error(err)
             });
+            // 预分配视频帧数组
+            this.frames = new Array(config.frameCount);
             this.demuxer = demuxer;
             this.decoder = decoder;
             this.config = config;
-            if (maskBuffer) {
+            if (hasMask) {
+                // 预分配蒙版视频帧数组
+                this.maskFrames = new Array(config.frameCount);
+                // 初始化用于蒙版抠图的离屏画布
+                this._initOffscreenCanvas();
                 const {
                     demuxer: maskDemuxer,
                     decoder: maskDecoder,
-                    config
-                } = await this._createDecoder(buffer, {
-                    onFrame: frame => console.log(2),
+                    config: maskConfig
+                } = await this._createDecoder(maskBuffer, {
+                    onFrame: this._emitNewMaskFrame.bind(this),
                     onError: err => console.error(err)
                 });
                 this.maskDemuxer = maskDemuxer;
                 this.maskDecoder = maskDecoder;
-                ____util.assert(config.frameCount == this.config.frameCount, `Mask video frameCount (${config.frameCount}) is inconsistent with the original video frameCount (${this.config.frameCount})`);
-                ____util.assert(config.fps == this.config.fps, `Mask video fps (${config.fps}) is inconsistent with the original video fps (${this.config.fps})`);
+                ____util.assert(maskConfig.codedWidth == config.codedWidth, `Mask video codedWidth (${maskConfig.codedWidth}) is inconsistent with the original video codedWidth (${config.codedWidth})`);
+                ____util.assert(maskConfig.codedHeight == config.codedHeight, `Mask video codedHeight (${maskConfig.codedHeight}) is inconsistent with the original video codedHeight (${config.codedHeight})`);
+                ____util.assert(maskConfig.frameCount == config.frameCount, `Mask video frameCount (${maskConfig.frameCount}) is inconsistent with the original video frameCount (${config.frameCount})`);
+                ____util.assert(maskConfig.fps == config.fps, `Mask video fps (${maskConfig.fps}) is inconsistent with the original video fps (${config.fps})`);
             }
         }
         catch (err) {
@@ -171,10 +210,42 @@ export default class VideoCanvas {
         return !!this.decoder;
     }
 
-    async seek() {
+    async seek(time) {
         // 已销毁不可索引
         if (this.destoryed) return;
-
+        // 计算当前帧的下标
+        const frameIndex = Math.floor(time / this.config.frameInterval);
+        // 如果当前时间点帧下标和上次一样不做处理
+        if (this.frameIndex === frameIndex) return;
+        console.log(`${frameIndex}/${this.config.frameCount}`);
+        if (frameIndex > 594)
+            return;
+        const frame = await this._acquireFrame(frameIndex);
+        let maskFrame = null;
+        if (this.config.hasMask)
+            maskFrame = await this._acquireMaskFrame(frameIndex);
+        const { displayWidth, displayHeight } = frame;
+        if (maskFrame) {
+            this.canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.offscreenCanvasCtx.drawImage(maskFrame, 0, 0, displayWidth, displayHeight, 0, 0, this.canvas.width, this.canvas.height);
+            const maskData = this.offscreenCanvasCtx.getImageData(0, 0, this.canvas.width, this.canvas.height)
+            for (let i = 0; i < maskData.data.length; i += 4)
+                maskData.data[i + 3] = maskData.data[i];
+            this.offscreenCanvasCtx.putImageData(maskData, 0, 0);
+            this.canvasCtx.drawImage(this.offscreenCanvas, 0, 0);
+            this.canvasCtx.globalCompositeOperation = 'source-in';
+            this.canvasCtx.drawImage(frame, 0, 0, displayWidth, displayHeight, 0, 0, this.canvas.width, this.canvas.height);
+            this.canvasCtx.globalCompositeOperation = 'source-over';
+        }
+        else
+            this.canvasCtx.drawImage(frame, 0, 0, displayWidth, displayHeight, 0, 0, this.canvas.width, this.canvas.height);
+        frame.close();
+        if (maskFrame) {
+            maskFrame.close();
+            this.maskFrames[frameIndex] = null;
+        }
+        this.frames[frameIndex] = null;
+        this.frameIndex = frameIndex;
     }
 
     isEnd() {
@@ -200,10 +271,104 @@ export default class VideoCanvas {
         this.destoryed = true;
     }
 
-    async _createDecoder(buffer, options = {}) {
+    /**
+     * 初始化离屏画布
+     * 
+     * @param {Object} [options] - 画布选项
+     * @param {boolean} [options.alpha=true] - 是否支持透明通道
+     * @param {boolean} [options.imageSmoothingEnabled=true] - 是否开启抗锯齿
+     * @param {boolean} [options.imageSmoothingEnabled="high"] - 抗锯齿强度
+     */
+    _initOffscreenCanvas(options = {}) {
+        const { alpha = true, imageSmoothingEnabled = true, imageSmoothingQuality = "high" } = options;
+        // 创建实验性的离屏画布
+        this.offscreenCanvas = new OffscreenCanvas(this.canvas.width, this.canvas.height);
+        // 获取2D渲染上下文
+        this.offscreenCanvasCtx = this.offscreenCanvas.getContext("2d", { alpha });
+        this.canvasCtx.imageSmoothingEnabled = imageSmoothingEnabled;
+        this.canvasCtx.imageSmoothingQuality = imageSmoothingQuality;
+    }
+
+    async _acquireFrame(frameIndex) {
+        if (this.frames[frameIndex])
+            return this.frames[frameIndex];
+        let timer;
+        await Promise.race([
+            new Promise(resolve => {
+                this.waitFrameIndex = frameIndex;
+                this.waitFrameCallback = resolve;
+            }),
+            new Promise((_, reject) => ____setTimeout(() => reject(new Error("Acquire video frame timeout (30s)")), 30000))
+        ]);
+        ____clearTimeout(timer);
+        return this.frames[frameIndex];
+    }
+
+    async _acquireMaskFrame(frameIndex) {
+        if (this.maskFrames[frameIndex])
+            return this.maskFrames[frameIndex];
+        let timer;
+        await Promise.race([
+            new Promise(resolve => {
+                this.waitMaskFrameIndex = frameIndex;
+                this.waitMaskFrameCallback = resolve;
+            }),
+            new Promise((_, reject) => ____setTimeout(() => reject(new Error("Acquire mask video frame timeout (30s)")), 30000))
+        ]);
+        ____clearTimeout(timer);
+        return this.maskFrames[frameIndex];
+    }
+
+    /**
+     * 通知新视频帧产生
+     * 
+     * @param {VideoFrame} frame - 视频帧
+     */
+    _emitNewFrame(frame) {
+        frame.index = this.decodedFrameIndex;
+        this.frames[frame.index] = frame;
+        if (this.waitFrameCallback && this.waitFrameIndex == frame.index) {
+            const fn = this.waitFrameCallback;
+            this.waitFrameIndex = null;
+            this.waitFrameCallback = null;
+            fn();
+        }
+        this.decodedFrameIndex++;
+    }
+
+    /**
+     * 通知新蒙版视频帧产生
+     * 
+     * @param {VideoFrame} frame - 视频帧
+     */
+    _emitNewMaskFrame(frame) {
+        frame.index = this.decodedMaskFrameIndex;
+        this.maskFrames[frame.index] = frame;
+        console.log(frame.index);
+        if (this.waitMaskFrameCallback && this.waitMaskFrameIndex == frame.index) {
+            const fn = this.waitMaskFrameCallback;
+            this.waitMaskFrameIndex = null;
+            this.waitMaskFrameCallback = null;
+            fn();
+        }
+        this.decodedMaskFrameIndex++;
+    }
+
+    /**
+     * 创建解码器
+     * 
+     * @param {Uint8Array} data - 视频数据
+     * @param {Object} options - 解码器选项
+     * @param {boolean} [hasMask] - 是否有蒙版
+     * @param {Function} onFrame - 视频帧回调
+     * @param {Function} onError - 错误回调
+     * @returns {Object} - 解码器和配置对象
+     */
+    async _createDecoder(data, options = {}) {
         const u = ____util;
-        const { onFrame, onError } = options;
-        u.assert(u.isUint8Array(buffer), "buffer must be Uint8Array");
+        const { hasMask, onFrame, onError } = options;
+        u.assert(u.isUint8Array(data), "data must be Uint8Array");
+        u.assert(u.isUndefined(hasMask) || u.isBoolean(hasMask), "hasMask must be boolean");
         u.assert(u.isFunction(onFrame), "onFrame must be Function");
         u.assert(u.isFunction(onError), "onError must be Function");
         const decoder = new VideoDecoder({
@@ -211,9 +376,11 @@ export default class VideoCanvas {
             error: onError.bind(this)
         });
         const demuxer = new ____MP4Demuxer();
+        let timer;
         const waitConfigPromise = Promise.race([
             new Promise((resolve, reject) => {
                 demuxer.onConfig(config => {
+                    resolve(config);
                     decoder.configure({
                         // 视频信息配置
                         ...config,
@@ -222,18 +389,19 @@ export default class VideoCanvas {
                         // 关闭延迟优化，让解码器批量处理解码，降低负载
                         optimizeForLatency: false
                     });
-                    resolve(config);
                 });
                 demuxer.onError(reject);
             }),
-            new Promise((_, reject) => ____setTimeout(() => reject(new Error("Video buffer demux timeout")), 60000))
+            new Promise((_, reject) => timer = ____setTimeout(() => reject(new Error(`Video buffer demux timeout (60s)`)), 60000))
         ]);
+        ____clearTimeout(timer);
         demuxer.onChunk(chunk => decoder.decode(chunk));
-        demuxer.load(buffer);
+        demuxer.load(data);
         // 等待解码配置
         const config = await waitConfigPromise;
         // 检查视频解码器是否支持当前配置
         await VideoDecoder.isConfigSupported(config);
+        config.hasMask = hasMask;
         return {
             config,
             decoder,
