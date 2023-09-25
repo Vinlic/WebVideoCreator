@@ -110,7 +110,7 @@ export default class Synthesizer extends EventEmitter {
      * @param {string} [options.coverCaptureFormat="jpg"] - 封面捕获格式（jpg/png/bmp）
      * @param {string} [options.liveUrl] - 直播推流地址
      * @param {string} [options.videoCodec="libx264"] - 视频编码器
-     * @param {number} [options.videoQuality=80] - 视频质量（0-100）
+     * @param {number} [options.videoQuality=100] - 视频质量（0-100）
      * @param {string} [options.videoBitrate] - 视频码率（设置码率将忽略videoQuality）
      * @param {string} [options.pixelFormat="yuv420p"] - 像素格式（yuv420p/yuv444p/rgb24）
      * @param {string} [options.audioCodec="aac"] - 音频编码器
@@ -168,7 +168,7 @@ export default class Synthesizer extends EventEmitter {
         this.coverCaptureFormat = _.defaultTo(coverCaptureFormat, "jpg");
         this.liveUrl = liveUrl;
         this.videoCodec = _.defaultTo(videoCodec, FORMAT_VIDEO_CODEC_MAP[this.format][0] || "libx264");
-        this.videoQuality = _.defaultTo(videoQuality, 80);
+        this.videoQuality = _.defaultTo(videoQuality, 100);
         this.videoBitrate = videoBitrate;
         this.pixelFormat = _.defaultTo(pixelFormat, "yuv420p");
         this.audioCodec = _.defaultTo(audioCodec, FORMAT_AUDIO_CODEC_MAP[this.format][0] || "aac");

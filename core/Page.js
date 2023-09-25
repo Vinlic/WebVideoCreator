@@ -167,8 +167,11 @@ export default class Page extends EventEmitter {
      * @returns {Object} - 控制器映射
      */
     async goto(url) {
+        assert(util.isURL(url), "goto url is invalid");
         // 清除资源
         this.#clearResources();
+        // 检查URL
+        this.#checkURL(url);
         // 页面导航到URL
         await this.target.goto(url);
         await Promise.all([
@@ -654,6 +657,17 @@ export default class Page extends EventEmitter {
             this.target.close();
             this.target = null;
         });
+    }
+
+    /**
+     * 检查URL
+     * 
+     * @param {string} url - URL
+     */
+    #checkURL(url) {
+        const { protocol, hostname, host } = new URL(url);
+        if(protocol != "https:" && hostname != "127.0.0.1" && hostname != "localhost")
+            throw new Error(`The URL ${protocol}//${host} is not a secure domain, which may cause security policies to disable some core features. Please use HTTPS protocol or http://localhost / http://127.0.0.1`);
     }
 
     /**

@@ -308,6 +308,8 @@ export default class Browser {
             "--disable-session-crashed-bubble",
             // 禁用字形提示以原始轮廓渲染
             "--font-render-hinting=none",
+            // 允许在HTTPS页面中加载不安全的HTTP内容
+            // "--allow-running-insecure-content",
             // 禁用默认浏览器检查
             "--no-default-browser-check",
             // 禁用弹窗
