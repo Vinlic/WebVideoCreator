@@ -239,11 +239,12 @@ export default class VideoCanvas {
         this.frameIndex = frameIndex;
         // 更新当前时间点
         this.currentTime = time;
-    
-        // if (this.loop && (this.isEnd() || this.currentTime >= this.config.duration)) {  //如开启循环且当前已播放结束时重置
-        //     this.offsetTime += this.currentTime;
-        //     this.reset();
-        // }
+        // 如开启循环且当前已播放结束时重置
+        if (this.loop && (this.isEnd() || this.currentTime >= this.config.duration)) {
+            console.log("循环");
+            this.offsetTime += this.currentTime;
+            this.reset();
+        }
     }
 
     isEnd() {
@@ -262,6 +263,8 @@ export default class VideoCanvas {
         this._clearUnclosedFrames();
         this.frameIndex = 0;
         this.currentTime = 0;
+        this.decodedFrameIndex = 0;
+        this.decodedMaskFrameIndex = 0;
         // 重置解码器
         this.decoder && this.decoder.reset();
         // 重置蒙版解码器
@@ -321,10 +324,10 @@ export default class VideoCanvas {
      * 清除未关闭的帧
      */
     _clearUnclosedFrames() {
-        this.frames.slice(this.frameIndex, this.frames.length)
+        this.frames
             .forEach(frame => frame && frame.close());
         this.frames = [];
-        this.maskFrames.slice(this.frameIndex, this.maskFrames.length)
+        this.maskFrames
             .forEach(maskFrame => maskFrame && maskFrame.close());
         this.maskFrames = [];
     }
@@ -342,7 +345,7 @@ export default class VideoCanvas {
         // 创建实验性的离屏画布
         this.offscreenCanvas = new OffscreenCanvas(this.canvas.width, this.canvas.height);
         // 获取2D渲染上下文
-        this.offscreenCanvasCtx = this.offscreenCanvas.getContext("2d", { alpha });
+        this.offscreenCanvasCtx = this.offscreenCanvas.getContext("2d", { alpha, willReadFrequently: false });
         this.canvasCtx.imageSmoothingEnabled = imageSmoothingEnabled;
         this.canvasCtx.imageSmoothingQuality = imageSmoothingQuality;
     }
@@ -385,7 +388,6 @@ export default class VideoCanvas {
     _emitNewFrame(frame) {
         frame.index = this.decodedFrameIndex;
         this.frames[frame.index] = frame;
-        // console.log(`${frame.index}/${this.decoder.decodeQueueSize}/${this.config.frameCount}`);
         if (this.waitFrameCallback && this.waitFrameIndex == frame.index) {
             const fn = this.waitFrameCallback;
             this.waitFrameIndex = null;
@@ -438,7 +440,6 @@ export default class VideoCanvas {
         const waitConfigPromise = Promise.race([
             new Promise((resolve, reject) => {
                 demuxer.onConfig(config => {
-                    resolve(config);
                     decoder.configure({
                         // 视频信息配置
                         ...config,
@@ -447,6 +448,7 @@ export default class VideoCanvas {
                         // 关闭延迟优化，让解码器批量处理解码，降低负载
                         optimizeForLatency: false
                     });
+                    resolve(config);
                 });
                 demuxer.onError(reject);
             }),
@@ -459,7 +461,11 @@ export default class VideoCanvas {
         const config = await waitConfigPromise;
         // 检查视频解码器是否支持当前配置
         await VideoDecoder.isConfigSupported(config);
-        decoder.flush().then(() => console.log("OKl"));
+        if(decoder.state == "configured") {
+            decoder.flush()
+                .then(() => console.log("OKl"))
+                .catch(err => err.message.indexOf("Aborted due to close") === -1 && err.message.indexOf("closed codec") === -1 ? console.error(err) : 0);
+        }
         console.log(decoder.decodeQueueSize);
         return {
             config,
