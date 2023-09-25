@@ -8,8 +8,8 @@ import uniqid from "uniqid";
 import _ from "lodash";
 
 import {
-    SUPPORT_FORMAT, FORMAT_VIDEO_CODEC_MAP,
-    FORMAT_AUDIO_CODEC_MAP, VIDEO_CODEC_MAP, AUDIO_CODEC_MAP
+    SUPPORT_FORMAT, FORMAT_VIDEO_ENCODER_MAP,
+    FORMAT_AUDIO_ENCODER_MAP, VIDEO_ENCODER_MAP, AUDIO_ENCODER_MAP
 } from "../lib/const.js";
 import Audio from "../entity/Audio.js";
 import util from "../lib/util.js";
@@ -58,7 +58,7 @@ export default class Synthesizer extends EventEmitter {
     /** @type {string} - 封面捕获格式（jpg/png/bmp） */
     coverCaptureFormat;
     /** @type {string} - 视频编码器 */
-    videoCodec;
+    videoEncoder;
     /** @type {number} - 视频质量（0-100） */
     videoQuality;
     /** @type {string} - 视频码率（如8M，设置码率将忽略videoQuality） */
@@ -66,7 +66,7 @@ export default class Synthesizer extends EventEmitter {
     /** @type {string} - 像素格式（yuv420p/yuv444p/rgb24） */
     pixelFormat;
     /** @type {string} - 音频编码器（aac/ogg） */
-    audioCodec;
+    audioEncoder;
     /** @type {string} - 音频码率 */
     audioBitrate;
     /** @type {numer} - 视频音量（0-100） */
@@ -109,11 +109,11 @@ export default class Synthesizer extends EventEmitter {
      * @param {number} [options.coverCaptureTime] - 封面捕获时间点（毫秒）
      * @param {string} [options.coverCaptureFormat="jpg"] - 封面捕获格式（jpg/png/bmp）
      * @param {string} [options.liveUrl] - 直播推流地址
-     * @param {string} [options.videoCodec="libx264"] - 视频编码器
+     * @param {string} [options.videoEncoder="libx264"] - 视频编码器
      * @param {number} [options.videoQuality=100] - 视频质量（0-100）
      * @param {string} [options.videoBitrate] - 视频码率（设置码率将忽略videoQuality）
      * @param {string} [options.pixelFormat="yuv420p"] - 像素格式（yuv420p/yuv444p/rgb24）
-     * @param {string} [options.audioCodec="aac"] - 音频编码器
+     * @param {string} [options.audioEncoder="aac"] - 音频编码器
      * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.volume] - 视频音量（0-100）
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
@@ -124,8 +124,8 @@ export default class Synthesizer extends EventEmitter {
         assert(_.isObject(options), "Synthesizer options must be object");
         const { width, height, fps, duration, format, outputPath,
             attachCoverPath, coverCapture, coverCaptureTime, coverCaptureFormat,
-            liveUrl, videoCodec, videoQuality, videoBitrate, pixelFormat,
-            audioCodec, audioBitrate, volume, parallelWriteFrames, debug } = options;
+            liveUrl, videoEncoder, videoQuality, videoBitrate, pixelFormat,
+            audioEncoder, audioBitrate, volume, parallelWriteFrames, debug } = options;
         assert(_.isFinite(width), "width must be number");
         assert(_.isFinite(height), "height must be number");
         assert(_.isFinite(fps), "synthesis fps must be number");
@@ -136,11 +136,11 @@ export default class Synthesizer extends EventEmitter {
         assert(_.isUndefined(coverCapture) || _.isBoolean(coverCapture), "coverCapture must be boolean");
         assert(_.isUndefined(coverCaptureTime) || _.isFinite(coverCaptureTime), "coverCaptureTime must be number");
         assert(_.isUndefined(coverCaptureFormat) || _.isString(coverCaptureFormat), "coverCaptureFormat must be string");
-        assert(_.isUndefined(videoCodec) || _.isString(videoCodec), "videoCodec must be string");
+        assert(_.isUndefined(videoEncoder) || _.isString(videoEncoder), "videoEncoder must be string");
         assert(_.isUndefined(videoQuality) || _.isFinite(videoQuality), "videoQuality must be number");
         assert(_.isUndefined(videoBitrate) || _.isString(videoBitrate), "videoBitrate must be string");
         assert(_.isUndefined(pixelFormat) || _.isString(pixelFormat), "pixelFormat must be string");
-        assert(_.isUndefined(audioCodec) || _.isString(audioCodec), "audioCodec must be string");
+        assert(_.isUndefined(audioEncoder) || _.isString(audioEncoder), "audioEncoder must be string");
         assert(_.isUndefined(audioBitrate) || _.isFinite(audioBitrate), "audioBitrate must be string");
         assert(_.isUndefined(volume) || _.isFinite(volume), "volume must be number");
         assert(_.isUndefined(parallelWriteFrames) || _.isFinite(parallelWriteFrames), "parallelWriteFrames must be number");
@@ -167,11 +167,11 @@ export default class Synthesizer extends EventEmitter {
         this.coverCaptureTime = coverCaptureTime;
         this.coverCaptureFormat = _.defaultTo(coverCaptureFormat, "jpg");
         this.liveUrl = liveUrl;
-        this.videoCodec = _.defaultTo(videoCodec, FORMAT_VIDEO_CODEC_MAP[this.format][0] || "libx264");
+        this.videoEncoder = _.defaultTo(videoEncoder, FORMAT_VIDEO_ENCODER_MAP[this.format][0] || "libx264");
         this.videoQuality = _.defaultTo(videoQuality, 100);
         this.videoBitrate = videoBitrate;
         this.pixelFormat = _.defaultTo(pixelFormat, "yuv420p");
-        this.audioCodec = _.defaultTo(audioCodec, FORMAT_AUDIO_CODEC_MAP[this.format][0] || "aac");
+        this.audioEncoder = _.defaultTo(audioEncoder, FORMAT_AUDIO_ENCODER_MAP[this.format][0] || "aac");
         this.audioBitrate = audioBitrate;
         this.volume = _.defaultTo(volume, 100);
         this.parallelWriteFrames = _.defaultTo(parallelWriteFrames, 10);
@@ -309,7 +309,7 @@ export default class Synthesizer extends EventEmitter {
     #emitError(err) {
         const message = err.message;
         if (message.indexOf("Error while opening encoder for output stream") != -1)
-            err = new Error(`Video codec ${this.videoCodec} may not be supported, please check if your hardware supports it. Some hardware encoders may have limitations in parallel encoding (such as NVENC https://github.com/keylase/nvidia-patch)`);
+            err = new Error(`Video codec ${this.videoEncoder} may not be supported, please check if your hardware supports it. Some hardware encoders may have limitations in parallel encoding (such as NVENC https://github.com/keylase/nvidia-patch)`);
         this.emit("error", err);
     }
 
@@ -347,15 +347,6 @@ export default class Synthesizer extends EventEmitter {
         audio && Object.assign(audio, options);
     }
 
-    // /**
-    //  * 添加覆盖在顶层的视频
-    //  * 
-    //  * @param {Audio} audio - 音频对象
-    //  */
-    // addVideo() {
-
-    // }
-
     /**
      * 创建视频编码器
      * 
@@ -363,7 +354,7 @@ export default class Synthesizer extends EventEmitter {
      * @returns {FfmpegCommand} - 编码器
      */
     _createVideoEncoder() {
-        const { width, height, fps, format, videoCodec, videoBitrate,
+        const { width, height, fps, format, videoEncoder, videoBitrate,
             videoQuality, pixelFormat, attachCoverPath, _swapFilePath } = this;
         const vencoder = ffmpeg();
         // 设置视频码率将忽略质量设置
@@ -400,7 +391,7 @@ export default class Synthesizer extends EventEmitter {
             // 去除冗余信息
             .inputOption("-hide_banner")
             // 指定视频编码器
-            .videoCodec(videoCodec)
+            .videoCodec(videoEncoder)
             // 将MOOV头移到最前面
             .outputOption("-movflags +faststart")
             // 指定输出格式
@@ -418,7 +409,7 @@ export default class Synthesizer extends EventEmitter {
      * @returns {FfmpegCommand} - 编码器
      */
     _createAudioEncoder() {
-        const { outputPath, _swapFilePath, format, audioCodec,
+        const { outputPath, _swapFilePath, format, audioEncoder,
             audioBitrate, volume: videoVolume, audios } = this;
         const aencoder = ffmpeg();
         // 指定音频码率
@@ -427,7 +418,7 @@ export default class Synthesizer extends EventEmitter {
             .addInput(_swapFilePath)
             .videoCodec("copy")
             .setDuration(this.getOutputDuration() / 1000)
-            .audioCodec(audioCodec)
+            .audioCodec(audioEncoder)
             .outputOption("-movflags +faststart")
             .toFormat(format)
             .addOutput(outputPath);
@@ -527,9 +518,9 @@ export default class Synthesizer extends EventEmitter {
      * @returns {string} - 编码类型
      */
     getVideoEncodingType() {
-        const videoCodec = this.videoCodec;
-        for (let key in VIDEO_CODEC_MAP) {
-            if (VIDEO_CODEC_MAP[key].includes(videoCodec))
+        const videoEncoder = this.videoEncoder;
+        for (let key in VIDEO_ENCODER_MAP) {
+            if (VIDEO_ENCODER_MAP[key].includes(videoEncoder))
                 return key;
         }
         return null;
@@ -541,9 +532,9 @@ export default class Synthesizer extends EventEmitter {
      * @returns {string} - 编码类型
      */
     getAudioEncodingType() {
-        const audioCodec = this.audioCodec;
-        for (let key in AUDIO_CODEC_MAP) {
-            if (AUDIO_CODEC_MAP[key].includes(audioCodec))
+        const audioEncoder = this.audioEncoder;
+        for (let key in AUDIO_ENCODER_MAP) {
+            if (AUDIO_ENCODER_MAP[key].includes(audioEncoder))
                 return key;
         }
         return null;

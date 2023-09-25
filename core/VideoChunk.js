@@ -27,11 +27,11 @@ export default class VideoChunk extends Synthesizer {
      * @param {number} options.duration - 视频时长
      * @param {number} [options.index=0] - 分块索引
      * @param {Transition} [options.transition] - 进入下一视频分块的转场
-     * @param {string} [options.videoCodec] - 视频编码器
+     * @param {string} [options.videoEncoder] - 视频编码器
      * @param {number} [options.videoQuality] - 视频质量（0-100）
      * @param {string} [options.videoBitrate] - 视频码率（设置码率将忽略videoQuality）
      * @param {string} [options.pixelFormat] - 像素格式（yuv420p/yuv444p/rgb24）
-     * @param {string} [options.audioCodec] - 音频编码器
+     * @param {string} [options.audioEncoder] - 音频编码器
      * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
      */
@@ -45,7 +45,7 @@ export default class VideoChunk extends Synthesizer {
         this.outputPath = path.join(this.tmpDirPath, `${uniqid("chunk_")}.ts`);
         this.format = "mpegts";
         const encodingType = this.getVideoEncodingType();
-        assert(_.isString(BITSTREAM_FILTER[encodingType]), `Video encoder ${this.videoCodec} does not support use in VideoChunk, only support encoding using H264, H265, and VP9`)
+        assert(_.isString(BITSTREAM_FILTER[encodingType]), `Video encoder ${this.videoEncoder} does not support use in VideoChunk, only support encoding using H264, H265, and VP9`)
     }
 
     /**

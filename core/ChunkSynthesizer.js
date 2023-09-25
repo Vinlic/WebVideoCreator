@@ -28,11 +28,11 @@ export default class ChunkSynthesizer extends Synthesizer {
      * @param {number} [options.coverCaptureTime] - 封面捕获时间点（毫秒）
      * @param {string} [options.coverCaptureFormat="jpg"] - 封面捕获格式（jpg/png/bmp）
      * @param {string} [options.liveUrl] - 直播推流地址
-     * @param {string} [options.videoCodec] - 视频编码器
+     * @param {string} [options.videoEncoder] - 视频编码器
      * @param {number} [options.videoQuality] - 视频质量（0-100）
      * @param {string} [options.videoBitrate] - 视频码率（设置码率将忽略videoQuality）
      * @param {string} [options.pixelFormat] - 像素格式（yuv420p/yuv444p/rgb24）
-     * @param {string} [options.audioCodec] - 音频编码器
+     * @param {string} [options.audioEncoder] - 音频编码器
      * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.volume] - 视频音量（0-100）
      * @param {number} [options.debug=false] - 是否输出调试信息
@@ -100,7 +100,7 @@ export default class ChunkSynthesizer extends Synthesizer {
      */
     _createVideoEncoder() {
         const { chunks, width, height, outputPath, _swapFilePath, format,
-            videoCodec, videoBitrate, videoQuality, pixelFormat, attachCoverPath,
+            videoEncoder, videoBitrate, videoQuality, pixelFormat, attachCoverPath,
             audioSynthesis } = this;
         const vencoder = ffmpeg();
         // 设置视频码率将忽略质量设置
@@ -186,7 +186,7 @@ export default class ChunkSynthesizer extends Synthesizer {
         }
         vencoder
             // 指定视频编码器
-            .videoCodec(videoCodec)
+            .videoCodec(videoEncoder)
             // 移动MOOV头到前面
             .outputOption("-movflags +faststart")
             // 指定输出格式

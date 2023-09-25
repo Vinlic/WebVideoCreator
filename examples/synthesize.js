@@ -2,7 +2,7 @@ import assert from "assert";
 import cliProgress from "cli-progress";
 import _ from "lodash";
 
-import { AUDIO_CODEC, ResourcePool, Synthesizer, VIDEO_CODEC } from "../index.js";
+import { AUDIO_ENCODER, ResourcePool, Synthesizer, VIDEO_ENCODER } from "../index.js";
 import util from "../lib/util.js";
 
 export default async ({
@@ -12,8 +12,8 @@ export default async ({
     fps,
     duration,
     browserUseGPU,
-    videoCodec,
-    audioCodec,
+    videoEncoder,
+    audioEncoder,
     outputPath
 }) => {
     url = _.defaultTo(url, "");
@@ -22,15 +22,15 @@ export default async ({
     fps = _.defaultTo(fps, 30);
     duration = _.defaultTo(duration, 20000);
     browserUseGPU = _.defaultTo(browserUseGPU, true);
-    videoCodec = _.defaultTo(videoCodec, VIDEO_CODEC.NVIDIA.H264);
-    audioCodec = _.defaultTo(audioCodec, AUDIO_CODEC.AAC);
+    videoEncoder = _.defaultTo(videoEncoder, VIDEO_ENCODER.NVIDIA.H264);
+    audioEncoder = _.defaultTo(audioEncoder, AUDIO_ENCODER.AAC);
 
     assert(util.isURL(url), "url is invalid");
     assert(_.isFinite(width) && _.isFinite(height), "width and height must be number");
     assert(_.isFinite(fps), "fps must be number");
     assert(_.isBoolean(browserUseGPU), "browserUseGPU must be boolean");
-    assert(_.isString(videoCodec), "videoCodec must be string");
-    assert(_.isString(audioCodec), "audioCodec must be string");
+    assert(_.isString(videoEncoder), "videoEncoder must be string");
+    assert(_.isString(audioEncoder), "audioEncoder must be string");
     assert(_.isString(outputPath), "outputPath must be string");
 
     // 计算总帧数
@@ -55,7 +55,7 @@ export default async ({
             numPageMax: 5
         },
         videoPreprocessorOptions: {
-            videoCodec
+            videoEncoder
         }
     });
 
@@ -87,12 +87,12 @@ export default async ({
         fps,
         // 视频时长，如果未设置将无法获知正确合成进度
         duration,
-        // 如果您有[独显]或者[核显]建议选择硬件编码器，请参考VIDEO_CODEC定义
-        // 如果使用VIDEO_CODEC.INTEL.H264将启用Intel核显的QSV编码器加速编码
-        // 如果使用VIDEO_CODEC.NVIDIA.H264将启用Nvidia显卡的NVENC编码器加速编码
+        // 如果您有[独显]或者[核显]建议选择硬件编码器，请参考VIDEO_ENCODER定义
+        // 如果使用VIDEO_ENCODER.INTEL.H264将启用Intel核显的QSV编码器加速编码
+        // 如果使用VIDEO_ENCODER.NVIDIA.H264将启用Nvidia显卡的NVENC编码器加速编码
         // 如果不具备任何图形加速设备请使用CPU软编码
-        videoCodec,
-        audioCodec
+        videoEncoder,
+        audioEncoder
     });
     // 监听合成进度
     synthesizer.on("progress", (progress, frameCount) => progressBar.update(frameCount));

@@ -8,7 +8,7 @@ import AsyncLock from "async-lock";
 import ProcessTask from "../base/ProcessTask.js";
 import Audio from "../../entity/Audio.js";
 import util from "../../lib/util.js";
-import { VIDEO_CODEC } from "../../lib/const.js";
+import { VIDEO_ENCODER } from "../../lib/const.js";
 
 // 处理异步锁
 const processLock = new AsyncLock();
@@ -46,7 +46,7 @@ export default class VideoProcessTask extends ProcessTask {
     /** @type {boolean} - 是否静音 */
     muted;
     /** @type {string} - 视频编码器 */
-    videoCodec;
+    videoEncoder;
 
     /**
      * 构造函数
@@ -64,13 +64,13 @@ export default class VideoProcessTask extends ProcessTask {
      * @param {boolean} [options.autoplay] - 是否自动播放
      * @param {boolean} [options.loop=false] - 是否循环播放
      * @param {boolean} [options.muted=false] - 是否静音
-     * @param {string} [options.videoCodec="libx264"] - 视频编码器
+     * @param {string} [options.videoEncoder="libx264"] - 视频编码器
      * @param {number} [options.retryFetchs=2] - 重试次数
      * @param {number} [options.retryDelay=1000] - 重试延迟
      */
     constructor(options) {
         super(options);
-        const { filePath, format, startTime, endTime, audioId, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, videoCodec } = options;
+        const { filePath, format, startTime, endTime, audioId, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, videoEncoder } = options;
         assert(_.isString(filePath), "filePath must be string");
         assert(_.isString(format) && ["mp4", "webm"].includes(format), "format must be string");
         assert(_.isFinite(startTime), "startTime must be number");
@@ -83,7 +83,7 @@ export default class VideoProcessTask extends ProcessTask {
         assert(_.isUndefined(autoplay) || _.isBoolean(autoplay), "autoplay must be number");
         assert(_.isUndefined(loop) || _.isBoolean(loop), "loop must be number");
         assert(_.isUndefined(muted) || _.isBoolean(muted), "muted must be number");
-        assert(_.isUndefined(videoCodec) || _.isString(videoCodec), "videoCodec must be string");
+        assert(_.isUndefined(videoEncoder) || _.isString(videoEncoder), "videoEncoder must be string");
         this.filePath = filePath;
         this.format = format;
         this.startTime =startTime;
@@ -96,7 +96,7 @@ export default class VideoProcessTask extends ProcessTask {
         this.autoplay = autoplay;
         this.loop = _.defaultTo(loop, false);
         this.muted = _.defaultTo(muted, false);
-        this.videoCodec = _.defaultTo(videoCodec, VIDEO_CODEC.CPU.H264);
+        this.videoEncoder = _.defaultTo(videoEncoder, VIDEO_ENCODER.CPU.H264);
     }
 
     /**
@@ -192,9 +192,9 @@ export default class VideoProcessTask extends ProcessTask {
                 this.maskFilePath = maskFilePath;
                 return;
             }
-            const videoCodecName = await util.getMediaVideoCodecName(this.filePath);
+            const videoEncoderName = await util.getMediaVideoCodecName(this.filePath);
             let codec;
-            switch (videoCodecName) {
+            switch (videoEncoderName) {
                 case "vp8":
                     codec = "libvpx";
                     break;
@@ -202,13 +202,13 @@ export default class VideoProcessTask extends ProcessTask {
                     codec = "libvpx-vp9";
                     break;
                 default:
-                    throw new Error(`Video file ${this.filePath} codec name ${videoCodecName} is not supported`);
+                    throw new Error(`Video file ${this.filePath} codec name ${videoEncoderName} is not supported`);
             }
             await new Promise((resolve, reject) => {
                 ffmpeg(this.filePath)
                     .addInputOption(`-c:v ${codec}`)
                     .videoFilter("alphaextract")
-                    .addOutputOption(`-c:v ${this.videoCodec}`)
+                    .addOutputOption(`-c:v ${this.videoEncoder}`)
                     .addOutputOption("-an")
                     .outputOption("-movflags +faststart")
                     .addOutput(maskFilePath)
@@ -230,9 +230,9 @@ export default class VideoProcessTask extends ProcessTask {
                 this.transcodedFilePath = transcodedFilePath;
                 return;
             }
-            const videoCodecName = await util.getMediaVideoCodecName(this.filePath);
+            const videoEncoderName = await util.getMediaVideoCodecName(this.filePath);
             let codec;
-            switch (videoCodecName) {
+            switch (videoEncoderName) {
                 case "vp8":
                     codec = "libvpx";
                     break;
@@ -240,12 +240,12 @@ export default class VideoProcessTask extends ProcessTask {
                     codec = "libvpx-vp9";
                     break;
                 default:
-                    throw new Error(`Video file ${this.filePath} codec name ${videoCodecName} is not supported`);
+                    throw new Error(`Video file ${this.filePath} codec name ${videoEncoderName} is not supported`);
             }
             await new Promise((resolve, reject) => {
                 ffmpeg(this.filePath)
                     .addInputOption(`-c:v ${codec}`)
-                    .addOutputOption(`-c:v ${this.videoCodec}`)
+                    .addOutputOption(`-c:v ${this.videoEncoder}`)
                     .addOutputOption("-an")
                     .addOutputOption("-crf 18")
                     .outputOption("-movflags +faststart")
@@ -268,7 +268,7 @@ export default class VideoProcessTask extends ProcessTask {
             const audioFilePath = `${this.filePath}.${audioFormat}`;
             if (this.ignoreCache || !await fs.pathExists(audioFilePath)) {
                 const hasAudioTrack = await util.separateVideoAudioTrack(this.filePath, audioFilePath, {
-                    audioCodec: "libmp3lame",
+                    audioEncoder: "libmp3lame",
                     outputFormat: audioFormat
                 });
                 if (hasAudioTrack)

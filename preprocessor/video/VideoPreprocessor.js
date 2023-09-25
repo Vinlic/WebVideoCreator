@@ -4,7 +4,7 @@ import _ from "lodash";
 import Preprocessor from "../base/Preprocessor.js";
 import VideoProcessTask from "./VideoProcessTask.js";
 import VideoConfig from "./VideoConfig.js";
-import { VIDEO_CODEC, VIDEO_CODEC_MAP } from "../../lib/const.js";
+import { VIDEO_ENCODER, VIDEO_ENCODER_MAP } from "../../lib/const.js";
 
 /**
  * 视频预处理器
@@ -12,7 +12,7 @@ import { VIDEO_CODEC, VIDEO_CODEC_MAP } from "../../lib/const.js";
 export default class VideoPreprocessor extends Preprocessor {
 
     /** @type {string} - 视频编码器（必须为H264编码器） */
-    videoCodec;
+    videoEncoder;
     
     /**
      * 构造函数
@@ -20,14 +20,14 @@ export default class VideoPreprocessor extends Preprocessor {
      * @param {Object} options - 预处理器选项
      * @param {number} [options.parallelDownloads=10] - 并行下载数量
      * @param {number} [options.parallelProcess=10] - 并行处理数量
-     * @param {string} [optiond.videoCodec="libx264"] - 视频编码器
+     * @param {string} [optiond.videoEncoder="libx264"] - 视频编码器
      */
     constructor(options) {
         super(options);
-        const { videoCodec } = options;
-        assert(_.isUndefined(videoCodec) || _.isString(videoCodec), "videoCodec must be string");
-        assert(_.isUndefined(videoCodec) || VIDEO_CODEC_MAP.H264.includes(videoCodec), `videoCodec ${videoCodec} is not H264 encoder`);
-        this.videoCodec = _.defaultTo(videoCodec, VIDEO_CODEC.CPU.H264);
+        const { videoEncoder } = options;
+        assert(_.isUndefined(videoEncoder) || _.isString(videoEncoder), "videoEncoder must be string");
+        assert(_.isUndefined(videoEncoder) || VIDEO_ENCODER_MAP.H264.includes(videoEncoder), `videoEncoder ${videoEncoder} is not H264 encoder`);
+        this.videoEncoder = _.defaultTo(videoEncoder, VIDEO_ENCODER.CPU.H264);
     }
 
     /**
@@ -47,7 +47,7 @@ export default class VideoPreprocessor extends Preprocessor {
      * @returns {VideoProcessTask} - 处理任务对象
      */
     createProcessTask(options) {
-        const task = new VideoProcessTask({ ...options, videoCodec: this.videoCodec });
+        const task = new VideoProcessTask({ ...options, videoEncoder: this.videoEncoder });
         this.addProcessTask(task);
         return task;
     }
