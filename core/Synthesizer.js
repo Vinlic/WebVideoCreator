@@ -447,7 +447,7 @@ export default class Synthesizer extends EventEmitter {
             const durationCut = `,atrim=start=0:end=${(endTime - startTime) / 1000}`;
             const loopFilter = loop ? ",aloop=loop=-1:size=2e+09" : "";
             outputs += `[${output}]`;
-            return result + `[${1 + index}]adelay=${startTime}|${startTime},volume=${_volume}${durationCut}${loopFilter}${fadeIn}${fadeOut}[${output}];`;
+            return result + `[${1 + index}]adelay=${startTime}|${startTime},volume=${_volume}${loopFilter}${durationCut}${fadeIn}${fadeOut}[${output}];`;
         }, "");
         // 应用符合过滤器
         complexFilter && aencoder.complexFilter(`${complexFilter}${outputs}amix=inputs=${audios.length}:normalize=0`);
