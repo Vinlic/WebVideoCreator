@@ -66,16 +66,16 @@ export default class Audio {
         const { path, url, startTime, endTime, loop, volume, seekStart, seekEnd,
             fadeInDuration, fadeOutDuration, retryFetchs, ignoreCache } = options;
         assert(_.isString(path) || _.isString(url), "Audio path or url must be string");
-        assert(_.isNil(startTime) || _.isFinite(startTime), "Audio startTime must be number");
-        assert(_.isNil(endTime) || _.isFinite(endTime), "Audio endTime must be number");
-        assert(_.isNil(loop) || _.isBoolean(loop), "Audio loop must be boolean");
-        assert(_.isNil(volume) || _.isFinite(volume), "Audio volume must be number");
-        assert(_.isNil(seekStart) || _.isFinite(seekStart), "Audio seekStart must be number");
-        assert(_.isNil(seekEnd) || _.isFinite(seekEnd), "Audio seekEnd must be number");
-        assert(_.isNil(fadeInDuration) || _.isFinite(fadeInDuration), "Audio fadeInDuration must be number");
-        assert(_.isNil(fadeOutDuration) || _.isFinite(fadeOutDuration), "Audio fadeOutDuration must be number");
-        assert(_.isNil(retryFetchs) || _.isFinite(retryFetchs), "Audio retryFetchs must be number");
-        assert(_.isNil(ignoreCache) || _.isBoolean(ignoreCache), "Audio fadeOutDuration must be boolean");
+        assert(_.isUndefined(startTime) || _.isFinite(startTime), "Audio startTime must be number");
+        assert(_.isUndefined(endTime) || _.isFinite(endTime), "Audio endTime must be number");
+        assert(_.isUndefined(loop) || _.isBoolean(loop), "Audio loop must be boolean");
+        assert(_.isUndefined(volume) || _.isFinite(volume), "Audio volume must be number");
+        assert(_.isUndefined(seekStart) || _.isFinite(seekStart), "Audio seekStart must be number");
+        assert(_.isUndefined(seekEnd) || _.isFinite(seekEnd), "Audio seekEnd must be number");
+        assert(_.isUndefined(fadeInDuration) || _.isFinite(fadeInDuration), "Audio fadeInDuration must be number");
+        assert(_.isUndefined(fadeOutDuration) || _.isFinite(fadeOutDuration), "Audio fadeOutDuration must be number");
+        assert(_.isUndefined(retryFetchs) || _.isFinite(retryFetchs), "Audio retryFetchs must be number");
+        assert(_.isUndefined(ignoreCache) || _.isBoolean(ignoreCache), "Audio fadeOutDuration must be boolean");
         this.path = path;
         this.url = url;
         this.startTime = _.defaultTo(startTime, 0);

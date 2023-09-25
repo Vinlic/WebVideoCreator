@@ -417,8 +417,8 @@ export default class CaptureContext {
     _createCanvas(options) {
         const { id, class: _class, width, height } = options;
         const canvas = document.createElement("canvas");
-        canvas.setAttribute("id", id);
-        canvas.setAttribute("class", _class);
+        id && canvas.setAttribute("id", id);
+        _class && canvas.setAttribute("class", _class);
         canvas.width = width;
         canvas.height = height;
         return canvas;
@@ -458,6 +458,10 @@ export default class CaptureContext {
         // 获取seek时间
         const currentTimeAttribute = e.getNumberAttribute("currentTime");
         const options = {
+            // 元素ID
+            id: e.getAttribute("id") || undefined,
+            // 元素类名
+            class: e.getAttribute("class") || undefined,
             // 音频来源
             url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
             // 音频格式
@@ -498,9 +502,9 @@ export default class CaptureContext {
         const currentTimeAttribute = e.getNumberAttribute("currentTime");
         const options = {
             // 元素ID
-            id: e.getAttribute("id"),
+            id: e.getAttribute("id") || undefined,
             // 元素类名
-            class: e.getAttribute("class"),
+            class: e.getAttribute("class") || undefined,
             // 视频来源
             url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
             // 视频格式
@@ -513,6 +517,10 @@ export default class CaptureContext {
             startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
             // 视频结束时间点（毫秒）
             endTime: Math.min(e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime") || Infinity, this.config.duration),
+            // 音频淡入时长（毫秒）
+            fadeInDuration: e.getNumberAttribute("fade-in-duration") || e.getNumberAttribute("fadeInDuration"),
+            // 音频淡出时长（毫秒）
+            fadeOutDuration: e.getNumberAttribute("fade-out-duration") || e.getNumberAttribute("fadeOutDuration"),
             // 视频裁剪开始时间点（毫秒）
             seekStart: e.getNumberAttribute("seek-start") || e.getNumberAttribute("seekStart") || (currentTimeAttribute ? currentTimeAttribute * 1000 : undefined),
             // 视频裁剪结束时间点（毫秒）
@@ -553,9 +561,9 @@ export default class CaptureContext {
     convertToDynamicImage(e) {
         const options = {
             // 元素ID
-            id: e.getAttribute("id"),
+            id: e.getAttribute("id") || undefined,
             // 元素类名
-            class: e.getAttribute("class"),
+            class: e.getAttribute("class") || undefined,
             // 图像来源
             url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
             // 图像格式
@@ -598,9 +606,9 @@ export default class CaptureContext {
     convertToLottieCanvas(e) {
         const options = {
             // 元素ID
-            id: e.getAttribute("id"),
+            id: e.getAttribute("id") || undefined,
             // 元素类名
-            class: e.getAttribute("class"),
+            class: e.getAttribute("class") || undefined,
             // lottie来源
             url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
             // 动画宽度

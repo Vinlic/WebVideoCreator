@@ -51,11 +51,11 @@ export default class Font {
         const { url, path, family, format, style, weight, retryFetchs, ignoreCache } = options;
         assert(_.isString(url) || _.isString(path), "Font path or url must be string");
         assert(_.isString(family), "Font family must be string");
-        assert(_.isNil(format) || _.isString(format), "Font format must be string");
-        assert(_.isNil(style) || _.isString(style), "Font style must be string");
-        assert(_.isNil(weight) || _.isFinite(weight) || _.isString(weight), "Font weight must be number or string");
-        assert(_.isNil(retryFetchs) || _.isFinite(retryFetchs), "Font retryFetchs must be number");
-        assert(_.isNil(ignoreCache) || _.isBoolean(ignoreCache), "Font fadeOutDuration must be boolean");
+        assert(_.isUndefined(format) || _.isString(format), "Font format must be string");
+        assert(_.isUndefined(style) || _.isString(style), "Font style must be string");
+        assert(_.isUndefined(weight) || _.isFinite(weight) || _.isString(weight), "Font weight must be number or string");
+        assert(_.isUndefined(retryFetchs) || _.isFinite(retryFetchs), "Font retryFetchs must be number");
+        assert(_.isUndefined(ignoreCache) || _.isBoolean(ignoreCache), "Font fadeOutDuration must be boolean");
         this.url = url;
         this.path = path;
         this.family = family;
