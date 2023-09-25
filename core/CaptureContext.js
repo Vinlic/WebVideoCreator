@@ -415,9 +415,10 @@ export default class CaptureContext {
      * @private
      */
     _createCanvas(options) {
-        const { id, width, height } = options;
+        const { id, class: _class, width, height } = options;
         const canvas = document.createElement("canvas");
-        canvas.id = id;
+        canvas.setAttribute("id", id);
+        canvas.setAttribute("class", _class);
         canvas.width = width;
         canvas.height = height;
         return canvas;
@@ -496,6 +497,10 @@ export default class CaptureContext {
         // 获取seek时间
         const currentTimeAttribute = e.getNumberAttribute("currentTime");
         const options = {
+            // 元素ID
+            id: e.getAttribute("id"),
+            // 元素类名
+            class: e.getAttribute("class"),
             // 视频来源
             url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
             // 视频格式
@@ -547,6 +552,10 @@ export default class CaptureContext {
      */
     convertToDynamicImage(e) {
         const options = {
+            // 元素ID
+            id: e.getAttribute("id"),
+            // 元素类名
+            class: e.getAttribute("class"),
             // 图像来源
             url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
             // 图像格式
@@ -588,6 +597,10 @@ export default class CaptureContext {
      */
     convertToLottieCanvas(e) {
         const options = {
+            // 元素ID
+            id: e.getAttribute("id"),
+            // 元素类名
+            class: e.getAttribute("class"),
             // lottie来源
             url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
             // 动画宽度

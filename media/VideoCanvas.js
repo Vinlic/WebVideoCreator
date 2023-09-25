@@ -34,6 +34,10 @@ export default class VideoCanvas {
     ignoreCache;
     /** @type {Object} - 视频信息配置对象 */
     config;
+    /** @type {Uint8Array} - 视频数据 */
+    buffer = null;
+    /** @type {Uint8Array} - 蒙版视频数据 */
+    maskBuffer = null;
     /** @type {number} - 帧索引 */
     frameIndex = 0;
     /** @type {number} - 已解码帧索引 */
@@ -62,17 +66,13 @@ export default class VideoCanvas {
     decoder = null;
     /** @type {VideoDecoder} - 蒙版视频解码器 */
     maskDecoder = null;
-    /** @type {____MP4Demuxer} - 视频解复用器 */
-    demuxer = null;
-    /** @type {____MP4Demuxer} - 蒙版视频解复用器 */
-    maskDemuxer = null;
     /** @type {number} - 等待视频帧下标 */
     waitFrameIndex = null;
     /** @type {number} - 等待蒙版视频帧下标 */
     waitMaskFrameIndex = null;
-    /** @type {____MP4Demuxer} - 等待视频帧回调 */
+    /** @type {Function} - 等待视频帧回调 */
     waitFrameCallback = null;
-    /** @type {____MP4Demuxer} - 等待蒙版视频帧回调 */
+    /** @type {Function} - 等待蒙版视频帧回调 */
     waitMaskFrameCallback = null;
 
     /**
@@ -152,55 +152,39 @@ export default class VideoCanvas {
      */
     async load() {
         try {
-            console.time();
-            const response = await captureCtx.fetch("video_preprocess", {
-                method: "POST",
-                body: JSON.stringify(this._exportConfig()),
-                retryFetchs: 0
-            });
-            console.timeEnd();
-            if (!response) {
+            const datas = await this._fetchData();
+            if (!datas) {
                 this.destory();
                 return false;
             }
-            const {
-                buffer,
-                maskBuffer,
-                hasMask
-            } = this._unpackData(await response.arrayBuffer());
-            const {
-                demuxer,
-                decoder,
-                config
-            } = await this._createDecoder(buffer, {
-                hasMask,
+            const { buffer, maskBuffer } = datas;
+            const { decoder, config } = await this._createDecoder(buffer, {
                 onFrame: this._emitNewFrame.bind(this),
                 onError: err => console.error(err)
             });
             // 预分配视频帧数组
             this.frames = new Array(config.frameCount);
-            this.demuxer = demuxer;
             this.decoder = decoder;
             this.config = config;
-            if (hasMask) {
+            if (maskBuffer) {
                 // 预分配蒙版视频帧数组
                 this.maskFrames = new Array(config.frameCount);
                 // 初始化用于蒙版抠图的离屏画布
                 this._initOffscreenCanvas();
                 const {
-                    demuxer: maskDemuxer,
                     decoder: maskDecoder,
                     config: maskConfig
                 } = await this._createDecoder(maskBuffer, {
+                    isMask: true,
                     onFrame: this._emitNewMaskFrame.bind(this),
                     onError: err => console.error(err)
                 });
-                this.maskDemuxer = maskDemuxer;
                 this.maskDecoder = maskDecoder;
-                ____util.assert(maskConfig.codedWidth == config.codedWidth, `Mask video codedWidth (${maskConfig.codedWidth}) is inconsistent with the original video codedWidth (${config.codedWidth})`);
-                ____util.assert(maskConfig.codedHeight == config.codedHeight, `Mask video codedHeight (${maskConfig.codedHeight}) is inconsistent with the original video codedHeight (${config.codedHeight})`);
-                ____util.assert(maskConfig.frameCount == config.frameCount, `Mask video frameCount (${maskConfig.frameCount}) is inconsistent with the original video frameCount (${config.frameCount})`);
-                ____util.assert(maskConfig.fps == config.fps, `Mask video fps (${maskConfig.fps}) is inconsistent with the original video fps (${config.fps})`);
+                const u = ____util;
+                u.assert(maskConfig.codedWidth == config.codedWidth, `Mask video codedWidth (${maskConfig.codedWidth}) is inconsistent with the original video codedWidth (${config.codedWidth})`);
+                u.assert(maskConfig.codedHeight == config.codedHeight, `Mask video codedHeight (${maskConfig.codedHeight}) is inconsistent with the original video codedHeight (${config.codedHeight})`);
+                u.assert(maskConfig.frameCount == config.frameCount, `Mask video frameCount (${maskConfig.frameCount}) is inconsistent with the original video frameCount (${config.frameCount})`);
+                u.assert(maskConfig.fps == config.fps, `Mask video fps (${maskConfig.fps}) is inconsistent with the original video fps (${config.fps})`);
             }
             return true;
         }
@@ -212,7 +196,7 @@ export default class VideoCanvas {
     }
 
     isReady() {
-        return !!this.decoder;
+        return this.decoder && this.decoder.state == "configured";
     }
 
     async seek(time) {
@@ -221,13 +205,14 @@ export default class VideoCanvas {
         // 计算当前帧的下标
         const frameIndex = Math.floor(time / this.config.frameInterval);
         // 如果当前时间点帧下标和上次一样不做处理
-        if (this.frameIndex === frameIndex) return;
-        console.log(`${frameIndex}/${this.config.frameCount}`);
-        if (frameIndex > 594)
+        if (this.frameIndex === frameIndex)
             return;
+        if (this.isEnd())
+            return;
+        // console.log(`${frameIndex}/${this.decoder.decodeQueueSize}/${this.config.frameCount}`);
         const frame = await this._acquireFrame(frameIndex);
         let maskFrame = null;
-        if (this.config.hasMask)
+        if (this.maskBuffer)
             maskFrame = await this._acquireMaskFrame(frameIndex);
         const { displayWidth, displayHeight } = frame;
         if (maskFrame) {
@@ -250,11 +235,19 @@ export default class VideoCanvas {
             this.maskFrames[frameIndex] = null;
         }
         this.frames[frameIndex] = null;
+        // 更新帧下标
         this.frameIndex = frameIndex;
+        // 更新当前时间点
+        this.currentTime = time;
+    
+        // if (this.loop && (this.isEnd() || this.currentTime >= this.config.duration)) {  //如开启循环且当前已播放结束时重置
+        //     this.offsetTime += this.currentTime;
+        //     this.reset();
+        // }
     }
 
     isEnd() {
-
+        return this.frameIndex >= this.config.frameCount - 1;
     }
 
     canDestory(time) {
@@ -265,15 +258,75 @@ export default class VideoCanvas {
     }
 
     reset() {
-
+        // 清除未关闭的视频帧避免内存泄露
+        this._clearUnclosedFrames();
+        this.frameIndex = 0;
+        this.currentTime = 0;
+        // 重置解码器
+        this.decoder && this.decoder.reset();
+        // 重置蒙版解码器
+        this.maskDecoder && this.maskDecoder.reset();
     }
 
+    /**
+     * 销毁资源
+     */
     destory() {
         this.decoder && this.decoder.close();
         this.decoder = null;
-        this.demuxer = null;
-        this.reset();
+        this.maskDecoder && this.maskDecoder.close();
+        this.maskDecoder = null;
+        this._clearUnclosedFrames();
+        this.buffer = null;
+        this.maskBuffer = null;
+        this.frameIndex = 0;
+        this.currentTime = 0;
+        this.canvas = null;
+        this.canvasCtx = null;
+        this.offscreenCanvas = null;
+        this.offscreenCanvasCtx = null;
         this.destoryed = true;
+    }
+
+    /**
+     * 拉取视频数据
+     */
+    async _fetchData() {
+        if (!this.buffer) {
+            console.time();
+            const response = await captureCtx.fetch("video_preprocess", {
+                method: "POST",
+                body: JSON.stringify(this._exportConfig()),
+                retryFetchs: 0
+            });
+            console.timeEnd();
+            if (!response)
+                return null;
+            const {
+                buffer,
+                maskBuffer,
+                hasMask
+            } = this._unpackData(await response.arrayBuffer());
+            this.buffer = buffer;
+            if (hasMask)
+                this.maskBuffer = maskBuffer;
+        }
+        return {
+            buffer: this.buffer,
+            maskBuffer: this.maskBuffer
+        }
+    }
+
+    /**
+     * 清除未关闭的帧
+     */
+    _clearUnclosedFrames() {
+        this.frames.slice(this.frameIndex, this.frames.length)
+            .forEach(frame => frame && frame.close());
+        this.frames = [];
+        this.maskFrames.slice(this.frameIndex, this.maskFrames.length)
+            .forEach(maskFrame => maskFrame && maskFrame.close());
+        this.maskFrames = [];
     }
 
     /**
@@ -332,6 +385,7 @@ export default class VideoCanvas {
     _emitNewFrame(frame) {
         frame.index = this.decodedFrameIndex;
         this.frames[frame.index] = frame;
+        // console.log(`${frame.index}/${this.decoder.decodeQueueSize}/${this.config.frameCount}`);
         if (this.waitFrameCallback && this.waitFrameIndex == frame.index) {
             const fn = this.waitFrameCallback;
             this.waitFrameIndex = null;
@@ -363,19 +417,19 @@ export default class VideoCanvas {
      * 
      * @param {Uint8Array} data - 视频数据
      * @param {Object} options - 解码器选项
-     * @param {boolean} [hasMask] - 是否有蒙版
-     * @param {Function} onFrame - 视频帧回调
-     * @param {Function} onError - 错误回调
+     * @param {boolean} options.isMask - 是否为蒙版
+     * @param {Function} options.onFrame - 视频帧回调
+     * @param {Function} options.onError - 错误回调
      * @returns {Object} - 解码器和配置对象
      */
     async _createDecoder(data, options = {}) {
         const u = ____util;
-        const { hasMask, onFrame, onError } = options;
+        const { isMask = false, onFrame, onError } = options;
         u.assert(u.isUint8Array(data), "data must be Uint8Array");
-        u.assert(u.isUndefined(hasMask) || u.isBoolean(hasMask), "hasMask must be boolean");
+        u.assert(u.isBoolean(isMask), "isMask must be boolean");
         u.assert(u.isFunction(onFrame), "onFrame must be Function");
         u.assert(u.isFunction(onError), "onError must be Function");
-        const decoder = new VideoDecoder({
+        const decoder = (isMask ? this.maskDecoder : this.decoder) || new VideoDecoder({
             output: onFrame.bind(this),
             error: onError.bind(this)
         });
@@ -405,11 +459,11 @@ export default class VideoCanvas {
         const config = await waitConfigPromise;
         // 检查视频解码器是否支持当前配置
         await VideoDecoder.isConfigSupported(config);
-        config.hasMask = hasMask;
+        decoder.flush().then(() => console.log("OKl"));
+        console.log(decoder.decodeQueueSize);
         return {
             config,
-            decoder,
-            demuxer
+            decoder
         };
     }
 
