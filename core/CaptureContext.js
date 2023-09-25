@@ -32,6 +32,7 @@ export default class CaptureContext {
     timeoutCallbacks = [];
     /** @type {number} - 计时器自增ID */
     timerId = 0;
+    audioId = 0;
     /** @type {Object} - 配置对象 */
     config = {
         /** @type {number} - 渲染帧率 */
@@ -87,7 +88,7 @@ export default class CaptureContext {
                     // 媒体未准备完毕时调用加载
                     if (!media.isReady()) {
                         // 加载媒体，如加载失败则跳过
-                        if(!await media.load())
+                        if (!await media.load())
                             return;
                     };
                     const mediaCurrentTime = this.currentTime - media.startTime - (media.offsetTime || 0);
@@ -219,20 +220,28 @@ export default class CaptureContext {
     _observMediaInsert() {
         const observer = new MutationObserver(mutations => {
             for (const mutation of mutations) {
-                if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-                    for (const addedNode of mutation.addedNodes) {
-                        if (addedNode.matches("canvas"))
-                            break;
-                        else if (addedNode.matches(this.SVG_SELECTOR))
-                            this.convertToSvgAnimation(addedNode);
-                        else if (addedNode.matches(this.DYNAMIC_IMAGE_SELECTOR))
-                            this.convertToDynamicImage(addedNode);
-                        else if (addedNode.matches(this.AUDIO_SELECTOR))
-                            this.convertToInnerAudio(addedNode);
-                        else if (addedNode.matches(this.VIDEO_SELECTOR))
-                            this.convertToVideoCanvas(addedNode);
-                        else if (addedNode.matches(this.LOTTIE_SELECTOR))
-                            this.convertToLottieCanvas(addedNode);
+                if (mutation.type === "childList") {
+                    if (mutation.addedNodes.length > 0) {
+                        for (const addedNode of mutation.addedNodes) {
+                            if (addedNode.matches("canvas"))
+                                break;
+                            else if (addedNode.matches(this.SVG_SELECTOR))
+                                this.convertToSvgAnimation(addedNode);
+                            else if (addedNode.matches(this.DYNAMIC_IMAGE_SELECTOR))
+                                this.convertToDynamicImage(addedNode);
+                            else if (addedNode.matches(this.AUDIO_SELECTOR))
+                                this.convertToInnerAudio(addedNode);
+                            else if (addedNode.matches(this.VIDEO_SELECTOR))
+                                this.convertToVideoCanvas(addedNode);
+                            else if (addedNode.matches(this.LOTTIE_SELECTOR))
+                                this.convertToLottieCanvas(addedNode);
+                        }
+                    }
+                    if (mutation.removedNodes.length > 0) {
+                        for (const removedNode of mutation.removedNodes) {
+                            // 通知节点移除
+                            removedNode.____onRemoved && removedNode.____onRemoved();
+                        }
                     }
                 }
             }
@@ -457,11 +466,10 @@ export default class CaptureContext {
     convertToInnerAudio(e) {
         // 获取seek时间
         const currentTimeAttribute = e.getNumberAttribute("currentTime");
+        const audioId = this.audioId++;
         const options = {
-            // 元素ID
-            id: e.getAttribute("id") || undefined,
-            // 元素类名
-            class: e.getAttribute("class") || undefined,
+            // 内部音频唯一ID
+            id: audioId,
             // 音频来源
             url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
             // 音频格式
@@ -489,6 +497,7 @@ export default class CaptureContext {
             // 是否忽略本地缓存
             ignoreCache: e.getBooleanAttribute("ignore-cache") || e.getBooleanAttribute("ignoreCache")
         };
+        e.____onRemoved = () => ____updateAudioEndTime(audioId, this.currentTime);
         ____addAudio(options);
     }
 
@@ -505,6 +514,8 @@ export default class CaptureContext {
             id: e.getAttribute("id") || undefined,
             // 元素类名
             class: e.getAttribute("class") || undefined,
+            // 内部音频唯一ID
+            audioId: this.audioId++,
             // 视频来源
             url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
             // 视频格式
@@ -534,7 +545,7 @@ export default class CaptureContext {
             // 拉取失败时重试拉取次数
             retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs"),
             // 是否忽略本地缓存
-            ignoreCache: e.getBooleanAttribute("ignore-cache") || e.getBooleanAttribute("ignoreCache")
+            ignoreCache: e.getBooleanAttribute("ignore-cache") || e.getBooleanAttribute("ignoreCache"),
         };
         // 创建画布元素
         const canvas = this._createCanvas(options);

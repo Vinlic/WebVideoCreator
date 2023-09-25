@@ -100,6 +100,7 @@ export default async ({
     synthesizer.on("error", err => console.error(err));
 
     page.on("audioAdd", options => synthesizer.addAudio(options));
+    page.on("audioUpdate", (audioId, options) => synthesizer.updateAudio(audioId, options))
     // 跳转到您希望渲染的页面，您可以考虑创建一个本地的Web服务器提供页面以提升加载速度和安全性
     await page.goto(url);
 

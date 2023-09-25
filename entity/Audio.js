@@ -13,6 +13,8 @@ const downloadLock = new AsyncLock();
  */
 export default class Audio {
 
+    /** @type {number} - 音频ID */
+    id;
     /** @type {string} - 音频路径 */
     path;
     /** @type {string} - 音频URL */
@@ -48,6 +50,7 @@ export default class Audio {
      * 构造函数
      * 
      * @param {Object} options - 音频选项
+     * @param {number} [options.id] - 音频ID
      * @param {string} [options.path] - 音频路径
      * @param {string} [options.url] - 音频URL
      * @param {number} [options.startTime=0] - 起始时间点（毫秒）
@@ -63,8 +66,9 @@ export default class Audio {
      */
     constructor(options) {
         assert(_.isObject(options), "addAudio options must be object");
-        const { path, url, startTime, endTime, loop, volume, seekStart, seekEnd,
+        const { id, path, url, startTime, endTime, loop, volume, seekStart, seekEnd,
             fadeInDuration, fadeOutDuration, retryFetchs, ignoreCache } = options;
+        assert(_.isUndefined(id) || _.isFinite(id), "Audio id must be number");
         assert(_.isString(path) || _.isString(url), "Audio path or url must be string");
         assert(_.isUndefined(startTime) || _.isFinite(startTime), "Audio startTime must be number");
         assert(_.isUndefined(endTime) || _.isFinite(endTime), "Audio endTime must be number");
@@ -76,6 +80,7 @@ export default class Audio {
         assert(_.isUndefined(fadeOutDuration) || _.isFinite(fadeOutDuration), "Audio fadeOutDuration must be number");
         assert(_.isUndefined(retryFetchs) || _.isFinite(retryFetchs), "Audio retryFetchs must be number");
         assert(_.isUndefined(ignoreCache) || _.isBoolean(ignoreCache), "Audio fadeOutDuration must be boolean");
+        this.id = id;
         this.path = path;
         this.url = url;
         this.startTime = _.defaultTo(startTime, 0);
@@ -109,8 +114,8 @@ export default class Audio {
             this.duration = await util.getMediaDuration(this.path);
             if (this.endTime > 0 && this.startTime > this.endTime)
                 throw new Error(`Audio startTime (${this.startTime}) > endTime (${this.endTime})`);
-            if (this.seekEnd && (this.seekStart || 0) > this.seekEnd)
-                throw new Error(`Audio seekStart(${this.seekStart}) > seekEnd(${this.seekEnd})`);
+            if (this.seekEnd && this.seekStart > this.seekEnd)
+                throw new Error(`Audio seekStart (${this.seekStart}) > seekEnd (${this.seekEnd})`);
         })();
         return this.#loadPromise;
     }

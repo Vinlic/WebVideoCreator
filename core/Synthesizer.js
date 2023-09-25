@@ -335,6 +335,18 @@ export default class Synthesizer extends EventEmitter {
         audios.forEach(audio => this.addAudio(audio));
     }
 
+    /**
+     * 更新音频
+     * 
+     * @param {number} audioId - 音频ID
+     * @param {Audio} options - 音频选项
+     */
+    updateAudio(audioId, options) {
+        assert(_.isObject(options), "options must be Object");
+        const audio = this.audios.find(audio => audio.id === audioId);
+        audio && Object.assign(audio, options);
+    }
+
     // /**
     //  * 添加覆盖在顶层的视频
     //  * 
@@ -423,20 +435,22 @@ export default class Synthesizer extends EventEmitter {
         let outputs = "";
         const complexFilter = audios.reduce((result, audio, index) => {
             const { path, url, loop, startTime, endTime, duration, volume, seekStart, seekEnd, fadeInDuration, fadeOutDuration } = audio;
+            if(seekEnd && seekEnd - seekStart > duration)
+                return result;
             const _volume = Math.floor(((volume / 100) * (videoVolume / 100)) * 100) / 100;
             const output = `a${index}`;
             aencoder.addInput(path ? util.rootPathJoin(path) : url);
-            loop && aencoder.inputOption("-stream_loop", "-1");
-            !loop && seekStart && aencoder.addInputOption("-ss", util.millisecondsToHmss(seekStart));  //截取开始时间点
-            !loop && seekEnd && aencoder.addInputOption("-to", util.millisecondsToHmss(seekEnd));  //截取结束时间点
+            seekStart && aencoder.addInputOption("-ss", util.millisecondsToHmss(seekStart));  //截取开始时间点
+            seekEnd && aencoder.addInputOption("-to", util.millisecondsToHmss(seekEnd));  //截取结束时间点
             const fadeIn = fadeInDuration ? `,afade=t=in:st=${startTime / 1000}:d=${fadeInDuration / 1000}` : "";
             const fadeOut = fadeOutDuration ? `,afade=t=out:st=${((loop ? endTime : (Math.min(endTime, duration) || duration)) - fadeOutDuration) / 1000}:d=${fadeOutDuration / 1000}` : "";
-            const loopCut = loop ? `,atrim=start=0:end=${(endTime - startTime) / 1000}` : "";
+            const durationCut = `,atrim=start=0:end=${(endTime - startTime) / 1000}`;
+            const loopFilter = loop ? ",aloop=loop=-1:size=2e+09" : "";
             outputs += `[${output}]`;
-            return result + `[${1 + index}]adelay=${startTime}|${startTime},volume=${_volume}${loopCut}${fadeIn}${fadeOut}[${output}];`;
-        }, "") + `${outputs}amix=inputs=${audios.length}:normalize=0`;
+            return result + `[${1 + index}]adelay=${startTime}|${startTime},volume=${_volume}${durationCut}${loopFilter}${fadeIn}${fadeOut}[${output}];`;
+        }, "");
         // 应用符合过滤器
-        aencoder.complexFilter(complexFilter);
+        complexFilter && aencoder.complexFilter(`${complexFilter}${outputs}amix=inputs=${audios.length}:normalize=0`);
         this.#encoder = aencoder;
         return aencoder;
     }

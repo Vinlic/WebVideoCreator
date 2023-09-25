@@ -37,6 +37,8 @@ export default class DynamicImage {
     errorCallback;
     /** @type {ImageDecoder} - 图像解码器 */
     decoder = null;
+    /** @type {boolean} - 是否被移除 */
+    removed = false;
     /** @type {boolean} - 是否已销毁 */
     destoryed = false;
 
@@ -80,6 +82,7 @@ export default class DynamicImage {
     bind(canvas, options = {}) {
         const { alpha = true, imageSmoothingEnabled = true } = options;
         this.canvas = canvas;
+        this.canvas.____onRemoved = () => this.removed = true;
         // 获取画布2D上下文
         this.canvasCtx = this.canvas.getContext("2d", { alpha });
         // 设置抗锯齿开关
@@ -157,8 +160,8 @@ export default class DynamicImage {
     async seek(time) {
         // 已销毁不可索引
         if (this.destoryed) return;
-        // 如果当前图像不循环且播放结束则不再索引
-        if (!this.loop && this.isEnd()) return;
+        // 如果元素已移除或当前图像不循环且播放结束则不再索引
+        if (this.removed || (!this.loop && this.isEnd())) return;
         // 获取图像轨道
         const track = this.getSelectedTrack();
         // 无可用图像轨道将跳过处理

@@ -428,6 +428,7 @@ export default class Page extends EventEmitter {
         await this.target.exposeFunction("____captureFrame", this.#captureFrame.bind(this));
         // 暴露添加音频函数
         await this.target.exposeFunction("____addAudio", this.#addAudio.bind(this));
+        await this.target.exposeFunction("____updateAudioEndTime", this.#updateAudioEndTime.bind(this));
         // 暴露抛出错误函数
         await this.target.exposeFunction("____throwError", (code = -1, message = "") => this.#emitError(new Error(`throw error: [${code}] ${message}`)));
         // 页面加载前进行上下文初始化
@@ -486,6 +487,16 @@ export default class Page extends EventEmitter {
      */
     #addAudio(options) {
         this.emit("audioAdd", new Audio(options));
+    }
+
+    /**
+     * 更新音频结束时间点
+     * 
+     * @param {number} audioId - 内部音频ID
+     * @param {number} endTime - 音频结束时间点
+     */
+    #updateAudioEndTime(audioId, endTime) {
+        this.emit("audioUpdate", audioId, { endTime });
     }
 
     /**
@@ -690,6 +701,8 @@ export default class Page extends EventEmitter {
         this.removeAllListeners("resourceAccepted");
         this.removeAllListeners("resourceRejected");
         this.removeAllListeners("videoPreprocess");
+        this.removeAllListeners("audioAdd");
+        this.removeAllListeners("audioUpdate");
         this.removeAllListeners("error");
         this.removeAllListeners("crashed");
     }

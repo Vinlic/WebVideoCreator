@@ -29,6 +29,8 @@ export default class VideoProcessTask extends ProcessTask {
     startTime;
     /** @type {number} - 结束播放时间点（毫秒） */
     endTime;
+    /** @type {number} - 音频ID */
+    audioId;
     /** @type {number} - 裁剪开始时间点（毫秒） */
     seekStart;
     /** @type {number} - 裁剪结束时间点（毫秒） */
@@ -52,8 +54,9 @@ export default class VideoProcessTask extends ProcessTask {
      * @param {Object} options - 任务选项
      * @param {string} options.filePath - 视频文件路径
      * @param {string} options.format - 视频格式
-     * @param {number} [options.startTime] - 开始播放时间点（毫秒）
-     * @param {number} [options.endTime] - 结束播放时间点（毫秒）
+     * @param {number} options.startTime - 开始播放时间点（毫秒）
+     * @param {number} options.endTime - 结束播放时间点（毫秒）
+     * @param {number} options.audioId - 音频ID
      * @param {number} [options.seekStart=0] - 裁剪开始时间点（毫秒）
      * @param {number} [options.seekEnd] - 裁剪结束时间点（毫秒）
      * @param {number} [options.fadeInDuration] - 音频淡入时长（毫秒）
@@ -67,11 +70,12 @@ export default class VideoProcessTask extends ProcessTask {
      */
     constructor(options) {
         super(options);
-        const { filePath, format, startTime, endTime, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, videoCodec } = options;
+        const { filePath, format, startTime, endTime, audioId, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, videoCodec } = options;
         assert(_.isString(filePath), "filePath must be string");
         assert(_.isString(format) && ["mp4", "webm"].includes(format), "format must be string");
-        assert(_.isUndefined(startTime) || _.isFinite(startTime), "startTime must be number");
-        assert(_.isUndefined(endTime) || _.isFinite(endTime), "endTime must be number");
+        assert(_.isFinite(startTime), "startTime must be number");
+        assert(_.isFinite(endTime), "endTime must be number");
+        assert(_.isFinite(audioId), "audioId must be number");
         assert(_.isUndefined(seekStart) || _.isFinite(seekStart), "seekStart must be number");
         assert(_.isUndefined(seekEnd) || _.isFinite(seekEnd), "seekEnd must be number");
         assert(_.isUndefined(fadeInDuration) || _.isFinite(fadeInDuration), "fadeInDuration must be number");
@@ -82,8 +86,9 @@ export default class VideoProcessTask extends ProcessTask {
         assert(_.isUndefined(videoCodec) || _.isString(videoCodec), "videoCodec must be string");
         this.filePath = filePath;
         this.format = format;
-        this.startTime = startTime;
+        this.startTime =startTime;
         this.endTime = endTime;
+        this.audioId = audioId;
         this.seekStart = _.defaultTo(seekStart, 0);
         this.seekEnd = seekEnd;
         this.fadeInDuration = fadeInDuration;
@@ -124,6 +129,7 @@ export default class VideoProcessTask extends ProcessTask {
         return {
             // 添加到合成器的音频对象
             audio: this.audioFilePath ? new Audio({
+                id: this.audioId,
                 path: this.audioFilePath,
                 startTime: this.startTime,
                 endTime: this.endTime,

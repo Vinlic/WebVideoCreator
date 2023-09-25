@@ -18,6 +18,8 @@ export default class VideoCanvas {
     startTime;
     /** @type {number} - 结束播放时间（毫秒） */
     endTime;
+    /** @type {number} - 内部音频ID */
+    audioId;
     /** @type {number} - 裁剪开始时间点（毫秒） */
     seekStart;
     /** @type {number} - 裁剪结束时间点（毫秒） */
@@ -64,6 +66,8 @@ export default class VideoCanvas {
     offscreenCanvasCtx;
     /** @type {number} - 偏移时间量 */
     offsetTime = 0;
+    /** @type {boolean} - 是否被移除 */
+    removed = false;
     /** @type {boolean} - 是否已销毁 */
     destoryed = false;
     /** @type {VideoDecoder} - 视频解码器 */
@@ -86,6 +90,7 @@ export default class VideoCanvas {
      * @param {string} options.url - 视频URL
      * @param {number} options.startTime - 开始播放时间点（毫秒）
      * @param {number} options.endTime - 结束播放时间点（毫秒）
+     * @param {number} options.audioId = 内部音频ID
      * @param {string} [options.format] - 视频格式（mp4/webm）
      * @param {number} [options.seekStart=0] - 裁剪开始时间点（毫秒）
      * @param {number} [options.seekEnd] - 裁剪结束时间点（毫秒）
@@ -100,10 +105,11 @@ export default class VideoCanvas {
     constructor(options) {
         const u = ____util;
         u.assert(u.isObject(options), "VideoCanvas options must be Object");
-        const { url, startTime, endTime, format, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
+        const { url, startTime, endTime, audioId, format, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
         u.assert(u.isString(url), "url must be string");
         u.assert(u.isNumber(startTime), "startTime must be number");
         u.assert(u.isNumber(endTime), "endTime must be number");
+        u.assert(u.isNumber(audioId), "audioId must be number");
         u.assert(u.isUndefined(format) || u.isString(format), "format must be string");
         u.assert(u.isUndefined(seekStart) || u.isNumber(seekStart), "seekStart must be number");
         u.assert(u.isUndefined(seekEnd) || u.isNumber(seekEnd), "seekEnd must be number");
@@ -117,6 +123,7 @@ export default class VideoCanvas {
         this.url = url;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.audioId = audioId;
         this.format = format;
         this.seekStart = u.defaultTo(seekStart, 0);
         this.seekEnd = seekEnd;
@@ -141,19 +148,27 @@ export default class VideoCanvas {
     bind(canvas, options = {}) {
         const { alpha = true, imageSmoothingEnabled = true, imageSmoothingQuality = "high" } = options;
         this.canvas = canvas;
+        this.canvas.____onRemoved = () => {
+            ____updateAudioEndTime(this.audioId, captureCtx.currentTime);
+            this.removed = true;
+        };
         // 获取画布2D上下文
-        this.canvasCtx = this.canvas.getContext("2d", { alpha });
-        // 设置抗锯齿开关
-        this.canvasCtx.imageSmoothingEnabled = imageSmoothingEnabled;
-        // 设置抗锯齿强度
-        this.canvasCtx.imageSmoothingQuality = imageSmoothingQuality;
+        this.canvasCtx = this.canvas.getContext("2d", {
+            // 是否透明通道
+            alpha,
+            // 设置抗锯齿开关
+            imageSmoothingEnabled,
+            // 设置抗锯齿强度
+            imageSmoothingQuality
+        });
     }
 
     canPlay(time) {
         if (this.destoryed) return;
         const { startTime, endTime } = this;
+        // 如果当前时间超过元素开始结束时间则判定未不可播放
         if (time < startTime || time >= endTime)
-            return false;  //如果当前时间超过元素开始结束时间则判定未不可播放
+            return false;
         return true;
     }
 
@@ -196,6 +211,10 @@ export default class VideoCanvas {
                 u.assert(maskConfig.frameCount == config.frameCount, `Mask video frameCount (${maskConfig.frameCount}) is inconsistent with the original video frameCount (${config.frameCount})`);
                 u.assert(maskConfig.fps == config.fps, `Mask video fps (${maskConfig.fps}) is inconsistent with the original video fps (${config.fps})`);
             }
+            if(this.config.duration <= 0) {
+                this.destory();
+                return false;
+            }
             return true;
         }
         catch (err) {
@@ -217,7 +236,8 @@ export default class VideoCanvas {
         // 如果当前时间点帧下标和上次一样不做处理
         if (this.frameIndex === frameIndex)
             return;
-        if (this.isEnd())
+        // 如果元素被移除播放已结束或画布则跳过
+        if (this.removed || (!this.loop && this.isEnd()))
             return;
         // console.log(`${frameIndex}/${this.decoder.decodeQueueSize}/${this.config.frameCount}`);
         const frame = await this._acquireFrame(frameIndex);
@@ -251,7 +271,6 @@ export default class VideoCanvas {
         this.currentTime = time;
         // 如开启循环且当前已播放结束时重置
         if (this.loop && (this.isEnd() || this.currentTime >= this.config.duration)) {
-            console.log("循环");
             this.offsetTime += this.currentTime;
             this.reset();
         }
@@ -494,6 +513,7 @@ export default class VideoCanvas {
             format: this.format,
             startTime: this.startTime,
             endTime: this.endTime,
+            audioId: this.audioId,
             seekStart: this.seekStart,
             seekEnd: this.seekEnd,
             fadeInDuration: this.fadeInDuration,
