@@ -94,7 +94,7 @@ export default class DynamicImage {
      */
     canPlay(time) {
         // 已销毁不可播放
-        if(this.destoryed) return false;
+        if (this.destoryed) return false;
         // 如果当前时间超过元素开始结束时间则判定未不可播放
         const { startTime, endTime } = this;
         if (time < startTime || time >= endTime)
@@ -106,28 +106,38 @@ export default class DynamicImage {
      * 加载图像
      */
     async load() {
-        // 下载图像数据
-        const response = await captureCtx.fetch(this.url, this.retryFetchs);
-        // 如果获得null可能响应存在问题，直接销毁对象，具体错误报告由Page.js的响应拦截器处理
-        if(!response)
-            return this.destory();
-        // 获取MIME类型
-        let contentType = response.headers.get("Content-Type") || response.headers.get("content-type");
-        if(!contentType)
-            throw new Error(`image Content-Type unknown is not supported`);
-        contentType = contentType.split(";")[0];
-        // 检查图像解码器是否是否支持此图像类型
-        if(!await ImageDecoder.isTypeSupported(contentType))
-            throw new Error(`image type ${contentType} is not supported`);
-        // 实例化图像解码器
-        this.decoder = new ImageDecoder({
-            // MIME类型
-            type: contentType,
-            // 图像数据
-            data: response.body
-        });
-        // 等待数据完成加载
-        await this.decoder.completed;
+        try {
+            // 下载图像数据
+            const response = await captureCtx.fetch(this.url, this.retryFetchs);
+            // 如果获得null可能响应存在问题，直接销毁对象，具体错误报告由Page.js的响应拦截器处理
+            if (!response) {
+                this.destory();
+                return false;
+            }
+            // 获取MIME类型
+            let contentType = response.headers.get("Content-Type") || response.headers.get("content-type");
+            if (!contentType)
+                throw new Error(`image Content-Type unknown is not supported`);
+            contentType = contentType.split(";")[0];
+            // 检查图像解码器是否是否支持此图像类型
+            if (!await ImageDecoder.isTypeSupported(contentType))
+                throw new Error(`image type ${contentType} is not supported`);
+            // 实例化图像解码器
+            this.decoder = new ImageDecoder({
+                // MIME类型
+                type: contentType,
+                // 图像数据
+                data: response.body
+            });
+            // 等待数据完成加载
+            await this.decoder.completed;
+            return true;
+        }
+        catch (err) {
+            console.error(err);
+            this.destory();
+            return false;
+        }
     }
 
     /**
@@ -146,18 +156,18 @@ export default class DynamicImage {
      */
     async seek(time) {
         // 已销毁不可索引
-        if(this.destoryed) return;
+        if (this.destoryed) return;
         // 如果当前图像不循环且播放结束则不再索引
-        if(!this.loop && this.isEnd()) return;
+        if (!this.loop && this.isEnd()) return;
         // 获取图像轨道
         const track = this.getSelectedTrack();
         // 无可用图像轨道将跳过处理
-        if(!track) return;
+        if (!track) return;
         // 当解码完成且帧索引指向最后一帧时重置帧指针
         if (this.decoder.complete && this.frameIndex >= track.frameCount + 1)
             this.reset();
         // 当存在上一帧且上一帧未完成停留时长前将跳过绘制下一帧，节约重绘频次
-        if(time !== 0 && this.lastFrameDuration && time < (this.lastFrameTimestamp + this.lastFrameDuration)) {
+        if (time !== 0 && this.lastFrameDuration && time < (this.lastFrameTimestamp + this.lastFrameDuration)) {
             this.currentTime = time;
             return;
         }
@@ -165,24 +175,24 @@ export default class DynamicImage {
         const result = await new Promise((resolve, reject) => {
             // 解码该帧图像
             this.decoder.decode({ frameIndex: this.frameIndex++ })
-            .then(resolve)
-            .catch(err => {
-                // 为效率考虑解码和绘制是同时进行的，如绘制快于解码时可能出现超出帧范围需容错处理
-                if (err instanceof RangeError) {
-                    // 重置帧索引
-                    this.reset();
-                    // 等待30毫秒后再触发resolve，避免后续疯狂递归
-                    ____setTimeout(resolve, 30);
-                }
-                // 其它错误抛出
-                else
-                    reject(err);
-            });
+                .then(resolve)
+                .catch(err => {
+                    // 为效率考虑解码和绘制是同时进行的，如绘制快于解码时可能出现超出帧范围需容错处理
+                    if (err instanceof RangeError) {
+                        // 重置帧索引
+                        this.reset();
+                        // 等待30毫秒后再触发resolve，避免后续疯狂递归
+                        ____setTimeout(resolve, 30);
+                    }
+                    // 其它错误抛出
+                    else
+                        reject(err);
+                });
         });
         // 如果因重置未解码任何帧将重新seek
-        if(!result) return this.seek(time);
+        if (!result) return this.seek(time);
         // 如未解码出任何图像帧将跳过该时间点
-        if(!result.image) return;
+        if (!result.image) return;
         const frame = result.image;
         const { displayWidth, displayHeight } = frame;
         // 清除上一帧画面
@@ -206,9 +216,9 @@ export default class DynamicImage {
         // 获取图像轨道
         const track = this.getSelectedTrack();
         // 无可用图像轨道将返回已结束
-        if(!track) return true;
+        if (!track) return true;
         // 如果强制不循环将只播放一次
-        if(this.loop === false)
+        if (this.loop === false)
             return this.repetitionIndex >= 1;
         // 其它情况遵循文件自身重复次数
         return this.repetitionIndex >= track.repetitionCount + 1;
@@ -221,7 +231,7 @@ export default class DynamicImage {
      */
     canDestory(time) {
         // 已销毁则避免重复销毁
-        if(this.destoryed) return false;
+        if (this.destoryed) return false;
         // 返回当前时间是否大于结束时间
         return time >= this.endTime;
     }

@@ -58,8 +58,16 @@ export default class SvgAnimation {
      * 加载动画
      */
     load() {
-        // 停止SVG动画播放，后续由内部调度
-        this.target.pauseAnimations();
+        try {
+            // 停止SVG动画播放，后续由内部调度渲染
+            this.target.pauseAnimations();
+            return true;
+        }
+        catch(err) {
+            console.error(err);
+            this.destory();
+            return false;
+        }
     }
 
     /**

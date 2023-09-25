@@ -5,7 +5,7 @@ const ____util = innerUtil();
 /**
  * Lottie画布
  */
- export default class LottieCanvas {
+export default class LottieCanvas {
 
     /** @type {string} - lottie来源 */
     url;
@@ -55,7 +55,7 @@ const ____util = innerUtil();
         this.loop = loop;
         this.retryFetchs = u.defaultTo(retryFetchs, 2);
     }
-    
+
     /**
      * 绑定画布元素
      * 
@@ -81,7 +81,7 @@ const ____util = innerUtil();
      */
     canPlay(time) {
         // 已销毁不可播放
-        if(this.destoryed) return false;
+        if (this.destoryed) return false;
         // 如果当前时间超过元素开始结束时间则判定未不可播放
         const { startTime, endTime } = this;
         if (time < startTime || time >= endTime)
@@ -93,36 +93,46 @@ const ____util = innerUtil();
      * 加载Lottie
      */
     async load() {
-        // 下载Lottie数据
-        const response = await captureCtx.fetch(this.url, this.retryFetchs);
-        // 如果获得null可能响应存在问题，直接销毁对象，具体错误报告由Page.js的响应拦截器处理
-        if(!response)
-            return this.destory();
-        // 获取MIME类型
-        let contentType = response.headers.get("Content-Type") || response.headers.get("content-type");
-        if(!contentType)
-            throw new Error(`lottie Content-Type unknown is not supported`);
-        contentType = contentType.split(";")[0];
-        // 检查是否为Lottie的json格式
-        if(contentType !== "application/json")
-            throw new Error(`lottie Content-Type ${contentType} is not supported`);
-        // 转换为json对象
-        const animationData = await response.json();
-        // 调用Lottie动画库加载动画 - 动画库由Page.js注入
-        this.animation = ____lottie.loadAnimation({
-            // 是否循环播放动画
-            loop: this.loop,
-            // 动画JSON数据
-            animationData,
-            // 使用canvas模式渲染
-            renderer: "canvas",
-            // 启用自动播放
-            autoplay: true,
-            // 渲染器设置画布上下文
-            rendererSettings: {
-                context: this.canvasCtx
+        try {
+            // 下载Lottie数据
+            const response = await captureCtx.fetch(this.url, this.retryFetchs);
+            // 如果获得null可能响应存在问题，直接销毁对象，具体错误报告由Page.js的响应拦截器处理
+            if (!response) {
+                this.destory();
+                return false;
             }
-        });
+            // 获取MIME类型
+            let contentType = response.headers.get("Content-Type") || response.headers.get("content-type");
+            if (!contentType)
+                throw new Error(`lottie Content-Type unknown is not supported`);
+            contentType = contentType.split(";")[0];
+            // 检查是否为Lottie的json格式
+            if (contentType !== "application/json")
+                throw new Error(`lottie Content-Type ${contentType} is not supported`);
+            // 转换为json对象
+            const animationData = await response.json();
+            // 调用Lottie动画库加载动画 - 动画库由Page.js注入
+            this.animation = ____lottie.loadAnimation({
+                // 是否循环播放动画
+                loop: this.loop,
+                // 动画JSON数据
+                animationData,
+                // 使用canvas模式渲染
+                renderer: "canvas",
+                // 启用自动播放
+                autoplay: true,
+                // 渲染器设置画布上下文
+                rendererSettings: {
+                    context: this.canvasCtx
+                }
+            });
+            return true;
+        }
+        catch (err) {
+            console.error(err);
+            this.destory();
+            return false;
+        }
     }
 
     /**
@@ -140,7 +150,7 @@ const ____util = innerUtil();
      * @param {number} time - 索引时间点
      */
     async seek(time) {
-        if(this.destoryed) return;
+        if (this.destoryed) return;
         this.currentTime = time;
         this.frameIndex++;
     }
@@ -152,7 +162,7 @@ const ____util = innerUtil();
      */
     canDestory(time) {
         // 已销毁则避免重复销毁
-        if(this.destoryed) return false;
+        if (this.destoryed) return false;
         // 返回当前时间是否大于结束实际
         return time >= this.endTime;
     }

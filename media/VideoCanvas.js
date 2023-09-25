@@ -159,8 +159,10 @@ export default class VideoCanvas {
                 retryFetchs: 0
             });
             console.timeEnd();
-            if (!response)
-                return this.destory();
+            if (!response) {
+                this.destory();
+                return false;
+            }
             const {
                 buffer,
                 maskBuffer,
@@ -200,9 +202,12 @@ export default class VideoCanvas {
                 ____util.assert(maskConfig.frameCount == config.frameCount, `Mask video frameCount (${maskConfig.frameCount}) is inconsistent with the original video frameCount (${config.frameCount})`);
                 ____util.assert(maskConfig.fps == config.fps, `Mask video fps (${maskConfig.fps}) is inconsistent with the original video fps (${config.fps})`);
             }
+            return true;
         }
         catch (err) {
             console.log(err);
+            this.destory();
+            return false;
         }
     }
 
@@ -344,7 +349,6 @@ export default class VideoCanvas {
     _emitNewMaskFrame(frame) {
         frame.index = this.decodedMaskFrameIndex;
         this.maskFrames[frame.index] = frame;
-        console.log(frame.index);
         if (this.waitMaskFrameCallback && this.waitMaskFrameIndex == frame.index) {
             const fn = this.waitMaskFrameCallback;
             this.waitMaskFrameIndex = null;

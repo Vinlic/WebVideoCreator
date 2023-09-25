@@ -78,10 +78,18 @@ export default class CaptureContext {
 
                 // 媒体调度
                 const mediaRenderPromises = this.dispatchMedias.map(media => (async () => {
+                    // 媒体可销毁时执行销毁
                     if (media.canDestory(this.currentTime))
-                        return media.destory();  //销毁媒体
-                    if (!media.canPlay(this.currentTime)) return;  //如媒体不可播放则跳过调度
-                    if (!media.isReady()) await media.load();  //媒体未准备完毕时调用加载
+                        return media.destory();
+                    // 如媒体不可播放则跳过调度
+                    if (!media.canPlay(this.currentTime))
+                        return;
+                    // 媒体未准备完毕时调用加载
+                    if (!media.isReady()) {
+                        // 加载媒体，如加载失败则跳过
+                        if(!await media.load())
+                            return;
+                    };
                     const mediaCurrentTime = this.currentTime - media.startTime - (media.offsetTime || 0);
                     await media.seek(mediaCurrentTime > 0 ? mediaCurrentTime : 0);
                 })());
