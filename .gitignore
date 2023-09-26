@@ -1,6 +1,7 @@
 node_modules
 output
 tmp
+.bin
 *.tmp
 *.mp3
 *.mp4

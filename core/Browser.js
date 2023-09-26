@@ -7,6 +7,7 @@ import _ from "lodash";
 import Pool from "./ResourcePool.js";
 import Page from "./Page.js";
 import util from "../lib/util.js";
+import installBrowser from "../lib/install-browser.js";
 
 // 异步锁
 const asyncLock = new AsyncLock();
@@ -117,14 +118,13 @@ export default class Browser {
      * 浏览器资源初始化
      */
     async init() {
+        const { executablePath } = await installBrowser();
         // 启动浏览器
         this.target = await puppeteer.launch({
             // BeginFrameControl必需处于无头模式下可用，新无头"new"暂时不可用，请关注进展：https://bugs.chromium.org/p/chromium/issues/detail?id=1480747
             headless: true,
-            // 目前只支持使用chrome
-            channel: "chrome",
             // 浏览器入口文件路径
-            executablePath: this.executablePath,
+            executablePath,
             // 忽略HTTPS错误
             ignoreHTTPSErrors: true,
             // 浏览器启动超时时间（毫秒）

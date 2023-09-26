@@ -36,7 +36,7 @@ export default async ({
     // 计算总帧数
     const frameCount = util.durationToFrameCount(duration, fps);
     // cli进度条
-    const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+    const progressBar = new cliProgress.SingleBar({ hideCursor: true }, cliProgress.Presets.shades_classic);
     progressBar.start(frameCount, 0);
 
     // 实例化无头浏览器资源池
