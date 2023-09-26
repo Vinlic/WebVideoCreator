@@ -492,10 +492,8 @@ export default class VideoCanvas {
         await VideoDecoder.isConfigSupported(config);
         if(decoder.state == "configured") {
             decoder.flush()
-                .then(() => console.log("OKl"))
                 .catch(err => err.message.indexOf("Aborted due to close") === -1 && err.message.indexOf("closed codec") === -1 ? console.error(err) : 0);
         }
-        console.log(decoder.decodeQueueSize);
         return {
             config,
             decoder

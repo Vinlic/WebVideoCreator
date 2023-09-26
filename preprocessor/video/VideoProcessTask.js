@@ -173,6 +173,7 @@ export default class VideoProcessTask extends ProcessTask {
             cliper
                 .addOutputOption(`-c:v ${this.videoEncoder}`)
                 .addOutputOption("-an")
+                .addOutputOption("-crf 18")
                 .addOutputOption("-movflags frag_keyframe+empty_moov")
                 .toFormat("mp4")
                 .once("error", reject)
