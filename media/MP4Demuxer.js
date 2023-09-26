@@ -70,7 +70,7 @@ export default class MP4Demuxer {
             "avc1.64003c": "avc1.640033"
         };
         // 配置信息回调用于配置视频解码器
-        const duration = track.movie_duration / track.movie_timescale * 1000;
+        const duration = (track.movie_duration / track.movie_timescale * 1000) || (track.samples_duration / track.timescale * 1000);
         const fps = Number((track.nb_samples / duration * 1000).toFixed());
         const frameInterval = duration / track.nb_samples;
         this._configCallback && this._configCallback({

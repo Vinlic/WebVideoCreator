@@ -171,9 +171,9 @@ export default class VideoProcessTask extends ProcessTask {
         });
         await new Promise((resolve, reject) => {
             cliper
-                .addOutputOption("-c:v", "copy")
+                .addOutputOption(`-c:v ${this.videoEncoder}`)
                 .addOutputOption("-an")
-                .addOutputOption('-movflags frag_keyframe+empty_moov')
+                .addOutputOption("-movflags frag_keyframe+empty_moov")
                 .toFormat("mp4")
                 .once("error", reject)
                 .once("end", resolve)
@@ -213,7 +213,10 @@ export default class VideoProcessTask extends ProcessTask {
                     .outputOption("-movflags +faststart")
                     .addOutput(maskFilePath)
                     .once("end", resolve)
-                    .once("error", reject)
+                    .once("error", err => {
+                        fs.removeSync(maskFilePath);
+                        reject(err);
+                    })
                     .run();
             });
             this.maskFilePath = maskFilePath;
@@ -252,7 +255,10 @@ export default class VideoProcessTask extends ProcessTask {
                     .addOutput(transcodedFilePath)
                     .once("start", cmd => logger.info(cmd))
                     .once("end", resolve)
-                    .once("error", reject)
+                    .once("error", err => {
+                        fs.removeSync(this.filePath);
+                        reject(err);
+                    })
                     .run();
             });
             this.transcodedFilePath = transcodedFilePath;
