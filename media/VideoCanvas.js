@@ -45,7 +45,7 @@ export default class VideoCanvas {
     /** @type {Uint8Array} - 蒙版视频数据 */
     maskBuffer = null;
     /** @type {number} - 帧索引 */
-    frameIndex = 0;
+    frameIndex = null;
     /** @type {number} - 已解码帧索引 */
     decodedFrameIndex = 0;
     /** @type {number} - 已解码蒙版帧索引 */
@@ -259,12 +259,13 @@ export default class VideoCanvas {
         }
         else
             this.canvasCtx.drawImage(frame, 0, 0, displayWidth, displayHeight, 0, 0, this.canvas.width, this.canvas.height);
+        
         frame.close();
+        this.frames[frameIndex] = null;
         if (maskFrame) {
             maskFrame.close();
             this.maskFrames[frameIndex] = null;
         }
-        this.frames[frameIndex] = null;
         // 更新帧下标
         this.frameIndex = frameIndex;
         // 更新当前时间点
@@ -290,7 +291,7 @@ export default class VideoCanvas {
     reset() {
         // 清除未关闭的视频帧避免内存泄露
         this._clearUnclosedFrames();
-        this.frameIndex = 0;
+        this.frameIndex = null;
         this.currentTime = 0;
         this.decodedFrameIndex = 0;
         this.decodedMaskFrameIndex = 0;
@@ -311,7 +312,7 @@ export default class VideoCanvas {
         this._clearUnclosedFrames();
         this.buffer = null;
         this.maskBuffer = null;
-        this.frameIndex = 0;
+        this.frameIndex = null;
         this.currentTime = 0;
         this.canvas = null;
         this.canvasCtx = null;
@@ -379,6 +380,12 @@ export default class VideoCanvas {
         this.canvasCtx.imageSmoothingQuality = imageSmoothingQuality;
     }
 
+    /**
+     * 获取视频帧
+     * 
+     * @param {number} frameIndex 帧下标
+     * @returns {VideoFrame} - 视频帧
+     */
     async _acquireFrame(frameIndex) {
         if (this.frames[frameIndex])
             return this.frames[frameIndex];
@@ -394,6 +401,12 @@ export default class VideoCanvas {
         return this.frames[frameIndex];
     }
 
+    /**
+     * 获取蒙版视频帧
+     * 
+     * @param {number} frameIndex 帧下标
+     * @returns {VideoFrame} - 蒙版视频帧
+     */
     async _acquireMaskFrame(frameIndex) {
         if (this.maskFrames[frameIndex])
             return this.maskFrames[frameIndex];
