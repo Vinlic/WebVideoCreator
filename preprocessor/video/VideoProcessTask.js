@@ -159,7 +159,7 @@ export default class VideoProcessTask extends ProcessTask {
         const duration = (seekEnd || Infinity) - (this.seekStart || 0);
         const endTime = this.startTime + duration;
         if(endTime != Infinity && endTime > this.endTime)
-            seekEnd = seekEnd - (this.endTime - endTime);
+            seekEnd = seekEnd - (endTime - this.endTime);
         this.seekStart && cliper.addInputOption("-ss", util.millisecondsToHmss(this.seekStart));
         seekEnd && cliper.addInputOption("-to", util.millisecondsToHmss(this.seekEnd));
         const buffers = [];

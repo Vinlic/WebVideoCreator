@@ -90,8 +90,8 @@ export default class ResourcePool {
      * 预热浏览器资源池
      */
     async warmup() {
+        if(this.#warmupped) return;
         await asyncLock.acquire("warmup", async () => {
-            if(this.#warmupped) return;
             this.#browserPool.start();
             await this.#browserPool.ready();
             this.#warmupped = true;

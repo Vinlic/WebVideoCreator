@@ -290,7 +290,7 @@ export default class Synthesizer extends EventEmitter {
     #emitProgress(value) {
         if (value > 100)
             value = 100;
-        this.emit("progress", Math.floor(value * 1000) / 1000, this._frameCount);
+        this.emit("progress", Math.floor(value * 1000) / 1000, this._frameCount, this.#targetFrameCount);
     }
 
     /**
