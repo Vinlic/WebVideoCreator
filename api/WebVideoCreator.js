@@ -3,7 +3,7 @@ import _ from "lodash";
 import globalConfig from "../lib/global-config.js";
 import logger from "../lib/logger.js";
 import { VIDEO_ENCODER } from "../lib/const.js";
-import ResourcePool from "./ResourcePool.js";
+import ResourcePool from "../core/ResourcePool.js";
 import SingleVideo from "./SingleVideo.js";
 import ChunkVideo from "./ChunkVideo.js";
 import MultiVideo from "./MultiVideo.js";
@@ -78,8 +78,8 @@ export default class WebVideoCreator {
         return singleVideo;
     }
 
-    createMultiVideo() {
-        
+    createMultiVideo(chunks) {
+        const multiVideo = new MultiVideo(options);
     }
 
     /**
@@ -115,10 +115,6 @@ export default class WebVideoCreator {
         const chunkVideo = new ChunkVideo(options);
         chunkVideo.onPageAcquire(async () => await this.pool.acquirePage());
         return chunkVideo;
-    }
-
-    createMultiVideoFromChunks(chunks) {
-        
     }
 
 }

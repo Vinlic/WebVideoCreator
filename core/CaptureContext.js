@@ -63,6 +63,8 @@ export default class CaptureContext {
 
     /**
      * 准备完毕
+     * 
+     * @return {boolean} - 是否已启动
      */
     ready() {
         // 设置准备完毕标志为true

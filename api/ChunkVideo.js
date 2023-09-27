@@ -2,7 +2,7 @@ import assert from "assert";
 import _ from "lodash";
 import AsyncLock from "async-lock";
 
-import VideoChunk from "./VideoChunk.js";
+import VideoChunk from "../core/VideoChunk.js";
 import Transition from "../entity/Transition.js";
 import logger from "../lib/logger.js";
 import util from "../lib/util.js";

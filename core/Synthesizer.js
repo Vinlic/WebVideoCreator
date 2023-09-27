@@ -39,8 +39,6 @@ export default class Synthesizer extends EventEmitter {
     state = Synthesizer.STATE.READY;
     /** @type {string} - 导出视频路径 */
     outputPath;
-    /** @type {string} - 直播推理地址 */
-    liveUrl;
     /** @type {number} - 视频合成帧率 */
     fps;
     /** @type {number} - 视频宽度 */
@@ -100,17 +98,16 @@ export default class Synthesizer extends EventEmitter {
      * 构造函数
      * 
      * @param {Object} options - 序列帧合成器选项
+     * @param {string} options.outputPath - 导出视频路径
      * @param {number} options.width - 视频宽度
      * @param {number} options.height - 视频高度
      * @param {number} options.duration - 视频时长
      * @param {number} [options.fps=30] - 视频合成帧率
-     * @param {string} [options.outputPath] - 导出视频路径
      * @param {string} [options.format] - 导出视频格式（mp4/webm）
      * @param {string} [options.attachCoverPath] - 附加到视频首帧的封面路径
      * @param {string} [options.coverCapture=false] - 是否捕获封面并输出
      * @param {number} [options.coverCaptureTime] - 封面捕获时间点（毫秒）
      * @param {string} [options.coverCaptureFormat="jpg"] - 封面捕获格式（jpg/png/bmp）
-     * @param {string} [options.liveUrl] - 直播推流地址
      * @param {string} [options.videoEncoder="libx264"] - 视频编码器
      * @param {number} [options.videoQuality=100] - 视频质量（0-100）
      * @param {string} [options.videoBitrate] - 视频码率（设置码率将忽略videoQuality）
@@ -126,13 +123,13 @@ export default class Synthesizer extends EventEmitter {
         assert(_.isObject(options), "Synthesizer options must be object");
         const { width, height, fps, duration, format, outputPath,
             attachCoverPath, coverCapture, coverCaptureTime, coverCaptureFormat,
-            liveUrl, videoEncoder, videoQuality, videoBitrate, pixelFormat,
+            videoEncoder, videoQuality, videoBitrate, pixelFormat,
             audioEncoder, audioBitrate, volume, parallelWriteFrames, debug } = options;
         assert(_.isFinite(width), "width must be number");
         assert(_.isFinite(height), "height must be number");
         assert(_.isFinite(duration), "synthesis duration must be number");
         assert(_.isString(fps) || _.isFinite(fps), "synthesis fps must be number");
-        assert((_.isString(outputPath) || _.isString(liveUrl)) || this._isVideoChunk(), "outputPath or liveUrl must be string");
+        assert(_.isString(outputPath) || this._isVideoChunk(), "outputPath must be string");
         assert(_.isUndefined(format) || SUPPORT_FORMAT.includes(format), `format ${format} is not supported`);
         assert(_.isUndefined(attachCoverPath) || _.isString(attachCoverPath), "attachCoverPath must be string");
         assert(_.isUndefined(coverCapture) || _.isBoolean(coverCapture), "coverCapture must be boolean");
@@ -168,7 +165,6 @@ export default class Synthesizer extends EventEmitter {
         this.coverCapture = _.defaultTo(coverCapture, false);
         this.coverCaptureTime = coverCaptureTime;
         this.coverCaptureFormat = _.defaultTo(coverCaptureFormat, "jpg");
-        this.liveUrl = liveUrl;
         this.videoEncoder = _.defaultTo(videoEncoder, _.defaultTo(this.format == "webm" ? globalConfig.webmEncoder : globalConfig.mp4Encoder, FORMAT_VIDEO_ENCODER_MAP[this.format][0] || "libx264"));
         this.videoQuality = _.defaultTo(videoQuality, 100);
         this.videoBitrate = videoBitrate;

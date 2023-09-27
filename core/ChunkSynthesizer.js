@@ -18,30 +18,28 @@ export default class ChunkSynthesizer extends Synthesizer {
      * 构造函数
      * 
      * @param {Object} options - 序列帧合成器选项
-     * @param {number} [options.width] - 视频宽度
-     * @param {number} [options.height] - 视频高度
-     * @param {number} [options.fps] - 视频合成帧率
-     * @param {string} [options.outputPath] - 导出视频路径
-     * @param {string} [options.format] - 导出视频格式
+     * @param {string} options.outputPath - 导出视频路径
+     * @param {number} options.width - 视频宽度
+     * @param {number} options.height - 视频高度
+     * @param {number} options.duration - 视频时长
+     * @param {VideoChunk[]} options.chunks - 视频分块列表
+     * @param {number} [options.fps=30] - 视频合成帧率
+     * @param {string} [options.format] - 导出视频格式（mp4/webm）
      * @param {string} [options.attachCoverPath] - 附加到视频首帧的封面路径
      * @param {string} [options.coverCapture=false] - 是否捕获封面并输出
      * @param {number} [options.coverCaptureTime] - 封面捕获时间点（毫秒）
      * @param {string} [options.coverCaptureFormat="jpg"] - 封面捕获格式（jpg/png/bmp）
-     * @param {string} [options.liveUrl] - 直播推流地址
-     * @param {string} [options.videoEncoder] - 视频编码器
-     * @param {number} [options.videoQuality] - 视频质量（0-100）
+     * @param {string} [options.videoEncoder="libx264"] - 视频编码器
+     * @param {number} [options.videoQuality=100] - 视频质量（0-100）
      * @param {string} [options.videoBitrate] - 视频码率（设置码率将忽略videoQuality）
-     * @param {string} [options.pixelFormat] - 像素格式（yuv420p/yuv444p/rgb24）
-     * @param {string} [options.audioEncoder] - 音频编码器
+     * @param {string} [options.pixelFormat="yuv420p"] - 像素格式（yuv420p/yuv444p/rgb24）
+     * @param {string} [options.audioEncoder="aac"] - 音频编码器
      * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.volume] - 视频音量（0-100）
+     * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
      * @param {number} [options.debug=false] - 是否输出调试信息
      */
     constructor(options) {
-        options.width = 0;
-        options.height = 0;
-        options.fps = 0;
-        options.duration = 0;
         super(options);
         const { chunks } = options;
         assert(_.isUndefined(chunks) || _.isArray(chunks), "chunks must be VideoChunk[]");
@@ -56,9 +54,9 @@ export default class ChunkSynthesizer extends Synthesizer {
      */
     input(chunk, transition) {
         assert(chunk instanceof VideoChunk, "input chunk must be VideoChunk");
-        assert(!this.width || chunk.width == this.width, "input chunk width does not match the previous block");
-        assert(!this.height || chunk.height == this.height, "input chunk height does not match the previous block");
-        assert(!this.fps || chunk.fps == this.fps, "input chunk fps does not match the previous block");
+        assert(chunk.width == this.width, "input chunk width does not match the previous block");
+        assert(chunk.height == this.height, "input chunk height does not match the previous block");
+        assert(chunk.fps == this.fps, "input chunk fps does not match the previous block");
         let insertIndex;
         for (let i = 0; i < this.chunks.length; i++) {
             if (chunk.index <= this.chunks[i].index) {

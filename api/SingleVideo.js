@@ -2,7 +2,7 @@ import assert from "assert";
 import _ from "lodash";
 import AsyncLock from "async-lock";
 
-import Synthesizer from "./Synthesizer.js";
+import Synthesizer from "../core/Synthesizer.js";
 import logger from "../lib/logger.js";
 import util from "../lib/util.js";
 
