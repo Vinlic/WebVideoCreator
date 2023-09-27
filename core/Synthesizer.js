@@ -11,7 +11,9 @@ import {
     SUPPORT_FORMAT, FORMAT_VIDEO_ENCODER_MAP,
     FORMAT_AUDIO_ENCODER_MAP, VIDEO_ENCODER_MAP, AUDIO_ENCODER_MAP
 } from "../lib/const.js";
+import globalConfig from "../lib/global-config.js";
 import Audio from "../entity/Audio.js";
+import logger from "../lib/logger.js";
 import util from "../lib/util.js";
 
 /** @typedef {import('fluent-ffmpeg').FfmpegCommand} FfmpegCommand */
@@ -100,8 +102,8 @@ export default class Synthesizer extends EventEmitter {
      * @param {Object} options - 序列帧合成器选项
      * @param {number} options.width - 视频宽度
      * @param {number} options.height - 视频高度
-     * @param {number} options.fps - 视频合成帧率
      * @param {number} options.duration - 视频时长
+     * @param {number} [options.fps=30] - 视频合成帧率
      * @param {string} [options.outputPath] - 导出视频路径
      * @param {string} [options.format] - 导出视频格式（mp4/webm）
      * @param {string} [options.attachCoverPath] - 附加到视频首帧的封面路径
@@ -128,11 +130,11 @@ export default class Synthesizer extends EventEmitter {
             audioEncoder, audioBitrate, volume, parallelWriteFrames, debug } = options;
         assert(_.isFinite(width), "width must be number");
         assert(_.isFinite(height), "height must be number");
-        assert(_.isFinite(fps), "synthesis fps must be number");
         assert(_.isFinite(duration), "synthesis duration must be number");
-        assert(_.isString(outputPath) || _.isString(liveUrl), "outputPath or liveUrl must be string");
-        assert(_.isUndefined(attachCoverPath) || _.isString(attachCoverPath), "attachCoverPath must be string");
+        assert(_.isString(fps) || _.isFinite(fps), "synthesis fps must be number");
+        assert((_.isString(outputPath) || _.isString(liveUrl)) || this._isVideoChunk(), "outputPath or liveUrl must be string");
         assert(_.isUndefined(format) || SUPPORT_FORMAT.includes(format), `format ${format} is not supported`);
+        assert(_.isUndefined(attachCoverPath) || _.isString(attachCoverPath), "attachCoverPath must be string");
         assert(_.isUndefined(coverCapture) || _.isBoolean(coverCapture), "coverCapture must be boolean");
         assert(_.isUndefined(coverCaptureTime) || _.isFinite(coverCaptureTime), "coverCaptureTime must be number");
         assert(_.isUndefined(coverCaptureFormat) || _.isString(coverCaptureFormat), "coverCaptureFormat must be string");
@@ -141,11 +143,11 @@ export default class Synthesizer extends EventEmitter {
         assert(_.isUndefined(videoBitrate) || _.isString(videoBitrate), "videoBitrate must be string");
         assert(_.isUndefined(pixelFormat) || _.isString(pixelFormat), "pixelFormat must be string");
         assert(_.isUndefined(audioEncoder) || _.isString(audioEncoder), "audioEncoder must be string");
-        assert(_.isUndefined(audioBitrate) || _.isFinite(audioBitrate), "audioBitrate must be string");
+        assert(_.isUndefined(audioBitrate) || _.isString(audioBitrate), "audioBitrate must be string");
         assert(_.isUndefined(volume) || _.isFinite(volume), "volume must be number");
         assert(_.isUndefined(parallelWriteFrames) || _.isFinite(parallelWriteFrames), "parallelWriteFrames must be number");
         assert(_.isUndefined(debug) || _.isBoolean(debug), "debug must be boolean");
-        if (!format && outputPath) {
+        if (!format && outputPath && !this._isVideoChunk()) {
             const _format = path.extname(outputPath).substring(1);
             if (!_format)
                 throw new Error(`Unable to recognize output video format: ${outputPath}`);
@@ -153,13 +155,13 @@ export default class Synthesizer extends EventEmitter {
                 throw new Error(`Unsupported output video format: ${_format}`);
             this.format = _format;
         }
-        else if(format)
+        else if (format)
             this.format = format;
         else
             this.format = SUPPORT_FORMAT[0];
         this.width = width;
         this.height = height;
-        this.fps = fps;
+        this.fps = _.defaultTo(fps, 30);
         this.duration = duration;
         this.outputPath = util.rootPathJoin(outputPath);
         this.attachCoverPath = util.rootPathJoin(attachCoverPath);
@@ -167,11 +169,11 @@ export default class Synthesizer extends EventEmitter {
         this.coverCaptureTime = coverCaptureTime;
         this.coverCaptureFormat = _.defaultTo(coverCaptureFormat, "jpg");
         this.liveUrl = liveUrl;
-        this.videoEncoder = _.defaultTo(videoEncoder, FORMAT_VIDEO_ENCODER_MAP[this.format][0] || "libx264");
+        this.videoEncoder = _.defaultTo(videoEncoder, _.defaultTo(this.format == "webm" ? globalConfig.webmEncoder : globalConfig.mp4Encoder, FORMAT_VIDEO_ENCODER_MAP[this.format][0] || "libx264"));
         this.videoQuality = _.defaultTo(videoQuality, 100);
         this.videoBitrate = videoBitrate;
         this.pixelFormat = _.defaultTo(pixelFormat, "yuv420p");
-        this.audioEncoder = _.defaultTo(audioEncoder, FORMAT_AUDIO_ENCODER_MAP[this.format][0] || "aac");
+        this.audioEncoder = _.defaultTo(audioEncoder, _.defaultTo(globalConfig.audioEncoder, FORMAT_AUDIO_ENCODER_MAP[this.format][0] || "aac"));
         this.audioBitrate = audioBitrate;
         this.volume = _.defaultTo(volume, 100);
         this.parallelWriteFrames = _.defaultTo(parallelWriteFrames, 10);
@@ -208,25 +210,27 @@ export default class Synthesizer extends EventEmitter {
                     .once("end", resolve)
                     .run();
             });
-            if (this.audioSynthesis) {
-                await this.#waitForAudiosLoaded();
-                await new Promise((resolve, reject) => {
-                    this._createAudioEncoder()
-                        .once("start", cmd => this.debug && console.log(cmd))
-                        .on("progress", e => this.#emitProgress(98 + ((e.percent || 0) * 0.02)))
-                        .once("error", reject)
-                        .once("end", resolve)
-                        .run();
-                });
-                await fs.remove(this._swapFilePath);
+            if (!this._isVideoChunk()) {
+                if (this.audioSynthesis) {
+                    await this.#waitForAudiosLoaded();
+                    await new Promise((resolve, reject) => {
+                        this._createAudioEncoder()
+                            .once("start", cmd => this.debug && console.log(cmd))
+                            .on("progress", e => this.#emitProgress(98 + ((e.percent || 0) * 0.02)))
+                            .once("error", reject)
+                            .once("end", resolve)
+                            .run();
+                    });
+                    await fs.remove(this._swapFilePath);
+                }
+                else
+                    await fs.move(this._swapFilePath, this.outputPath, { overwrite: true });
             }
-            else
-                await fs.move(this._swapFilePath, this.outputPath, { overwrite: true });
             this.coverCapture && await this.#captureCover();
             this.#emitCompleted();
             this.#setState(Synthesizer.STATE.COMPLETED);
         })()
-            .catch(err => this.#emitError(err));
+            .catch(err => this._emitError(err));
     }
 
     /**
@@ -304,13 +308,19 @@ export default class Synthesizer extends EventEmitter {
     /**
      * 发送错误事件
      * 
+     * @protected
      * @param {Error} err - 错误对象
      */
-    #emitError(err) {
+    _emitError(err) {
+        if (_.isString(err))
+            err = new Error(err);
         const message = err.message;
         if (message.indexOf("Error while opening encoder for output stream") != -1)
             err = new Error(`Video codec ${this.videoEncoder} may not be supported, please check if your hardware supports it. Some hardware encoders may have limitations in parallel encoding (such as NVENC https://github.com/keylase/nvidia-patch)`);
-        this.emit("error", err);
+        if (this.eventNames().includes("error"))
+            this.emit("error", err);
+        else
+            logger.error(err);
     }
 
     /**
@@ -354,7 +364,7 @@ export default class Synthesizer extends EventEmitter {
      * @returns {FfmpegCommand} - 编码器
      */
     _createVideoEncoder() {
-        const { width, height, fps, format, videoEncoder, videoBitrate,
+        const { outputPath, width, height, fps, format, videoEncoder, videoBitrate,
             videoQuality, pixelFormat, attachCoverPath, _swapFilePath } = this;
         const vencoder = ffmpeg();
         // 设置视频码率将忽略质量设置
@@ -374,7 +384,7 @@ export default class Synthesizer extends EventEmitter {
             vencoder.outputOption("-preset medium");
         }
         vencoder.addInput(this.#pipeStream);
-        if(attachCoverPath) {
+        if (attachCoverPath) {
             vencoder.addInput(attachCoverPath);
             vencoder.complexFilter(`[1:v]scale=${width}:${height}[cover];[0:v][cover]overlay=repeatlast=0,scale=w=${width}:h=${height},format=${pixelFormat}`);
         }
@@ -397,7 +407,7 @@ export default class Synthesizer extends EventEmitter {
             // 指定输出格式
             .toFormat(format)
             // 指定输出路径
-            .addOutput(_swapFilePath);
+            .output(this._isVideoChunk() ? outputPath : _swapFilePath);
         this.#encoder = vencoder;
         return vencoder;
     }
@@ -426,7 +436,7 @@ export default class Synthesizer extends EventEmitter {
         let outputs = "";
         const complexFilter = audios.reduce((result, audio, index) => {
             const { path, url, loop, startTime, endTime, duration, volume, seekStart, seekEnd, fadeInDuration, fadeOutDuration } = audio;
-            if(seekEnd && seekEnd - seekStart > duration)
+            if (seekEnd && seekEnd - seekStart > duration)
                 return result;
             const _volume = Math.floor(((volume / 100) * (videoVolume / 100)) * 100) / 100;
             const output = `a${index}`;
@@ -483,7 +493,7 @@ export default class Synthesizer extends EventEmitter {
      * @returns {number} - 已合成视频时长
      */
     getOutputDuration() {
-        if(!this.fps || !this._frameCount)
+        if (!this.fps || !this._frameCount)
             return this.duration || 0;
         return Math.floor(this._frameCount / this.fps) * 1000;
     }
@@ -629,7 +639,7 @@ export default class Synthesizer extends EventEmitter {
      * @returns {boolean} - 是否合成音频
      */
     get audioSynthesis() {
-        return !this._isVideoChunk() && this.audios.length > 0;
+        return this.audios.length > 0;
     }
 
     /**

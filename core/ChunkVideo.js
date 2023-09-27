@@ -2,14 +2,15 @@ import assert from "assert";
 import _ from "lodash";
 import AsyncLock from "async-lock";
 
-import Synthesizer from "./Synthesizer.js";
+import VideoChunk from "./VideoChunk.js";
+import Transition from "../entity/Transition.js";
 import logger from "../lib/logger.js";
 import util from "../lib/util.js";
 
 /**
- * 单幕视频
+ * 分块视频
  */
-export default class SingleVideo extends Synthesizer {
+export default class ChunkVideo extends VideoChunk {
 
     /** @type {string} - 页面URL */
     url;
@@ -17,6 +18,10 @@ export default class SingleVideo extends Synthesizer {
     duration;
     /** @type {boolean} - 是否自动启动渲染 */
     autostartRender;
+    /** @type {number} - 分块索引 */
+    index;
+    /** @type {Transition} - 进入下一视频分块的转场 */
+    transition;
     /** @type {boolean} - 是否输出页面控制台日志 */
     consoleLog;
     /** @type {boolean} - 是否输出视频预处理日志 */
@@ -29,13 +34,15 @@ export default class SingleVideo extends Synthesizer {
     /**
      * 构造函数
      * 
-     * @param {Object} options - 单幕视频选项
+     * @param {Object} options - 分块视频选项
      * @param {string} options.url - 页面URL
      * @param {string} options.outputPath - 输出路径
      * @param {number} options.width - 视频宽度
      * @param {number} options.height - 视频高度
      * @param {number} options.duration - 视频时长
      * @param {number} [options.fps=30] - 视频帧率
+     * @param {number} [options.index=0] - 分块索引
+     * @param {Transition} [options.transition] - 进入下一视频分块的转场
      * @param {string} [options.format] - 导出视频格式（mp4/webm）
      * @param {string} [options.attachCoverPath] - 附加到视频首帧的封面路径
      * @param {string} [options.coverCapture=false] - 是否捕获封面并输出

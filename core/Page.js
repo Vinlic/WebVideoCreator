@@ -265,10 +265,11 @@ export default class Page extends EventEmitter {
      * @param {number} [options.fps] - 渲染帧率
      * @param {number} [options.duration] - 渲染时长（毫秒）
      * @param {number} [options.frameCount] - 渲染总帧数
+     * @param {boolean} [options.autostart=true] - 是否自动启动渲染
      */
     async startScreencast(options = {}) {
         await asyncLock.acquire("startScreencast", async () => {
-            let { fps, duration, frameCount } = options;
+            let { fps, duration, frameCount, autostart = true } = options;
             assert(this.isReady(), "Page state must be ready");
             assert(_.isUndefined(fps) || _.isFinite(fps), "fps must be number");
             assert(_.isUndefined(duration) || _.isFinite(duration), "duration must be number");
@@ -293,9 +294,11 @@ export default class Page extends EventEmitter {
             });
             // 如果设置帧率或者总帧数将覆盖页面中设置的帧率和总帧数
             await this.target.evaluate(async config => {
+                // 注入配置选项
                 Object.assign(captureCtx.config, config);
-                captureCtx.start();
-            }, _.pickBy({ fps, duration, frameCount }, _.isFinite));
+                // 如果准备后还未启动且自动启动选项开启时渲染则开始
+                !captureCtx.ready() && captureCtx.config.autostart && captureCtx.start();
+            }, _.pickBy({ fps, duration, frameCount, autostart }, v => !_.isUndefined(v)));
         });
     }
 

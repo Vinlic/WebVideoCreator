@@ -6,6 +6,8 @@ import _ from "lodash";
 import Synthesizer from "./Synthesizer.js";
 import { BITSTREAM_FILTER } from "../lib/const.js";
 import Transition from "../entity/Transition.js";
+import Audio from "../entity/Audio.js";
+import util from "../lib/util.js";
 
 /**
  * 视频分块
@@ -35,14 +37,14 @@ export default class VideoChunk extends Synthesizer {
      * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
      */
-    constructor(options) {
-        options.outputPath = "";
+    constructor(options = {}) {
         super(options);
         const { index, transition } = options;
+        this.outputPath = _.defaultTo(this.outputPath, path.join(this.tmpDirPath, `${uniqid("chunk_")}.ts`));
+        assert(util.getPathExtname(this.outputPath) == "ts", "Video chunk output path extname must be .ts");
         this.index = _.defaultTo(index, 0);
         transition && this.setTransition(transition);
         this.coverCapture = false;
-        this.outputPath = path.join(this.tmpDirPath, `${uniqid("chunk_")}.ts`);
         this.format = "mpegts";
         const encodingType = this.getVideoEncodingType();
         assert(_.isString(BITSTREAM_FILTER[encodingType]), `Video encoder ${this.videoEncoder} does not support use in VideoChunk, only support encoding using H264, H265, and VP9`)

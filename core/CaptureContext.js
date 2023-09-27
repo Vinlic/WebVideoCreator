@@ -20,10 +20,14 @@ export default class CaptureContext {
     frameIndex = 0;
     /** @type {number} - 帧间隔时间（毫秒） */
     frameInterval = 0;
+    /** @type {boolean} - 准备完毕标志 */
+    readyFlag = false;
     /** @type {boolean} - 停止标志 */
     stopFlag = false;
     /** @type {boolean} - 暂停标志 */
     pauseFlag = false;
+    /** @type {Function} - 准备完毕回调 */
+    readyCallback;
     /** @type {Function} - 恢复回调 */
     resumeCallback = null;
     /** @type {Function[]} - 间隔回调列表 */
@@ -58,9 +62,28 @@ export default class CaptureContext {
     }
 
     /**
+     * 准备完毕
+     */
+    ready() {
+        // 设置准备完毕标志为true
+        this.readyFlag = true;
+        // 如果存在准备前的启动则调用
+        if(this.readyCallback) {
+            this.readyCallback();
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * 开始捕获
      */
     start() {
+        // 如果在准备完毕前启动则延迟到准备完毕再启动
+        if(!this.readyFlag) {
+            this.readyCallback = this.start;
+            return;
+        }
         // 检查配置
         this._checkConfig();
         // 插入捕获辅助元素
@@ -122,35 +145,6 @@ export default class CaptureContext {
             })()
                 .catch(err => console.error(err));
         }).bind(this)();
-    }
-
-    /**
-     * 设置捕获帧率
-     * 
-     * @param {number} value - 捕获帧率
-     */
-    setFPS(value) {
-        this.config.fps = parseInt(value);
-    }
-
-    /**
-     * 设置捕获时长
-     * 
-     * @param {number} value - 捕获时长（毫秒）
-     */
-    setDuration(value) {
-        this.config.duration = value;
-        this.config.frameCount = Math.floor(value / 1000 * fps);
-    }
-
-    /**
-     * 设置捕获总帧数
-     * 
-     * @param {number} value - 捕获总帧数
-     */
-    setFrameCount(value) {
-        this.config.frameCount = value;
-        this.config.duration = value / fps;
     }
 
     /**
