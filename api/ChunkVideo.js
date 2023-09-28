@@ -102,8 +102,14 @@ export default class ChunkVideo extends VideoChunk {
             }
             if (this.videoPreprocessLog)
                 page.on("videoPreprocess", config => logger.log("[video_preprocess]", config.url));
-            page.on("audioAdd", options => this.addAudio(options));
-            page.on("audioUpdate", (audioId, options) => this.updateAudio(audioId, options))
+            page.on("audioAdd", options => {
+                this.addAudio(options);
+                this.emit("audioAdd", options);
+            });
+            page.on("audioUpdate", (audioId, options) => {
+                this.updateAudio(audioId, options);
+                this.emit("audioUpdate", options);
+            })
             // 设置视窗宽高
             await page.setViewport({
                 width,

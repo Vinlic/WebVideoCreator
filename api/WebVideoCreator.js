@@ -78,8 +78,10 @@ export default class WebVideoCreator {
         return singleVideo;
     }
 
-    createMultiVideo(chunks) {
+    createMultiVideo(options) {
         const multiVideo = new MultiVideo(options);
+        multiVideo.onPageAcquire(async () => await this.pool.acquirePage())
+        return multiVideo;
     }
 
     /**

@@ -1,3 +1,7 @@
+import assert from "assert";
+import AsyncLock from "async-lock";
+import _ from "lodash";
+
 import ChunkSynthesizer from "../core/ChunkSynthesizer.js";
 import ChunkVideo from "./ChunkVideo.js";
 
@@ -5,6 +9,11 @@ import ChunkVideo from "./ChunkVideo.js";
  * 多幕视频
  */
 export default class MultiVideo extends ChunkSynthesizer {
+
+    /** @type {Function} - 页面获取函数 */
+    #pageAcquireFn = null;
+    /** @type {AsyncLock} - 异步锁 */
+    #asyncLock = new AsyncLock();
 
     /**
      * 构造函数
@@ -33,9 +42,40 @@ export default class MultiVideo extends ChunkSynthesizer {
      */
     constructor(options) {
         super(options);
-
     }
 
-    
+    /**
+     * 输入分块视频
+     * 
+     * @param {ChunkVideo} chunk - 分块视频
+     * @param {Transition} [transition] - 进入下一分块的转场对象
+     */
+    input(chunk, transition) {
+        if(!(chunk instanceof ChunkVideo))
+            chunk = new ChunkVideo(chunk);
+        super.input(chunk, transition);
+        chunk.onPageAcquire(async () => await this.#acquirePage());
+    }
+
+     /**
+     * 注册页面获取函数
+     * 
+     * @param {Function} fn 
+     */
+     onPageAcquire(fn) {
+        assert(_.isFunction(fn), "Page acquire function must be Function");
+        this.#pageAcquireFn = fn;
+    }
+
+    /**
+     * 获取渲染页面
+     * 
+     * @protected
+     * @returns {Page} - 页面对象
+     */
+    async #acquirePage() {
+        assert(_.isFunction(this.#pageAcquireFn), "Page acquire function must be Function");
+        return await this.#pageAcquireFn();
+    }
 
 }

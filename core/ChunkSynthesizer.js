@@ -40,6 +40,7 @@ export default class ChunkSynthesizer extends Synthesizer {
      * @param {number} [options.debug=false] - 是否输出调试信息
      */
     constructor(options) {
+        options.duration = 0;
         super(options);
         const { chunks } = options;
         assert(_.isUndefined(chunks) || _.isArray(chunks), "chunks must be VideoChunk[]");
@@ -77,17 +78,29 @@ export default class ChunkSynthesizer extends Synthesizer {
 
     start() {
         let offsetTime = 0
+        const chunksRenderPromises = []
         this.chunks.forEach(chunk => {
             chunk.audios.forEach(audio => {
-                if(_.isFinite(audio.startTime))
+                if (_.isFinite(audio.startTime))
                     audio.startTime += offsetTime;
-                if(_.isFinite(audio.endTime))
+                if (_.isFinite(audio.endTime))
                     audio.endTime += offsetTime;
                 this.addAudio(audio);
             });
             offsetTime += chunk.getOutputDuration();
+            if (chunk.isReady()) {
+                chunksRenderPromises.push(new Promise((resolve, reject) => {
+                    chunk.on("audioAdd", options => this.addAudio(options));
+                    chunk.on("audioUpdate", options => this.updateAudio(options));
+                    chunk.once("completed", resolve);
+                    chunk.once("error", reject);
+                    chunk.start();
+                }));
+            }
         });
-        super.start();
+        Promise.all(chunksRenderPromises)
+            .then(() => super.start())
+            .catch(err => this._emitError(err));
     }
 
     /**
@@ -97,9 +110,8 @@ export default class ChunkSynthesizer extends Synthesizer {
      * @returns {FfmpegCommand} - 编码器
      */
     _createVideoEncoder() {
-        const { chunks, width, height, outputPath, _swapFilePath, format,
-            videoEncoder, videoBitrate, videoQuality, pixelFormat, attachCoverPath,
-            audioSynthesis } = this;
+        const { chunks, width, height, _swapFilePath, format,
+            videoEncoder, videoBitrate, videoQuality, pixelFormat, attachCoverPath } = this;
         const vencoder = ffmpeg();
         // 设置视频码率将忽略质量设置
         if (videoBitrate)
@@ -189,7 +201,7 @@ export default class ChunkSynthesizer extends Synthesizer {
             .outputOption("-movflags +faststart")
             // 指定输出格式
             .toFormat(format)
-            .addOutput(audioSynthesis ? _swapFilePath : outputPath);
+            .addOutput(_swapFilePath);
         return vencoder;
     }
 
