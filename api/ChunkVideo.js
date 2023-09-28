@@ -14,14 +14,8 @@ export default class ChunkVideo extends VideoChunk {
 
     /** @type {string} - 页面URL */
     url;
-    /** @type {number} - 视频时长 */
-    duration;
     /** @type {boolean} - 是否自动启动渲染 */
     autostartRender;
-    /** @type {number} - 分块索引 */
-    index;
-    /** @type {Transition} - 进入下一视频分块的转场 */
-    transition;
     /** @type {boolean} - 是否输出页面控制台日志 */
     consoleLog;
     /** @type {boolean} - 是否输出视频预处理日志 */
@@ -63,16 +57,14 @@ export default class ChunkVideo extends VideoChunk {
     constructor(options = {}) {
         super(options);
         assert(_.isObject(options), "options must be Object");
-        const { url, duration, autostartRender, consoleLog, videoPreprocessLog } = options;
+        const { url, autostartRender, consoleLog, videoPreprocessLog } = options;
         assert(util.isURL(url), `url ${url} is not valid URL`);
-        assert(_.isFinite(duration), "duration must be number");
         assert(_.isUndefined(autostartRender) || _.isBoolean(autostartRender), "autostartRender must be boolean");
         assert(_.isUndefined(consoleLog) || _.isBoolean(consoleLog), "consoleLog must be boolean");
         this.url = url;
-        this.duration = duration;
         this.autostartRender = _.defaultTo(autostartRender, true);
         this.consoleLog = _.defaultTo(consoleLog, false);
-        this.videoPreprocessLog = _.defaultTo(videoPreprocessLog, false)
+        this.videoPreprocessLog = _.defaultTo(videoPreprocessLog, false);
     }
 
     /**

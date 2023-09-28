@@ -66,7 +66,7 @@ export default class ChunkSynthesizer extends Synthesizer {
             }
         }
         transition && chunk.setTransition(_.isString(transition) ? { id: transition } : transition);
-        if (_.isNumber(insertIndex))
+        if (_.isNumber(insertIndex) && insertIndex > 1)
             this.chunks.splice(insertIndex, 0, chunk);
         else
             this.chunks.push(chunk);

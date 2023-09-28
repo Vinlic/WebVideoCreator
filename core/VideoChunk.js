@@ -76,7 +76,7 @@ export default class VideoChunk extends Synthesizer {
      * @param {Transition} transition - 转场对象
      */
     setTransition(transition) {
-        if(_.isString(transition))
+        if (_.isString(transition))
             transition = new Transition({ id: transition });
         else if (!(transition instanceof Transition))
             transition = new Transition(transition);
@@ -113,7 +113,7 @@ export default class VideoChunk extends Synthesizer {
     get transitionId() {
         return this.transition ? this.transition.id : 0;
     }
-    
+
     /**
      * 获取转场时长
      */
