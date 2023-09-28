@@ -6,8 +6,10 @@ import _ from "lodash";
 
 import Pool from "./ResourcePool.js";
 import Page from "./Page.js";
-import util from "../lib/util.js";
+import globalConfig from "../lib/global-config.js";
 import installBrowser from "../lib/install-browser.js";
+import logger from "../lib/logger.js";
+import util from "../lib/util.js";
 
 // 异步锁
 const asyncLock = new AsyncLock();
@@ -66,8 +68,6 @@ export default class Browser {
     disableDevShm;
     /** @type {string[]} - 浏览器启动参数 */
     args = [];
-    /** @type {boolean=false} - 是否调试模式 */
-    debug;
     /** @type {PageOptions} - 浏览器日志是否输出到控制台 */
     pageOptions = {};
     #launchCallbacks = [];
@@ -86,14 +86,13 @@ export default class Browser {
      * @param {boolean} [options.useAngle=true] - 3D渲染后端是否使用Angle，建议开启
      * @param {boolean} [options.disableDevShm=false] - 是否禁用共享内存，当/dev/shm较小时建议开启此选项
      * @param {string[]} [options.args] - 浏览器启动参数
-     * @param {boolean} [options.debug=false] - 浏览器日志是否输出到控制台
      * @param {PageOptions} [options.pageOptions] - 页面选项
      */
     constructor(parent, options) {
         assert(parent instanceof Pool, "Browser parent must be Pool");
         this.parent = parent;
         assert(_.isObject(options), "Browser options must be object");
-        const { numPageMax, numPageMin, executablePath, useGPU, useAngle, disableDevShm, args, debug, pageOptions } = options;
+        const { numPageMax, numPageMin, executablePath, useGPU, useAngle, disableDevShm, args, pageOptions } = options;
         assert(_.isFinite(numPageMax), "Browser numPageMax must be number");
         assert(_.isFinite(numPageMin), "Browser numPageMin must be number");
         assert(_.isUndefined(executablePath) || _.isBoolean(executablePath), "Browser executablePath must be string");
@@ -101,7 +100,6 @@ export default class Browser {
         assert(_.isUndefined(useAngle) || _.isBoolean(useAngle), "Browser useAngle must be boolean");
         assert(_.isUndefined(disableDevShm) || _.isBoolean(disableDevShm), "Browser disableDevShm must be boolean");
         assert(_.isUndefined(args) || _.isArray(args), "Browser args must be array");
-        assert(_.isUndefined(debug) || _.isBoolean(debug), "Browser debug must be boolean");
         assert(_.isUndefined(pageOptions) || _.isObject(pageOptions), "Browser pageOptions must be object");
         this.numPageMax = numPageMax;
         this.numPageMin = numPageMin;
@@ -110,7 +108,6 @@ export default class Browser {
         this.useAngle = _.defaultTo(useAngle, true);
         this.disableDevShm = _.defaultTo(disableDevShm, false);
         this.args = _.defaultTo(args, []);
-        this.debug = _.defaultTo(debug, false);
         this.pageOptions = _.defaultTo(pageOptions, {});
     }
 
@@ -124,13 +121,13 @@ export default class Browser {
             // BeginFrameControl必需处于无头模式下可用，新无头"new"暂时不可用，请关注进展：https://bugs.chromium.org/p/chromium/issues/detail?id=1480747
             headless: true,
             // 浏览器入口文件路径
-            executablePath,
+            executablePath: globalConfig.browserExecutablePath || executablePath,
             // 忽略HTTPS错误
             ignoreHTTPSErrors: true,
             // 浏览器启动超时时间（毫秒）
             timeout: 30000,
             // 是否输出调试信息到控制台
-            dumpio: this.debug,
+            dumpio: globalConfig.browserDebug || false,
             // 是否使用管道通信
             pipe: false,
             // 用户目录路径
@@ -141,7 +138,7 @@ export default class Browser {
         // 浏览器关闭时自动处理
         this.target.once("disconnected", () => {
             this.close()
-                .catch(err => console.error(`browser ${this.id} close error:`, err));
+                .catch(err => logger.error(`Browser ${this.id} close error:`, err));
         });
         // 创建页面池
         this.#createPagePool();
@@ -168,7 +165,7 @@ export default class Browser {
         });
         this.#pagePool.on('factoryCreateError', (error) => {
             const client = this.#pagePool._waitingClientsQueue.dequeue();
-            if (!client) return console.error(error);
+            if (!client) return logger.error(error);
             client.reject(error);
         });
     }

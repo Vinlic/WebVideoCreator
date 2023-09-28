@@ -3,6 +3,7 @@ import cliProgress from "cli-progress";
 import _ from "lodash";
 
 import { AUDIO_ENCODER, ResourcePool, Synthesizer, VIDEO_ENCODER } from "../index.js";
+import logger from "../lib/logger.js";
 import util from "../lib/util.js";
 
 export default async ({
@@ -64,13 +65,13 @@ export default async ({
     // 获取页面资源，它将从资源池自动获取可用的页面
     const page = await pool.acquirePage();
     // 监听页面打印到console的正常日志
-    page.on("consoleLog", message => console.log(message));
+    page.on("consoleLog", message => logger.log(message));
     // 监听页面打印到console的错误日志
-    page.on("consoleError", err => console.error(err));
+    page.on("consoleError", err => logger.error(err));
     // 监听页面实例发生的某些内部错误
-    page.on("error", err => console.error("page error:", err));
+    page.on("error", err => logger.error("Page error:", err));
     // 监听页面是否崩溃，当内存不足或过载时可能会崩溃
-    page.on("crashed", err => console.error("page crashed:", err));
+    page.on("crashed", err => logger.error("Page crashed:", err));
     // 设置视窗宽高
     await page.setViewport({ width, height });
 
@@ -97,7 +98,7 @@ export default async ({
     // 监听合成进度
     synthesizer.on("progress", (progress, frameCount) => progressBar.update(frameCount));
     // 监听合成器错误
-    synthesizer.on("error", err => console.error(err));
+    synthesizer.on("error", err => logger.error(err));
 
     page.on("audioAdd", options => synthesizer.addAudio(options));
     page.on("audioUpdate", (audioId, options) => synthesizer.updateAudio(audioId, options))

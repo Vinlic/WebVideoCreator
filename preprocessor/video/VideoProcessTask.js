@@ -213,6 +213,7 @@ export default class VideoProcessTask extends ProcessTask {
                     .addOutputOption("-an")
                     .outputOption("-movflags +faststart")
                     .addOutput(maskFilePath)
+                    .once("start", cmd => util.ffmpegLog(cmd))
                     .once("end", resolve)
                     .once("error", err => {
                         fs.removeSync(maskFilePath);
@@ -254,7 +255,7 @@ export default class VideoProcessTask extends ProcessTask {
                     .addOutputOption("-crf 18")
                     .outputOption("-movflags +faststart")
                     .addOutput(transcodedFilePath)
-                    .once("start", cmd => logger.info(cmd))
+                    .once("start", cmd => util.ffmpegLog(cmd))
                     .once("end", resolve)
                     .once("error", err => {
                         fs.removeSync(this.filePath);

@@ -1,6 +1,5 @@
 import VideoConfig from "../preprocessor/video/VideoConfig.js";
 import ____MP4Demuxer from "./MP4Demuxer.js";
-
 import innerUtil from "../lib/inner-util.js";
 
 const ____util = innerUtil();

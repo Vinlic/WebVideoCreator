@@ -1,4 +1,5 @@
 import Task from "./Task.js";
+import logger from "../../lib/logger.js";
 
 export default class ProcessTask extends Task {
 
@@ -16,7 +17,7 @@ export default class ProcessTask extends Task {
     }
 
     async process() {
-        console.warn("Process task nothing to do...");
+        logger.warn("Process task nothing to do...");
         return null;
     }
 

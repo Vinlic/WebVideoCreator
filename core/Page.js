@@ -16,6 +16,7 @@ import MP4Demuxer from "../media/MP4Demuxer.js";
 import VideoConfig from "../preprocessor/video/VideoConfig.js";
 import Audio from "../entity/Audio.js";
 import Font from "../entity/Font.js";
+import logger from "../lib/logger.js";
 import innerUtil from "../lib/inner-util.js";
 import util from "../lib/util.js";
 
@@ -277,7 +278,7 @@ export default class Page extends EventEmitter {
             // 指定时长时将计算总帧数
             if (_.isFinite(duration))
                 frameCount = util.durationToFrameCount(duration, fps);
-            else if(_.isFinite(frameCount))
+            else if (_.isFinite(frameCount))
                 duration = util.frameCountToDuration(frameCount, fps);
             // 页面进入捕获中状态
             this.#setState(Page.STATE.CAPTURING);
@@ -360,7 +361,7 @@ export default class Page extends EventEmitter {
         if (this.eventNames().indexOf("error") != -1)
             this.emit("error", err);
         else
-            console.error("page error:", err);
+            logger.error("Page error:", err);
     }
 
     /**
@@ -374,7 +375,7 @@ export default class Page extends EventEmitter {
         if (this.eventNames().indexOf("crashed") != -1)
             this.emit("crashed", error);
         else
-            console.error("page crashed:", err);
+            logger.error("Page crashed:", err);
     }
 
     /**
@@ -593,7 +594,7 @@ export default class Page extends EventEmitter {
                     status: 500,
                     body: err.stack
                 })
-                    .catch(err => console.error(err));
+                    .catch(err => logger.error(err));
             })
     }
 
@@ -627,7 +628,7 @@ export default class Page extends EventEmitter {
             if (this.eventNames().indexOf("resourceError") != -1)
                 this.emit("resourceRejected", new Error(message));
             else
-                console.error(message);
+                logger.error(message);
         }
     }
 
@@ -680,7 +681,7 @@ export default class Page extends EventEmitter {
      */
     #checkURL(url) {
         const { protocol, hostname, host } = new URL(url);
-        if(protocol != "https:" && hostname != "127.0.0.1" && hostname != "localhost")
+        if (protocol != "https:" && hostname != "127.0.0.1" && hostname != "localhost")
             throw new Error(`The URL ${protocol}//${host} is not a secure domain, which may cause security policies to disable some core features. Please use HTTPS protocol or http://localhost / http://127.0.0.1`);
     }
 

@@ -6,6 +6,7 @@ import _ from "lodash";
 
 import Browser from "./Browser.js";
 import Page from "./Page.js";
+import logger from "../lib/logger.js";
 
 // 异步锁
 const asyncLock = new AsyncLock();
@@ -113,7 +114,7 @@ export default class ResourcePool {
         });
         this.#browserPool.on('factoryCreateError', (error) => {
             const client = this.#browserPool._waitingClientsQueue.dequeue();
-            if(!client) return console.error(error);
+            if(!client) return logger.error(error);
             client.reject(error);
         });
     }
@@ -209,7 +210,7 @@ export default class ResourcePool {
             }
         })()
             .then(() => setTimeout(this.#checker.bind(this), 5000))
-            .catch(err => console.error(err));
+            .catch(err => logger.error(err));
     }
 
     /**

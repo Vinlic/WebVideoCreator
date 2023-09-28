@@ -75,8 +75,6 @@ export default class Synthesizer extends EventEmitter {
     parallelWriteFrames;
     /** @type {Audio[]} - 音频列表 */
     audios = [];
-    /** @type {numer} - 是否输出调试信息 */
-    debug;
     /** @type {string} @protected - 交换文件路径 */
     _swapFilePath;
     /** @type {string} - 临时路径 */
@@ -116,7 +114,6 @@ export default class Synthesizer extends EventEmitter {
      * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.volume] - 视频音量（0-100）
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
-     * @param {number} [options.debug=false] - 是否输出调试信息
      */
     constructor(options) {
         super();
@@ -124,7 +121,7 @@ export default class Synthesizer extends EventEmitter {
         const { width, height, fps, duration, format, outputPath,
             attachCoverPath, coverCapture, coverCaptureTime, coverCaptureFormat,
             videoEncoder, videoQuality, videoBitrate, pixelFormat,
-            audioEncoder, audioBitrate, volume, parallelWriteFrames, debug } = options;
+            audioEncoder, audioBitrate, volume, parallelWriteFrames } = options;
         assert(_.isFinite(width), "width must be number");
         assert(_.isFinite(height), "height must be number");
         assert(_.isFinite(duration), "synthesis duration must be number");
@@ -143,7 +140,6 @@ export default class Synthesizer extends EventEmitter {
         assert(_.isUndefined(audioBitrate) || _.isString(audioBitrate), "audioBitrate must be string");
         assert(_.isUndefined(volume) || _.isFinite(volume), "volume must be number");
         assert(_.isUndefined(parallelWriteFrames) || _.isFinite(parallelWriteFrames), "parallelWriteFrames must be number");
-        assert(_.isUndefined(debug) || _.isBoolean(debug), "debug must be boolean");
         if (!format && outputPath && !this._isVideoChunk()) {
             const _format = path.extname(outputPath).substring(1);
             if (!_format)
@@ -173,7 +169,6 @@ export default class Synthesizer extends EventEmitter {
         this.audioBitrate = audioBitrate;
         this.volume = _.defaultTo(volume, 100);
         this.parallelWriteFrames = _.defaultTo(parallelWriteFrames, 10);
-        this.debug = _.defaultTo(debug, false);
         this.#frameBuffers = new Array(this.parallelWriteFrames);
         this.#tmpDirPath = util.rootPathJoin(`tmp/synthesizer/`);
         this._swapFilePath = path.join(this.#tmpDirPath, `${uniqid("video_")}.${this.format}`);
@@ -195,7 +190,7 @@ export default class Synthesizer extends EventEmitter {
             await this.#waitForAudiosLoaded();
             await new Promise((resolve, reject) => {
                 this._createVideoEncoder()
-                    .once("start", cmd => this.debug && console.log(cmd))
+                    .once("start", cmd => util.ffmpegLog(cmd))
                     .on("progress", e => {
                         if (!this.#targetFrameCount)
                             return this.#emitProgress(0);
@@ -211,7 +206,7 @@ export default class Synthesizer extends EventEmitter {
                     await this.#waitForAudiosLoaded();
                     await new Promise((resolve, reject) => {
                         this._createAudioEncoder()
-                            .once("start", cmd => this.debug && console.log(cmd))
+                            .once("start", cmd => util.ffmpegLog(cmd))
                             .on("progress", e => this.#emitProgress(98 + ((e.percent || 0) * 0.02)))
                             .once("error", reject)
                             .once("end", resolve)

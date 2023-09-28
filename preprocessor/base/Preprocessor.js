@@ -3,6 +3,7 @@ import _ from "lodash";
 
 import DownloadTask from "./DownloadTask.js";
 import ProcessTask from "./ProcessTask.js";
+import logger from "../../lib/logger.js";
 
 /**
  * 预处理器
@@ -130,7 +131,7 @@ export default class Preprocessor {
             this.downloadTasks.push(task);
             this.#dispatchDownloadQueue();
         })()
-            .catch(err => console.error(err));
+            .catch(err => logger.error(err));
     }
 
     /**
@@ -146,7 +147,7 @@ export default class Preprocessor {
             this.processTasks.push(task);
             this.#dispatchProcessQueue();
         })()
-            .catch(err => console.error(err));
+            .catch(err => logger.error(err));
     }
 
     /**
@@ -185,7 +186,7 @@ export default class Preprocessor {
             setTimeout(this.#dispatchTasks.bind(this), 0);
         }
         catch (err) {
-            console.error(err);
+            logger.error(err);
         }
     }
 
