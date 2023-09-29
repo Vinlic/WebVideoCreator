@@ -56,7 +56,11 @@ export default class ChunkSynthesizer extends Synthesizer {
      * @param {Transition} [transition] - 进入下一分块的转场对象
      */
     input(chunk, transition) {
-        assert(chunk instanceof VideoChunk, "input chunk must be VideoChunk");
+        _.isFinite(this.width) && (chunk.width = _.defaultTo(chunk.width, this.width));
+        _.isFinite(this.height) && (chunk.height = _.defaultTo(chunk.height, this.height));
+        _.isFinite(this.fps) && (chunk.fps = _.defaultTo(chunk.fps, this.fps));
+        if (!(chunk instanceof VideoChunk))
+            chunk = new VideoChunk(chunk);
         assert(chunk.width == this.width, "input chunk width does not match the previous block");
         assert(chunk.height == this.height, "input chunk height does not match the previous block");
         assert(chunk.fps == this.fps, "input chunk fps does not match the previous block");

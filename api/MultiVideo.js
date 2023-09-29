@@ -67,6 +67,9 @@ export default class MultiVideo extends ChunkSynthesizer {
      * @param {Transition} [transition] - 进入下一分块的转场对象
      */
     input(chunk, transition) {
+        _.isFinite(this.width) && (chunk.width = _.defaultTo(chunk.width, this.width));
+        _.isFinite(this.height) && (chunk.height = _.defaultTo(chunk.height, this.height));
+        _.isFinite(this.fps) && (chunk.fps = _.defaultTo(chunk.fps, this.fps));
         if (!(chunk instanceof ChunkVideo))
             chunk = new ChunkVideo(chunk);
         super.input(chunk, transition);
