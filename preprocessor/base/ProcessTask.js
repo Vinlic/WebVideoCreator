@@ -16,6 +16,9 @@ export default class ProcessTask extends Task {
             .catch(err => this._emitError(err));
     }
 
+    /**
+     * 处理
+     */
     async process() {
         logger.warn("Process task nothing to do...");
         return null;
