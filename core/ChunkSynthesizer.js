@@ -84,6 +84,8 @@ export default class ChunkSynthesizer extends Synthesizer {
             // 分块未完成时先进行渲染
             !chunk.isCompleted() && chunksRenderPromises.push(this.renderChunk(chunk, offsetTime));
             offsetTime += chunk.getOutputDuration();
+            if(chunk.transition)
+                offsetTime -= Math.floor(chunk.transition.duration);
         });
         // 等待分块渲染完成再开始合成流程
         Promise.all(chunksRenderPromises)
