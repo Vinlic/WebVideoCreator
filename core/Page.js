@@ -226,17 +226,22 @@ export default class Page extends EventEmitter {
             const styleSheets = Array.from(document.styleSheets);
             // 获取所有引入的字体集
             const fontFamilys = [];
-            styleSheets.forEach((styleSheet) => {
-                const rules = styleSheet.cssRules || styleSheet.rules;
-                if (!rules)
-                    return;
-                Array.from(rules).map(rule => {
-                    if (rule.constructor.name === "CSSFontFaceRule") {
-                        const fontFamily = rule.style.getPropertyValue('font-family');
-                        fontFamilys.push(fontFamily);
-                    }
+            try {
+                styleSheets.forEach((styleSheet) => {
+                    const rules = styleSheet.cssRules || styleSheet.rules;
+                    if (!rules)
+                        return;
+                    Array.from(rules).map(rule => {
+                        if (rule.constructor.name === "CSSFontFaceRule") {
+                            const fontFamily = rule.style.getPropertyValue('font-family');
+                            fontFamilys.push(fontFamily);
+                        }
+                    });
                 });
-            });
+            }
+            catch(err) {
+                console.warn(err.message);
+            }
             // 无字体则跳过加载
             if (fontFamilys.length == 0)
                 return;
