@@ -66,6 +66,9 @@ export default class ChunkSynthesizer extends Synthesizer {
         this.duration += chunk.getOutputDuration() - chunk.transitionDuration;
     }
 
+    /**
+     * 启动合成
+     */
     start() {
         assert(this.chunks.length > 0, "There is no VideoChunk that can be synthesized");
         let offsetTime = 0

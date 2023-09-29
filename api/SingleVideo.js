@@ -77,6 +77,13 @@ export default class SingleVideo extends Synthesizer {
     }
 
     /**
+     * 启动并等待完成
+     */
+    async startAndWait() {
+        await this.#asyncLock.acquire("start", () => this.#synthesize());
+    }
+
+    /**
      * 合成处理
      */
     async #synthesize() {

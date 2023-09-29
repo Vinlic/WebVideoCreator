@@ -4,6 +4,7 @@ import _ from "lodash";
 
 import ChunkSynthesizer from "../core/ChunkSynthesizer.js";
 import ChunkVideo from "./ChunkVideo.js";
+import logger from "../lib/logger.js";
 
 /**
  * 多幕视频
@@ -45,24 +46,50 @@ export default class MultiVideo extends ChunkSynthesizer {
     }
 
     /**
+     * 启动合成
+     */
+    start() {
+        this.#asyncLock.acquire("start", () => this.#synthesize())
+            .catch(err => logger.error(err));
+    }
+
+    /**
+     * 启动并等待
+     */
+    async startAndWait() {
+        await this.#asyncLock.acquire("start", () => this.#synthesize());
+    }
+
+    /**
      * 输入分块视频
      * 
      * @param {ChunkVideo} chunk - 分块视频
      * @param {Transition} [transition] - 进入下一分块的转场对象
      */
     input(chunk, transition) {
-        if(!(chunk instanceof ChunkVideo))
+        if (!(chunk instanceof ChunkVideo))
             chunk = new ChunkVideo(chunk);
         super.input(chunk, transition);
         chunk.onPageAcquire(async () => await this.#acquirePage());
     }
 
-     /**
-     * 注册页面获取函数
-     * 
-     * @param {Function} fn 
+    /**
+     * 合成处理
      */
-     onPageAcquire(fn) {
+    async #synthesize() {
+        return await new Promise((resolve, reject) => {
+            this.once("error", reject);
+            this.once("completed", resolve);
+            super.start();
+        });
+    }
+
+    /**
+    * 注册页面获取函数
+    * 
+    * @param {Function} fn 
+    */
+    onPageAcquire(fn) {
         assert(_.isFunction(fn), "Page acquire function must be Function");
         this.#pageAcquireFn = fn;
     }
