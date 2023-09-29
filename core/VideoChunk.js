@@ -16,6 +16,8 @@ export default class VideoChunk extends Synthesizer {
 
     /** @type {Transition} - 进入下一视频分块的转场 */
     transition;
+    /** @type {boolean} - 被合并后是否自动删除分块文件 */
+    autoremove;
 
     /**
      * 构造函数
@@ -26,6 +28,7 @@ export default class VideoChunk extends Synthesizer {
      * @param {number} options.fps - 视频合成帧率
      * @param {number} options.duration - 视频时长
      * @param {Transition} [options.transition] - 进入下一视频分块的转场
+     * @param {boolean} [options.autoremove=true] - 被合并后是否自动删除分块文件
      * @param {string} [options.videoEncoder] - 视频编码器
      * @param {number} [options.videoQuality] - 视频质量（0-100）
      * @param {string} [options.videoBitrate] - 视频码率（设置码率将忽略videoQuality）
@@ -36,10 +39,11 @@ export default class VideoChunk extends Synthesizer {
      */
     constructor(options = {}) {
         super(options);
-        const { transition } = options;
+        const { transition, autoremove } = options;
         this.outputPath = _.defaultTo(this.outputPath, path.join(this.tmpDirPath, `${uniqid("chunk_")}.ts`));
         assert(util.getPathExtname(this.outputPath) == "ts", "Video chunk output path extname must be .ts");
         transition && this.setTransition(transition);
+        this.autoremove = _.defaultTo(autoremove, true);
         this.coverCapture = false;
         this.format = "mpegts";
         const encodingType = this.getVideoEncodingType();

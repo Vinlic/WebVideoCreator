@@ -1,10 +1,12 @@
 import assert from "assert";
+import fs from "fs-extra";
 import ffmpeg from "fluent-ffmpeg";
 import _ from "lodash";
 
 import Synthesizer from "./Synthesizer.js";
 import VideoChunk from "./VideoChunk.js";
 import Transition from "../entity/Transition.js";
+import logger from "../lib/logger.js";
 
 /**
  * 视频分块合成器
@@ -84,8 +86,8 @@ export default class ChunkSynthesizer extends Synthesizer {
             // 分块未完成时先进行渲染
             !chunk.isCompleted() && chunksRenderPromises.push(this.renderChunk(chunk, offsetTime));
             offsetTime += chunk.getOutputDuration();
-            if(chunk.transition)
-                offsetTime -= Math.floor(chunk.transition.duration);
+            if (chunk.transition)
+                offsetTime -= Math.min(chunk.duration, Math.floor(chunk.transition.duration));
         });
         // 等待分块渲染完成再开始合成流程
         Promise.all(chunksRenderPromises)
@@ -119,6 +121,17 @@ export default class ChunkSynthesizer extends Synthesizer {
             chunk.once("error", reject);
             chunk.isReady() && chunk.start();
         });
+    }
+
+    /**
+     * 发送已完成事件
+     * 
+     * @protected
+     */
+    _emitCompleted() {
+        Promise.all(this.chunks.map(chunk => chunk.autoremove && fs.remove(chunk.outputPath)))
+            .catch(err => logger.error(err));
+        super._emitCompleted();
     }
 
     /**

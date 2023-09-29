@@ -219,7 +219,7 @@ export default class Synthesizer extends EventEmitter {
             }
             this.coverCapture && await this.#captureCover();
             this.#setState(Synthesizer.STATE.COMPLETED);
-            this.#emitCompleted();
+            this._emitCompleted();
         })()
             .catch(err => this._emitError(err));
     }
@@ -289,9 +289,11 @@ export default class Synthesizer extends EventEmitter {
     }
 
     /**
-     * 发送已完成时间
+     * 发送已完成事件
+     * 
+     * @protected
      */
-    #emitCompleted() {
+    _emitCompleted() {
         this.#emitProgress(100);
         this.emit("completed");
     }
