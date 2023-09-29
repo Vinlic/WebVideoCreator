@@ -1,35 +1,34 @@
-import ResourcePool from "./core/ResourcePool.js";
-import Synthesizer from "./core/Synthesizer.js";
-import VideoChunk from "./core/VideoChunk.js";
-import ChunkSynthesizer from "./core/ChunkSynthesizer.js";
-import Previewer from "./core/Previewer.js";
-import Browser from "./core/Browser.js";
-import Page from "./core/Page.js";
-import Transition from "./entity/Transition.js";
-import Font from "./entity/Font.js";
-import Audio from "./entity/Audio.js";
+import WebVideoCreator from "./api/WebVideoCreator.js";
+import SingleVideo from "./api/SingleVideo.js";
+import MultiVideo from "./api/MultiVideo.js";
+import ChunkVideo from "./api/ChunkVideo.js";
 import examples from "./examples/index.js";
-import presetParser from "./lib/preset-parser.js";
-import cleaner from "./lib/cleaner.js";
+import * as core from "./core/index.js";
+import * as entity from "./entity/index.js";
 import util from "./lib/util.js";
+
 import { VIDEO_ENCODER, AUDIO_ENCODER, TRANSITION } from "./lib/const.js";
 
+export default WebVideoCreator;
 export {
-    ResourcePool,
-    Browser,
-    Page,
-    Synthesizer,
-    VideoChunk,
-    ChunkSynthesizer,
-    Previewer,
-    Transition,
-    Font,
-    Audio,
-    examples,
-    cleaner,
-    util,
-    presetParser,
+    /** 视频编码器 */
     VIDEO_ENCODER,
+    /** 音频编码器 */
     AUDIO_ENCODER,
-    TRANSITION
+    /** 转场效果 */
+    TRANSITION,
+    /** 单幕视频 */
+    SingleVideo,
+    /** 多幕视频 */
+    MultiVideo,
+    /** 分块视频 */
+    ChunkVideo,
+    /** 示例 */
+    examples,
+    /** 核心类 */
+    core,
+    /** 实体类 */
+    entity,
+    /** 工具类 */
+    util
 };

@@ -1,21 +1,21 @@
+import assert from "assert";
 import _ from "lodash";
 
 import globalConfig from "../lib/global-config.js";
-import logger from "../lib/logger.js";
 import { VIDEO_ENCODER } from "../lib/const.js";
 import ResourcePool from "../core/ResourcePool.js";
 import SingleVideo from "./SingleVideo.js";
 import ChunkVideo from "./ChunkVideo.js";
 import MultiVideo from "./MultiVideo.js";
+import logger from "../lib/logger.js";
+import cleaner from "../lib/cleaner.js";
 
 export default class WebVideoCreator {
 
     /** @type {ResourcePool} - 资源池 */
     pool = null;
-
-    constructor() {
-
-    }
+    /** @type {boolean} - 是否已配置 */
+    #configured = false;
 
     /**
      * 配置引擎
@@ -31,7 +31,7 @@ export default class WebVideoCreator {
         if (!browserUseGPU)
             logger.warn("browserUseGPU is turn off, recommended to turn it on to improve rendering performance");
         if (Object.values(VIDEO_ENCODER.CPU).includes(mp4Encoder))
-            logger.warn(`Recommended to use video hard coder to accelerate video synthesis, currently used is ${globalConfig.videoEncoder}`);
+            logger.warn(`Recommended to use video hard coder to accelerate video synthesis, currently used is [${globalConfig.mp4Encoder}]`);
         this.pool = new ResourcePool({
             numBrowserMin,
             numBrowserMax,
@@ -43,6 +43,7 @@ export default class WebVideoCreator {
                 videoEncoder: mp4Encoder
             }
         });
+        this.#configured = true;
     }
 
     /**
@@ -73,6 +74,7 @@ export default class WebVideoCreator {
      * @param {boolean} [options.videoPreprocessLog=false] - 是否开启视频预处理日志输出
      */
     createSingleVideo(options) {
+        assert(this.#configured, "WebVideoCreator has not been configured yet, please execute config() first");
         const singleVideo = new SingleVideo(options);
         // 注册获取页面函数
         singleVideo.onPageAcquire(async () => await this.pool.acquirePage());
@@ -105,6 +107,7 @@ export default class WebVideoCreator {
      * @param {number} [options.debug=false] - 是否输出调试信息
      */
     createMultiVideo(options) {
+        assert(this.#configured, "WebVideoCreator has not been configured yet, please execute config() first");
         const multiVideo = new MultiVideo(options);
         // 注册获取页面函数
         multiVideo.onPageAcquire(async () => await this.pool.acquirePage())
@@ -140,10 +143,23 @@ export default class WebVideoCreator {
      * @param {boolean} [options.videoPreprocessLog=false] - 是否开启视频预处理日志输出
      */
     createChunkVideo(options) {
+        assert(this.#configured, "WebVideoCreator has not been configured yet, please execute config() first");
         const chunkVideo = new ChunkVideo(options);
         // 注册获取页面函数
         chunkVideo.onPageAcquire(async () => await this.pool.acquirePage());
         return chunkVideo;
     }
+
+    /** 清理浏览器缓存 */
+    cleanBrowserCache = cleaner.cleanBrowserCache.bind(cleaner);
+
+    /** 清理预处理缓存 */
+    cleanPreprocessCache = cleaner.cleanPreprocessCache.bind(cleaner);
+
+    /** 清理合成缓存 */
+    cleanSynthesizeCache = cleaner.cleanSynthesizeCache.bind(cleaner);
+
+    /** 清理本地字体缓存 */
+    cleanLocalFontCache = cleaner.cleanLocalFontCache.bind(cleaner);
 
 }
