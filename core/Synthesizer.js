@@ -3,6 +3,8 @@ import assert from "assert";
 import EventEmitter from "eventemitter3";
 import fs from "fs-extra";
 import { PassThrough } from "stream";
+import ffmpegPath from "ffmpeg-static";
+import { path as ffprobePath } from "ffprobe-static";
 import ffmpeg from "fluent-ffmpeg";
 import uniqid from "uniqid";
 import _ from "lodash";
@@ -15,6 +17,9 @@ import globalConfig from "../lib/global-config.js";
 import Audio from "../entity/Audio.js";
 import logger from "../lib/logger.js";
 import util from "../lib/util.js";
+
+ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
 
 /** @typedef {import('fluent-ffmpeg').FfmpegCommand} FfmpegCommand */
 
