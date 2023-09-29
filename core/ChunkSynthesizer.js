@@ -59,6 +59,7 @@ export default class ChunkSynthesizer extends Synthesizer {
         assert(chunk.height == this.height, "input chunk height does not match the previous block");
         assert(chunk.fps == this.fps, "input chunk fps does not match the previous block");
         transition && chunk.setTransition(_.isString(transition) ? { id: transition } : transition);
+        this.chunks.push(chunk);
         this.width = chunk.width;
         this.height = chunk.height;
         this.fps = chunk.fps;
@@ -66,8 +67,9 @@ export default class ChunkSynthesizer extends Synthesizer {
     }
 
     start() {
+        assert(this.chunks.length > 0, "There is no VideoChunk that can be synthesized");
         let offsetTime = 0
-        const chunksRenderPromises = []
+        const chunksRenderPromises = [];
         this.chunks.forEach(chunk => {
             chunk.audios.forEach(audio => {
                 if (_.isFinite(audio.startTime))
@@ -76,32 +78,42 @@ export default class ChunkSynthesizer extends Synthesizer {
                     audio.endTime += offsetTime;
                 this.addAudio(audio);
             });
-            if (chunk.isReady()) {
-                chunksRenderPromises.push(new Promise((resolve, reject) => {
-                    (_offsetTime => {
-                        chunk.on("audioAdd", options => {
-                            const audio = this.addAudio(options);
-                            audio.startTime += _offsetTime;
-                            audio.endTime += _offsetTime;
-                        });
-                        chunk.on("audioUpdate", options => {
-                            if (_.isFinite(options.startTime))
-                                options.startTime += _offsetTime;
-                            if(_.isFinite(options.endTime))
-                                options.endTime += _offsetTime;
-                            this.updateAudio(options);
-                        });
-                    })(offsetTime);
-                    chunk.once("completed", resolve);
-                    chunk.once("error", reject);
-                    chunk.start();
-                }));
-            }
+            // 分块未完成时先进行渲染
+            !chunk.isCompleted() && chunksRenderPromises.push(this.renderChunk(chunk, offsetTime));
             offsetTime += chunk.getOutputDuration();
         });
+        // 等待分块渲染完成再开始合成流程
         Promise.all(chunksRenderPromises)
             .then(() => super.start())
             .catch(err => this._emitError(err));
+    }
+
+    /**
+     * 渲染分块
+     * 
+     * @param {VideoChunk} chunk - 视频分块
+     * @param {number} offsetTime - 分块偏移时间点
+     */
+    async renderChunk(chunk, offsetTime) {
+        if (chunk.isCompleted())
+            return;
+        return await new Promise((resolve, reject) => {
+            chunk.on("audioAdd", options => {
+                const audio = this.addAudio(options);
+                audio.startTime += offsetTime;
+                audio.endTime += offsetTime;
+            });
+            chunk.on("audioUpdate", options => {
+                if (_.isFinite(options.startTime))
+                    options.startTime += offsetTime;
+                if (_.isFinite(options.endTime))
+                    options.endTime += offsetTime;
+                this.updateAudio(options);
+            });
+            chunk.once("completed", resolve);
+            chunk.once("error", reject);
+            chunk.isReady() && chunk.start();
+        });
     }
 
     /**
