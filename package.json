@@ -31,6 +31,8 @@
     "crc-32": "^1.2.2",
     "date-fns": "^2.30.0",
     "eventemitter3": "^5.0.1",
+    "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0",
     "fluent-ffmpeg": "^2.1.2",
     "fs-extra": "^11.1.1",
     "generic-pool": "^3.9.0",
