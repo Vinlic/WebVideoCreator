@@ -58,18 +58,7 @@ export default class ChunkSynthesizer extends Synthesizer {
         assert(chunk.width == this.width, "input chunk width does not match the previous block");
         assert(chunk.height == this.height, "input chunk height does not match the previous block");
         assert(chunk.fps == this.fps, "input chunk fps does not match the previous block");
-        let insertIndex;
-        for (let i = 0; i < this.chunks.length; i++) {
-            if (chunk.index <= this.chunks[i].index) {
-                insertIndex = i;
-                break;
-            }
-        }
         transition && chunk.setTransition(_.isString(transition) ? { id: transition } : transition);
-        if (_.isNumber(insertIndex) && insertIndex > 1)
-            this.chunks.splice(insertIndex, 0, chunk);
-        else
-            this.chunks.push(chunk);
         this.width = chunk.width;
         this.height = chunk.height;
         this.fps = chunk.fps;
@@ -87,16 +76,28 @@ export default class ChunkSynthesizer extends Synthesizer {
                     audio.endTime += offsetTime;
                 this.addAudio(audio);
             });
-            offsetTime += chunk.getOutputDuration();
             if (chunk.isReady()) {
                 chunksRenderPromises.push(new Promise((resolve, reject) => {
-                    chunk.on("audioAdd", options => this.addAudio(options));
-                    chunk.on("audioUpdate", options => this.updateAudio(options));
+                    (_offsetTime => {
+                        chunk.on("audioAdd", options => {
+                            const audio = this.addAudio(options);
+                            audio.startTime += _offsetTime;
+                            audio.endTime += _offsetTime;
+                        });
+                        chunk.on("audioUpdate", options => {
+                            if (_.isFinite(options.startTime))
+                                options.startTime += _offsetTime;
+                            if(_.isFinite(options.endTime))
+                                options.endTime += _offsetTime;
+                            this.updateAudio(options);
+                        });
+                    })(offsetTime);
                     chunk.once("completed", resolve);
                     chunk.once("error", reject);
                     chunk.start();
                 }));
             }
+            offsetTime += chunk.getOutputDuration();
         });
         Promise.all(chunksRenderPromises)
             .then(() => super.start())

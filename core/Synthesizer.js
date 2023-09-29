@@ -325,6 +325,7 @@ export default class Synthesizer extends EventEmitter {
         // 开始加载音频
         audio.load();
         this.audios.push(audio);
+        return audio;
     }
 
     /**
@@ -346,6 +347,7 @@ export default class Synthesizer extends EventEmitter {
         assert(_.isObject(options), "options must be Object");
         const audio = this.audios.find(audio => audio.id === audioId);
         audio && Object.assign(audio, options);
+        return audio;
     }
 
     /**
@@ -429,17 +431,28 @@ export default class Synthesizer extends EventEmitter {
             const { path, url, loop, startTime, endTime, duration, volume, seekStart, seekEnd, fadeInDuration, fadeOutDuration } = audio;
             if (seekEnd && seekEnd - seekStart > duration)
                 return result;
-            const _volume = Math.floor(((volume / 100) * (videoVolume / 100)) * 100) / 100;
-            const output = `a${index}`;
+            // 添加音频输入
             aencoder.addInput(path ? util.rootPathJoin(path) : url);
+            // 设置裁剪开始时间点
             seekStart && aencoder.addInputOption("-ss", util.millisecondsToHmss(seekStart));  //截取开始时间点
+            // 设置裁剪结束时间点
             seekEnd && aencoder.addInputOption("-to", util.millisecondsToHmss(seekEnd));  //截取结束时间点
-            const fadeIn = fadeInDuration ? `,afade=t=in:st=${startTime / 1000}:d=${fadeInDuration / 1000}` : "";
-            const fadeOut = fadeOutDuration ? `,afade=t=out:st=${((loop ? endTime : (Math.min(endTime, duration) || duration)) - fadeOutDuration) / 1000}:d=${fadeOutDuration / 1000}` : "";
-            const durationCut = `,atrim=start=0:end=${(endTime - startTime) / 1000}`;
+            // 时长裁剪过滤器
+            const cutFilter = `atrim=start=0:end=${(endTime - startTime) / 1000}`;
+            // 循环过滤器
             const loopFilter = loop ? ",aloop=loop=-1:size=2e+09" : "";
+            // 延迟过滤器
+            const delayFilter = `,adelay=${startTime}|${startTime}`;
+            // 音量过滤器
+            const volumeFilter = `,volume=${Math.floor((volume * videoVolume) * 0.01) / 100}`;
+            // 音频淡入过滤器
+            const fadeInFilter = fadeInDuration ? `,afade=t=in:st=${startTime / 1000}:d=${fadeInDuration / 1000}` : "";
+            // 音频淡出过滤器
+            const fadeOutFilter = fadeOutDuration ? `,afade=t=out:st=${((loop ? endTime : (Math.min(endTime, duration) || duration)) - fadeOutDuration) / 1000}:d=${fadeOutDuration / 1000}` : "";
+            // 输出标志
+            const output = `a${index}`;
             outputs += `[${output}]`;
-            return result + `[${1 + index}]adelay=${startTime}|${startTime},volume=${_volume}${loopFilter}${durationCut}${fadeIn}${fadeOut}[${output}];`;
+            return result + `[${1 + index}]${cutFilter}${loopFilter}${delayFilter}${volumeFilter}${fadeInFilter}${fadeOutFilter}[${output}];`;
         }, "");
         // 应用符合过滤器
         complexFilter && aencoder.complexFilter(`${complexFilter}${outputs}amix=inputs=${audios.length}:normalize=0`);

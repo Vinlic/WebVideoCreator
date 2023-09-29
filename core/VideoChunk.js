@@ -14,8 +14,6 @@ import util from "../lib/util.js";
  */
 export default class VideoChunk extends Synthesizer {
 
-    /** @type {number} - 分块索引 */
-    index;
     /** @type {Transition} - 进入下一视频分块的转场 */
     transition;
 
@@ -27,7 +25,6 @@ export default class VideoChunk extends Synthesizer {
      * @param {number} options.height - 视频高度
      * @param {number} options.fps - 视频合成帧率
      * @param {number} options.duration - 视频时长
-     * @param {number} [options.index=0] - 分块索引
      * @param {Transition} [options.transition] - 进入下一视频分块的转场
      * @param {string} [options.videoEncoder] - 视频编码器
      * @param {number} [options.videoQuality] - 视频质量（0-100）
@@ -39,10 +36,9 @@ export default class VideoChunk extends Synthesizer {
      */
     constructor(options = {}) {
         super(options);
-        const { index, transition } = options;
+        const { transition } = options;
         this.outputPath = _.defaultTo(this.outputPath, path.join(this.tmpDirPath, `${uniqid("chunk_")}.ts`));
         assert(util.getPathExtname(this.outputPath) == "ts", "Video chunk output path extname must be .ts");
-        this.index = _.defaultTo(index, 0);
         transition && this.setTransition(transition);
         this.coverCapture = false;
         this.format = "mpegts";
@@ -59,15 +55,7 @@ export default class VideoChunk extends Synthesizer {
         if (!(audio instanceof Audio))
             audio = new Audio(audio);
         this.audios.push(audio);
-    }
-
-    /**
-     * 设置分块索引，用于乱序插入ChunkSynthesizer时保持顺序
-     * 
-     * @param {number} - 分块index
-     */
-    setIndex(index) {
-        this.index = index;
+        return audio;
     }
 
     /**
