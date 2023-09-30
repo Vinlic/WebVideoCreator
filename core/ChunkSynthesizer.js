@@ -160,7 +160,7 @@ export default class ChunkSynthesizer extends Synthesizer {
      * @protected
      * @param {number} value - 进度值
      */
-    _emitProgress(value) {
+    _emitProgress(value, frameCount, targetFrameCount) {
         if (value < 0)
             return;
         let progress = this.progress + Math.floor(value * 0.05 * 1000) / 1000;
@@ -171,15 +171,15 @@ export default class ChunkSynthesizer extends Synthesizer {
                 this._cliProgress.stop();
                 this._cliProgress = new cliProgress.SingleBar({
                     hideCursor: true,
-                    format: `[${"{bar}".green}] {percentage}% | {eta_formatted} | {filename}`,
+                    format: `[${"{bar}".green}] {percentage}% | {value}/{total} | {eta_formatted} | {filename}`,
                 }, cliProgress.Presets.shades_grey);
             }
             if (!this._cliProgress.started) {
                 logger.log(`Waiting to merge ${this.chunks.length} chunks and audio synthesis...`);
-                this._cliProgress.start(100, 0);
+                this._cliProgress.start(targetFrameCount, 0);
                 this._cliProgress.started = true;
             }
-            this._cliProgress.update(Math.floor(value), { filename: this.name });
+            this._cliProgress.update(frameCount, { filename: this.name });
         }
         this.emit("progress", progress, this._frameCount, this._targetFrameCount);
     }

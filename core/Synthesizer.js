@@ -216,9 +216,9 @@ export default class Synthesizer extends EventEmitter {
                     .once("start", cmd => util.ffmpegLog(cmd))
                     .on("progress", e => {
                         if (!this._targetFrameCount)
-                            return this._emitProgress(0);
+                            return this._emitProgress(0, 0, 0);
                         const progres = e.frames / this._targetFrameCount;
-                        this._emitProgress(progres * (this.audioSynthesis ? 98 : 100));
+                        this._emitProgress(progres * (this.audioSynthesis ? 98 : 100), e.frames, this._targetFrameCount);
                     })
                     .once("error", reject)
                     .once("end", resolve)
@@ -230,7 +230,7 @@ export default class Synthesizer extends EventEmitter {
                     await new Promise((resolve, reject) => {
                         this._createAudioEncoder()
                             .once("start", cmd => util.ffmpegLog(cmd))
-                            .on("progress", e => this._emitProgress(98 + ((e.percent || 0) * 0.02)))
+                            .on("progress", e => this._emitProgress(98 + ((e.percent || 0) * 0.02), this._targetFrameCount, this._targetFrameCount))
                             .once("error", reject)
                             .once("end", resolve)
                             .run();
