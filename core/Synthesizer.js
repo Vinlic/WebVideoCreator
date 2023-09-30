@@ -7,6 +7,7 @@ import ffmpegPath from "ffmpeg-static";
 import { path as ffprobePath } from "ffprobe-static";
 import ffmpeg from "fluent-ffmpeg";
 import uniqid from "uniqid";
+import cliProgress from "cli-progress";
 import _ from "lodash";
 
 import {
@@ -42,6 +43,8 @@ export default class Synthesizer extends EventEmitter {
     id = uniqid("video_");
     /** @type {Synthesizer.STATE} - 合成器状态 */
     state = Synthesizer.STATE.READY;
+    /** @type {number} - 合成进度 */
+    progress = 0;
     /** @type {string} - 导出视频路径 */
     outputPath;
     /** @type {number} - 视频合成帧率 */
@@ -78,16 +81,20 @@ export default class Synthesizer extends EventEmitter {
     volume;
     /** @type {numer} - 并行写入帧数 */
     parallelWriteFrames;
+    /** @type {boolean} - 是否在命令行展示进度 */
+    showProgress;
     /** @type {Audio[]} - 音频列表 */
     audios = [];
-    /** @type {string} @protected - 交换文件路径 */
+    /** @protected @type {string} - 交换文件路径 */
     _swapFilePath;
     /** @type {string} - 临时路径 */
     #tmpDirPath;
-    /** @type {number} @protected - 帧计数 */
+    /** @type {number} - 帧计数 */
     _frameCount = 0;
-    /** @type {number} - 目标帧数 */
-    #targetFrameCount = 0;
+    /** @protected @type {cliProgress.SingleBar|cliProgress.MultiBar} - cli进度 */
+    _cliProgress = null;
+    /** @protected @type {number} - 目标帧数 */
+    _targetFrameCount = 0;
     /** @type {Buffer[]} - 帧缓冲区列表 */
     #frameBuffers = null;
     /** @type {Buffer[]} - 帧缓冲区指针 */
@@ -119,6 +126,7 @@ export default class Synthesizer extends EventEmitter {
      * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.volume] - 视频音量（0-100）
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
+     * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
      */
     constructor(options) {
         super();
@@ -126,7 +134,7 @@ export default class Synthesizer extends EventEmitter {
         const { width, height, fps, duration, format, outputPath,
             attachCoverPath, coverCapture, coverCaptureTime, coverCaptureFormat,
             videoEncoder, videoQuality, videoBitrate, pixelFormat,
-            audioEncoder, audioBitrate, volume, parallelWriteFrames } = options;
+            audioEncoder, audioBitrate, volume, parallelWriteFrames, showProgress } = options;
         assert(_.isFinite(width), "width must be number");
         assert(_.isFinite(height), "height must be number");
         assert(_.isFinite(duration), "synthesis duration must be number");
@@ -145,6 +153,7 @@ export default class Synthesizer extends EventEmitter {
         assert(_.isUndefined(audioBitrate) || _.isString(audioBitrate), "audioBitrate must be string");
         assert(_.isUndefined(volume) || _.isFinite(volume), "volume must be number");
         assert(_.isUndefined(parallelWriteFrames) || _.isFinite(parallelWriteFrames), "parallelWriteFrames must be number");
+        assert(_.isUndefined(showProgress) || _.isBoolean(showProgress), "showProgress must be boolean")
         if (!format && outputPath && !this._isVideoChunk()) {
             const _format = path.extname(outputPath).substring(1);
             if (!_format)
@@ -174,17 +183,23 @@ export default class Synthesizer extends EventEmitter {
         this.audioBitrate = audioBitrate;
         this.volume = _.defaultTo(volume, 100);
         this.parallelWriteFrames = _.defaultTo(parallelWriteFrames, 10);
+        this.showProgress = _.defaultTo(showProgress, false);
         this.#frameBuffers = new Array(this.parallelWriteFrames);
         this.#tmpDirPath = util.rootPathJoin(`tmp/synthesizer/`);
         this._swapFilePath = path.join(this.#tmpDirPath, `${uniqid("video_")}.${this.format}`);
-        this.#targetFrameCount = util.durationToFrameCount(this.duration, this.fps);
+        this._targetFrameCount = util.durationToFrameCount(this.duration, this.fps);
+        if(this.showProgress) {
+            this._cliProgress = new cliProgress.SingleBar({
+                hideCursor: true,
+                format: `[${"{bar}".green}] {percentage}% | {value}/{total} | {eta_formatted} | {chunk}`,
+            }, cliProgress.Presets.shades_grey);
+        }
     }
 
     /**
      * 启动合成
      */
     start() {
-        this._frameCount = 0;
         if (!this.#pipeStream)
             this.#pipeStream = new PassThrough();
         assert(this.isReady(), "Synthesizer status is not READY, please reset the synthesizer: synthesizer.reset()");
@@ -197,10 +212,10 @@ export default class Synthesizer extends EventEmitter {
                 this._createVideoEncoder()
                     .once("start", cmd => util.ffmpegLog(cmd))
                     .on("progress", e => {
-                        if (!this.#targetFrameCount)
-                            return this.#emitProgress(0);
-                        const progres = e.frames / this.#targetFrameCount;
-                        this.#emitProgress(progres * (this.audioSynthesis ? 98 : 100));
+                        if (!this._targetFrameCount)
+                            return this._emitProgress(0);
+                        const progres = e.frames / this._targetFrameCount;
+                        this._emitProgress(progres * (this.audioSynthesis ? 98 : 100));
                     })
                     .once("error", reject)
                     .once("end", resolve)
@@ -212,7 +227,7 @@ export default class Synthesizer extends EventEmitter {
                     await new Promise((resolve, reject) => {
                         this._createAudioEncoder()
                             .once("start", cmd => util.ffmpegLog(cmd))
-                            .on("progress", e => this.#emitProgress(98 + ((e.percent || 0) * 0.02)))
+                            .on("progress", e => this._emitProgress(98 + ((e.percent || 0) * 0.02)))
                             .once("error", reject)
                             .once("end", resolve)
                             .run();
@@ -285,12 +300,24 @@ export default class Synthesizer extends EventEmitter {
     /**
      * 发送进度事件
      * 
+     * @protected
      * @param {number} value - 进度值
      */
-    #emitProgress(value) {
+    _emitProgress(value) {
         if (value > 100)
             value = 100;
-        this.emit("progress", Math.floor(value * 1000) / 1000, this._frameCount, this.#targetFrameCount);
+        this.progress = Math.floor(value * 1000) / 1000;
+        if (this.showProgress) {
+            if (!this._cliProgress.started) {
+                if(this._cliProgress instanceof cliProgress.MultiBar)
+                    this._cliProgress = this._cliProgress.create(this._targetFrameCount, 0);
+                else
+                    this._cliProgress.start(this._targetFrameCount, 0);
+                this._cliProgress.started = true;
+            }
+            this._cliProgress.update(this._frameCount, { chunk: this.outputPath });
+        }
+        this.emit("progress", this.progress, this._frameCount, this._targetFrameCount);
     }
 
     /**
@@ -299,7 +326,11 @@ export default class Synthesizer extends EventEmitter {
      * @protected
      */
     _emitCompleted() {
-        this.#emitProgress(100);
+        this._emitProgress(100);
+        if (this._cliProgress) {
+            this._cliProgress.stop();
+            this._cliProgress = null;
+        }
         this.emit("completed");
     }
 
@@ -315,6 +346,10 @@ export default class Synthesizer extends EventEmitter {
         const message = err.message;
         if (message.indexOf("Error while opening encoder for output stream") != -1)
             err = new Error(`Video codec ${this.videoEncoder} may not be supported, please check if your hardware supports it. Some hardware encoders may have limitations in parallel encoding (such as NVENC https://github.com/keylase/nvidia-patch)`);
+        if (this._cliProgress) {
+            this._cliProgress.stop();
+            this._cliProgress = null;
+        }
         if (this.eventNames().includes("error"))
             this.emit("error", err);
         else
@@ -598,6 +633,16 @@ export default class Synthesizer extends EventEmitter {
     }
 
     /**
+     * 挂载CliProgress
+     * 
+     * @param {cliProgress.SingleBar} instance - cli进度条
+     */
+    attachCliProgress(instance) {
+        this.showProgress = true;
+        this._cliProgress = instance;
+    }
+
+    /**
      * 设置合成器状态
      * 
      * @param {Synthesizer.STATE} state - 合成器状态
@@ -642,6 +687,15 @@ export default class Synthesizer extends EventEmitter {
      */
     get frameCount() {
         return this._frameCount;
+    }
+
+    /**
+     * 获取目标总帧数
+     * 
+     * @returns {number} - 目标总帧数
+     */
+    get targetFrameCount() {
+        return this._targetFrameCount;
     }
 
     /**

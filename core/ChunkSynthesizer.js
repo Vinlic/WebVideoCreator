@@ -1,6 +1,8 @@
+import "colors";
 import assert from "assert";
 import fs from "fs-extra";
 import ffmpeg from "fluent-ffmpeg";
+import cliProgress from "cli-progress";
 import _ from "lodash";
 
 import Synthesizer from "./Synthesizer.js";
@@ -46,6 +48,12 @@ export default class ChunkSynthesizer extends Synthesizer {
         super(options);
         const { chunks } = options;
         assert(_.isUndefined(chunks) || _.isArray(chunks), "chunks must be VideoChunk[]");
+        if (this.showProgress) {
+            this._cliProgress = new cliProgress.MultiBar({
+                hideCursor: true,
+                format: `[${"{bar}".green}] {percentage}% | {value}/{total} | {eta_formatted} | {chunk}`,
+            }, cliProgress.Presets.shades_grey);
+        }
         chunks && chunks.forEach(chunk => this.input(chunk));
     }
 
@@ -65,11 +73,14 @@ export default class ChunkSynthesizer extends Synthesizer {
         assert(chunk.height == this.height, "input chunk height does not match the previous block");
         assert(chunk.fps == this.fps, "input chunk fps does not match the previous block");
         transition && chunk.setTransition(_.isString(transition) ? { id: transition } : transition);
+        if (this.showProgress)
+            chunk.attachCliProgress(this._cliProgress);
         this.chunks.push(chunk);
         this.width = chunk.width;
         this.height = chunk.height;
         this.fps = chunk.fps;
-        this.duration += chunk.getOutputDuration() - chunk.transitionDuration;
+        this.duration += chunk.getOutputDuration();
+        this._targetFrameCount += chunk.targetFrameCount;
     }
 
     /**
@@ -90,8 +101,6 @@ export default class ChunkSynthesizer extends Synthesizer {
             // 分块未完成时先进行渲染
             !chunk.isCompleted() && chunksRenderPromises.push(this.renderChunk(chunk, offsetTime));
             offsetTime += chunk.getOutputDuration();
-            if (chunk.transition)
-                offsetTime -= Math.min(chunk.duration, Math.floor(chunk.transition.duration));
         });
         // 等待分块渲染完成再开始合成流程
         Promise.all(chunksRenderPromises)
@@ -121,10 +130,58 @@ export default class ChunkSynthesizer extends Synthesizer {
                     options.endTime += offsetTime;
                 this.updateAudio(options);
             });
+            chunk.on("progress", () => this._emitChunksProgress());
             chunk.once("completed", resolve);
             chunk.once("error", reject);
             chunk.isReady() && chunk.start();
         });
+    }
+
+    /**
+     * 发送进度事件
+     */
+    _emitChunksProgress() {
+        const { progress: totalProgress, frameCount: totalFrameCount } = this.chunks.reduce((total, chunk) => {
+            total.progress += chunk.progress;
+            total.frameCount += chunk.frameCount;
+            return total;
+        }, {
+            progress: 0,
+            frameCount: 0
+        });
+        this.progress = Math.floor(totalProgress / this.chunks.length * 0.95 * 1000) / 1000;
+        this._frameCount = totalFrameCount;
+        this.emit("progress", this.progress * 0.95, totalFrameCount, this._targetFrameCount);
+    }
+
+    /**
+     * 发送进度事件
+     * 
+     * @protected
+     * @param {number} value - 进度值
+     */
+    _emitProgress(value) {
+        if (value < 0)
+            return;
+        let progress = this.progress + Math.floor(value * 0.05 * 1000) / 1000;
+        if (progress > 100)
+            progress = 100;
+        if (this.showProgress) {
+            if(this._cliProgress instanceof cliProgress.MultiBar) {
+                this._cliProgress.stop();
+                this._cliProgress = new cliProgress.SingleBar({
+                    hideCursor: true,
+                    format: `[${"{bar}".green}] {percentage}% | {eta_formatted} | {chunk}`,
+                }, cliProgress.Presets.shades_grey);
+            }
+            if (!this._cliProgress.started) {
+                logger.log(`Waiting to merge ${this.chunks.length} chunks and audio synthesis...`);
+                this._cliProgress.start(100, 0);
+                this._cliProgress.started = true;
+            }
+            this._cliProgress.update(Math.floor(value), { chunk: this.outputPath });
+        }
+        this.emit("progress", progress, this._frameCount, this._targetFrameCount);
     }
 
     /**
@@ -238,6 +295,15 @@ export default class ChunkSynthesizer extends Synthesizer {
             .toFormat(format)
             .addOutput(_swapFilePath);
         return vencoder;
+    }
+
+    /**
+     * 获取已合成视频时长
+     * 
+     * @returns {number} - 已合成视频时长
+     */
+    getOutputDuration() {
+        return this.duration;
     }
 
 }

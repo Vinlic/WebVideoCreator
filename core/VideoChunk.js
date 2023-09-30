@@ -76,6 +76,15 @@ export default class VideoChunk extends Synthesizer {
     }
 
     /**
+     * 获取已合成视频时长
+     * 
+     * @returns {number} - 已合成视频时长
+     */
+    getOutputDuration() {
+        return super.getOutputDuration() - this.transitionDuration;
+    }
+
+    /**
      * 创建视频编码器
      * 
      * @protected
