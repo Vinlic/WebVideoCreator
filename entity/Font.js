@@ -26,12 +26,12 @@ export default class Font {
     retryFetchs;
     /** @type {boolean} - 是否忽略本地缓存 */
     ignoreCache;
+    /** @type {string} - 临时路径 */
+    tmpDirPath = "tmp/local_font/";
     /** @type {string} - 内部字体URL */
     #innerURL;
     /** @type {Promise} - 加载承诺 */
     #loadPromise;
-    /** @type {string} - 临时路径 */
-    #tmpDirPath;
 
     /**
      * 构造函数
@@ -69,7 +69,6 @@ export default class Font {
         this.weight = _.isNumber(weight) ? parseInt(weight) : weight;
         this.retryFetchs = _.defaultTo(retryFetchs, 2);
         this.ignoreCache = _.defaultTo(ignoreCache, false);
-        this.#tmpDirPath = util.rootPathJoin(`tmp/local_font/`);
     }
 
     /**
@@ -79,7 +78,7 @@ export default class Font {
         if (this.#loadPromise)
             return this.#loadPromise;
         this.#loadPromise = (async () => {
-            await fs.ensureDir(this.#tmpDirPath);
+            await fs.ensureDir(this.tmpDirPath);
             if (this.path) {
                 const filePath = this.path;
                 if (!await fs.pathExists(filePath))
@@ -88,7 +87,7 @@ export default class Font {
                     throw new Error(`Font source ${filePath} must be file`);
                 const { dir, base } = path.parse(filePath);
                 const dirPath = dir.replace(/:/g, "").replace(/\\/g, "/").toLowerCase();
-                const destPath = path.join(this.#tmpDirPath, dirPath, base);
+                const destPath = path.join(this.tmpDirPath, dirPath, base);
                 await fs.ensureDir(path.dirname(destPath), { recursive: true });
                 await fs.copy(filePath, destPath);
                 this.#innerURL = path.join("local_font/", dirPath, base).replace(/\\/g, "/");

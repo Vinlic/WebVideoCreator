@@ -131,7 +131,7 @@ export default class Browser {
             // 是否使用管道通信
             pipe: false,
             // 用户目录路径
-            userDataDir: util.rootPathJoin("tmp/browser"),
+            userDataDir: "tmp/browser",
             // 浏览器启动参数
             args: this.#generateArgs()
         });

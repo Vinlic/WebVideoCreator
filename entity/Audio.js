@@ -41,10 +41,10 @@ export default class Audio {
     retryFetchs;
     /** @type {boolean} - 是否忽略本地缓存 */
     ignoreCache;
+    /** @type {string} - 临时路径 */
+    tmpDirPath = "tmp/preprocessor/";
     /** @type {Promise} - 加载承诺 */
     #loadPromise;
-    /** @type {string} - 临时路径 */
-    #tmpDirPath;
 
     /**
      * 构造函数
@@ -93,7 +93,6 @@ export default class Audio {
         this.fadeOutDuration = fadeOutDuration;
         this.retryFetchs = _.defaultTo(retryFetchs, 2);
         this.ignoreCache = _.defaultTo(ignoreCache, false);
-        this.#tmpDirPath = util.rootPathJoin(`tmp/preprocessor/`);
     }
 
     /**
@@ -126,7 +125,7 @@ export default class Audio {
      * @param {string} url 资源URL
      */
     async #downloadFile(url) {
-        const filePath = path.join(this.#tmpDirPath, util.urlToPath(url));
+        const filePath = path.join(this.tmpDirPath, util.urlToPath(url));
         await downloadLock.acquire(util.crc32(url), async () => {
             if (!this.ignoreCache && await fs.pathExists(filePath)) return filePath;
             await fs.ensureDir(path.dirname(filePath), { recursive: true });

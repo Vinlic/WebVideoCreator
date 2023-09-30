@@ -92,7 +92,7 @@ export default class Synthesizer extends EventEmitter {
     /** @protected @type {string} - 交换文件路径 */
     _swapFilePath;
     /** @type {string} - 临时路径 */
-    #tmpDirPath;
+    tmpDirPath = "tmp/synthesizer/";
     /** @type {number} - 帧计数 */
     _frameCount = 0;
     /** @protected @type {cliProgress.SingleBar|cliProgress.MultiBar} - cli进度 */
@@ -190,8 +190,7 @@ export default class Synthesizer extends EventEmitter {
         this.parallelWriteFrames = _.defaultTo(parallelWriteFrames, 10);
         this.showProgress = _.defaultTo(showProgress, false);
         this.#frameBuffers = new Array(this.parallelWriteFrames);
-        this.#tmpDirPath = util.rootPathJoin(`tmp/synthesizer/`);
-        this._swapFilePath = path.join(this.#tmpDirPath, `${uniqid("video_")}.${this.format}`);
+        this._swapFilePath = path.join(this.tmpDirPath, `${uniqid("video_")}.${this.format}`);
         this._targetFrameCount = util.durationToFrameCount(this.duration, this.fps);
         if(this.showProgress) {
             this._cliProgress = new cliProgress.SingleBar({
@@ -212,7 +211,7 @@ export default class Synthesizer extends EventEmitter {
         this._startupTime = _.defaultTo(this._startupTime, performance.now());
         (async () => {
             await fs.ensureDir(path.dirname(this.outputPath));
-            await fs.ensureDir(this.#tmpDirPath);
+            await fs.ensureDir(this.tmpDirPath);
             await this.#waitForAudiosLoaded();
             await new Promise((resolve, reject) => {
                 this._createVideoEncoder()
@@ -664,13 +663,6 @@ export default class Synthesizer extends EventEmitter {
     #setState(state) {
         assert(_.isSymbol(state), "state must be Symbol");
         this.state = state;
-    }
-
-    /**
-     * 临时目录路径
-     */
-    get tmpDirPath() {
-        return this.#tmpDirPath;
     }
 
     /**

@@ -49,7 +49,7 @@ export default class DownloadTask extends Task {
      * @param {string} url 资源URL
      */
     async #downloadFile(url) {
-        const filePath = path.join(this._tmpDirPath, util.urlToPath(url));
+        const filePath = path.join(this.tmpDirPath, util.urlToPath(url));
         await downloadLock.acquire(util.crc32(url), async () => {
             if (!this.ignoreCache && await fs.pathExists(filePath)) return filePath;
             await fs.ensureDir(path.dirname(filePath), { recursive: true });

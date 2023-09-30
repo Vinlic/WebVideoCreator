@@ -571,7 +571,7 @@ export default class Page extends EventEmitter {
             }
             // 从本地拉取字体
             else if (method == "GET" && /^\/local_font\//.test(pathname)) {
-                const filePath = path.join(util.rootPathJoin("tmp/local_font/"), pathname.substring(12));
+                const filePath = path.join("tmp/local_font/", pathname.substring(12));
                 if (!await fs.pathExists(filePath)) {
                     return await request.respond({
                         status: 404,

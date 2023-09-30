@@ -3,10 +3,6 @@ import uniqid from "uniqid";
 import EventEmitter from "eventemitter3";
 import _ from "lodash";
 
-import util from "../../lib/util.js";
-
-const TMP_DIR_PATH = util.rootPathJoin("tmp/preprocessor/");
-
 export default class Task extends EventEmitter {
 
     /** 任务类型枚举 */
@@ -51,7 +47,7 @@ export default class Task extends EventEmitter {
     /** @type {boolean} - 是否忽略本地缓存 */
     ignoreCache;
     /** @type {string} @protected 临时路径 */
-    _tmpDirPath = TMP_DIR_PATH;
+    tmpDirPath = "tmp/preprocessor/";
 
     /**
      * 构造函数
