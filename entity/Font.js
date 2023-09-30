@@ -27,7 +27,7 @@ export default class Font {
     /** @type {boolean} - 是否忽略本地缓存 */
     ignoreCache;
     /** @type {string} - 临时路径 */
-    tmpDirPath = "tmp/local_font/";
+    tmpDirPath = path.resolve("tmp/local_font/");
     /** @type {string} - 内部字体URL */
     #innerURL;
     /** @type {Promise} - 加载承诺 */

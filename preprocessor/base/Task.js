@@ -47,7 +47,7 @@ export default class Task extends EventEmitter {
     /** @type {boolean} - 是否忽略本地缓存 */
     ignoreCache;
     /** @type {string} @protected 临时路径 */
-    tmpDirPath = "tmp/preprocessor/";
+    tmpDirPath = path.resolve("tmp/preprocessor/");
 
     /**
      * 构造函数

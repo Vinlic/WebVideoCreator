@@ -92,7 +92,7 @@ export default class Synthesizer extends EventEmitter {
     /** @protected @type {string} - 交换文件路径 */
     _swapFilePath;
     /** @type {string} - 临时路径 */
-    tmpDirPath = "tmp/synthesizer/";
+    tmpDirPath = path.resolve("tmp/synthesizer/");
     /** @type {number} - 帧计数 */
     _frameCount = 0;
     /** @protected @type {cliProgress.SingleBar|cliProgress.MultiBar} - cli进度 */
@@ -174,9 +174,9 @@ export default class Synthesizer extends EventEmitter {
         this.height = height;
         this.fps = _.defaultTo(fps, 30);
         this.duration = duration;
-        this.outputPath = outputPath;
+        this.outputPath = outputPath ? path.resolve(outputPath) : outputPath;
         this.name = this.outputPath ? path.basename(this.outputPath) : null;
-        this.attachCoverPath = attachCoverPath;
+        this.attachCoverPath = attachCoverPath ? path.resolve(attachCoverPath) : attachCoverPath;
         this.coverCapture = _.defaultTo(coverCapture, false);
         this.coverCaptureTime = coverCaptureTime;
         this.coverCaptureFormat = _.defaultTo(coverCaptureFormat, "jpg");

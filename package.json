@@ -11,6 +11,17 @@
     "type": "git",
     "url": "https://github.com/Vinlic/WebVideoCreator.git"
   },
+  "files": [
+    "api/",
+    "core/",
+    "entity",
+    "examples",
+    "lib/",
+    "media/",
+    "preprocessor/",
+    "README.md",
+    "index.js"
+  ],
   "keywords": [
     "video",
     "render",

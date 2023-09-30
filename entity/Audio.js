@@ -42,7 +42,7 @@ export default class Audio {
     /** @type {boolean} - 是否忽略本地缓存 */
     ignoreCache;
     /** @type {string} - 临时路径 */
-    tmpDirPath = "tmp/preprocessor/";
+    tmpDirPath = path.resolve("tmp/preprocessor/");
     /** @type {Promise} - 加载承诺 */
     #loadPromise;
 
