@@ -81,7 +81,7 @@ export default class Font {
         this.#loadPromise = (async () => {
             await fs.ensureDir(this.#tmpDirPath);
             if (this.path) {
-                const filePath = util.rootPathJoin(this.path);
+                const filePath = this.path;
                 if (!await fs.pathExists(filePath))
                     throw new Error(`Font source ${filePath} not exists`);
                 if (!(await fs.stat(filePath)).isFile())

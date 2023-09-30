@@ -174,9 +174,9 @@ export default class Synthesizer extends EventEmitter {
         this.height = height;
         this.fps = _.defaultTo(fps, 30);
         this.duration = duration;
-        this.outputPath = util.rootPathJoin(outputPath);
+        this.outputPath = outputPath;
         this.name = this.outputPath ? path.basename(this.outputPath) : null;
-        this.attachCoverPath = util.rootPathJoin(attachCoverPath);
+        this.attachCoverPath = attachCoverPath;
         this.coverCapture = _.defaultTo(coverCapture, false);
         this.coverCaptureTime = coverCaptureTime;
         this.coverCaptureFormat = _.defaultTo(coverCaptureFormat, "jpg");
@@ -487,7 +487,7 @@ export default class Synthesizer extends EventEmitter {
             if (seekEnd && seekEnd - seekStart > duration)
                 return result;
             // 添加音频输入
-            aencoder.addInput(path ? util.rootPathJoin(path) : url);
+            aencoder.addInput(path || url);
             // 设置裁剪开始时间点
             seekStart && aencoder.addInputOption("-ss", util.millisecondsToHmss(seekStart));  //截取开始时间点
             // 设置裁剪结束时间点
