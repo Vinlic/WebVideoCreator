@@ -1,6 +1,6 @@
 {
   "name": "web-video-creator",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A powerful video synthesis engine based on a headless browser.",
   "type": "module",
   "main": "index.js",
