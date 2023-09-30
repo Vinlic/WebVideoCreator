@@ -45,6 +45,8 @@ export default class Synthesizer extends EventEmitter {
     state = Synthesizer.STATE.READY;
     /** @type {number} - 合成进度 */
     progress = 0;
+    /** 合成对象名称 */
+    name = null;
     /** @type {string} - 导出视频路径 */
     outputPath;
     /** @type {number} - 视频合成帧率 */
@@ -171,6 +173,7 @@ export default class Synthesizer extends EventEmitter {
         this.fps = _.defaultTo(fps, 30);
         this.duration = duration;
         this.outputPath = util.rootPathJoin(outputPath);
+        this.name = this.outputPath ? path.basename(this.outputPath) : null;
         this.attachCoverPath = util.rootPathJoin(attachCoverPath);
         this.coverCapture = _.defaultTo(coverCapture, false);
         this.coverCaptureTime = coverCaptureTime;
@@ -191,7 +194,7 @@ export default class Synthesizer extends EventEmitter {
         if(this.showProgress) {
             this._cliProgress = new cliProgress.SingleBar({
                 hideCursor: true,
-                format: `[${"{bar}".green}] {percentage}% | {value}/{total} | {eta_formatted} | {chunk}`,
+                format: `[${"{bar}".green}] {percentage}% | {value}/{total} | {eta_formatted} | {filename}`,
             }, cliProgress.Presets.shades_grey);
         }
     }
@@ -315,7 +318,7 @@ export default class Synthesizer extends EventEmitter {
                     this._cliProgress.start(this._targetFrameCount, 0);
                 this._cliProgress.started = true;
             }
-            this._cliProgress.update(this._frameCount, { chunk: this.outputPath });
+            this._cliProgress.update(this._frameCount, { filename: this.name });
         }
         this.emit("progress", this.progress, this._frameCount, this._targetFrameCount);
     }

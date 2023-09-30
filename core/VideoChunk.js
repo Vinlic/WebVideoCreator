@@ -41,6 +41,7 @@ export default class VideoChunk extends Synthesizer {
         super(options);
         const { transition, autoremove } = options;
         this.outputPath = _.defaultTo(this.outputPath, path.join(this.tmpDirPath, `${uniqid("chunk_")}.ts`));
+        this.name = _.defaultTo(this.name, path.basename(this.outputPath));
         assert(util.getPathExtname(this.outputPath) == "ts", "Video chunk output path extname must be .ts");
         transition && this.setTransition(transition);
         this.autoremove = _.defaultTo(autoremove, true);

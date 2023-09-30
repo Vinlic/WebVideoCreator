@@ -51,7 +51,7 @@ export default class ChunkSynthesizer extends Synthesizer {
         if (this.showProgress) {
             this._cliProgress = new cliProgress.MultiBar({
                 hideCursor: true,
-                format: `[${"{bar}".green}] {percentage}% | {value}/{total} | {eta_formatted} | {chunk}`,
+                format: `[${"{bar}".cyan}] {percentage}% | {value}/{total} | {eta_formatted} | {filename}`,
             }, cliProgress.Presets.shades_grey);
         }
         chunks && chunks.forEach(chunk => this.input(chunk));
@@ -171,7 +171,7 @@ export default class ChunkSynthesizer extends Synthesizer {
                 this._cliProgress.stop();
                 this._cliProgress = new cliProgress.SingleBar({
                     hideCursor: true,
-                    format: `[${"{bar}".green}] {percentage}% | {eta_formatted} | {chunk}`,
+                    format: `[${"{bar}".green}] {percentage}% | {eta_formatted} | {filename}`,
                 }, cliProgress.Presets.shades_grey);
             }
             if (!this._cliProgress.started) {
@@ -179,7 +179,7 @@ export default class ChunkSynthesizer extends Synthesizer {
                 this._cliProgress.start(100, 0);
                 this._cliProgress.started = true;
             }
-            this._cliProgress.update(Math.floor(value), { chunk: this.outputPath });
+            this._cliProgress.update(Math.floor(value), { filename: this.name });
         }
         this.emit("progress", progress, this._frameCount, this._targetFrameCount);
     }
