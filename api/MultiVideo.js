@@ -39,7 +39,7 @@ export default class MultiVideo extends ChunkSynthesizer {
      * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.volume] - 视频音量（0-100）
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
-     * @param {number} [options.debug=false] - 是否输出调试信息
+     * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
      */
     constructor(options) {
         super(options);

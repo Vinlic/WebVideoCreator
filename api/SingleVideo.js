@@ -49,6 +49,7 @@ export default class SingleVideo extends Synthesizer {
      * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.volume] - 视频音量（0-100）
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
+     * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
      * @param {boolean} [options.autostartRender=true] - 是否自动启动渲染，如果为false请务必在页面中执行 captureCtx.start()
      * @param {boolean} [options.consoleLog=false] - 是否开启控制台日志输出
      * @param {boolean} [options.videoPreprocessLog=false] - 是否开启视频预处理日志输出

@@ -1,5 +1,8 @@
-import synthesize from "./synthesize.js"
+import singleVideo from "./single-video.js";
+import multiVideo from "./multi-video.js";
 
 export default {
-    synthesize
+    singleVideo,
+    multiVideo,
+    synthesize: singleVideo,
 };

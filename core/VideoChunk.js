@@ -36,6 +36,7 @@ export default class VideoChunk extends Synthesizer {
      * @param {string} [options.audioEncoder] - 音频编码器
      * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
+     * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
      */
     constructor(options = {}) {
         super(options);
