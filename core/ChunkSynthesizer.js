@@ -88,6 +88,7 @@ export default class ChunkSynthesizer extends Synthesizer {
      */
     start() {
         assert(this.chunks.length > 0, "There is no VideoChunk that can be synthesized");
+        this._startupTime = performance.now();
         let offsetTime = 0
         const chunksRenderPromises = [];
         this.chunks.forEach(chunk => {

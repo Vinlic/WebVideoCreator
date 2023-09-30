@@ -87,6 +87,8 @@ export default class Synthesizer extends EventEmitter {
     showProgress;
     /** @type {Audio[]} - 音频列表 */
     audios = [];
+    /** @type {number} - 启动时间点 */
+    _startupTime = null;
     /** @protected @type {string} - 交换文件路径 */
     _swapFilePath;
     /** @type {string} - 临时路径 */
@@ -207,6 +209,7 @@ export default class Synthesizer extends EventEmitter {
             this.#pipeStream = new PassThrough();
         assert(this.isReady(), "Synthesizer status is not READY, please reset the synthesizer: synthesizer.reset()");
         this.#setState(Synthesizer.STATE.SYNTHESIZING);
+        this._startupTime = _.defaultTo(this._startupTime, performance.now());
         (async () => {
             await fs.ensureDir(path.dirname(this.outputPath));
             await fs.ensureDir(this.#tmpDirPath);
@@ -334,7 +337,14 @@ export default class Synthesizer extends EventEmitter {
             this._cliProgress.stop();
             this._cliProgress = null;
         }
-        this.emit("completed");
+        const takes = performance.now() - this._startupTime;
+        this._startupTime = null;
+        const result = {
+            takes,
+            duration: this.duration,
+            rtf: this.duration / takes
+        };
+        this.emit("completed", result);
     }
 
     /**
@@ -564,6 +574,7 @@ export default class Synthesizer extends EventEmitter {
         this.#frameBufferIndex = 0;
         this.#frameBuffers = new Array(this.parallelWriteFrames);
         this._frameCount = 0;
+        this._startupTime = null;
         this.#closeEncoder(true);
         if (this.#pipeStream && !this.#pipeStream.closed)
             this.#pipeStream.end();
