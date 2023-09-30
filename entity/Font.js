@@ -48,8 +48,8 @@ export default class Font {
      */
     constructor(options) {
         assert(_.isObject(options), "Font options must be Object");
-        const { url, path, family, format, style, weight, retryFetchs, ignoreCache } = options;
-        assert(_.isString(url) || _.isString(path), "Font path or url must be string");
+        const { url, path: _path, family, format, style, weight, retryFetchs, ignoreCache } = options;
+        assert(_.isString(url) || _.isString(_path), "Font path or url must be string");
         assert(_.isString(family), "Font family must be string");
         assert(_.isUndefined(format) || _.isString(format), "Font format must be string");
         assert(_.isUndefined(style) || _.isString(style), "Font style must be string");
@@ -57,7 +57,7 @@ export default class Font {
         assert(_.isUndefined(retryFetchs) || _.isFinite(retryFetchs), "Font retryFetchs must be number");
         assert(_.isUndefined(ignoreCache) || _.isBoolean(ignoreCache), "Font fadeOutDuration must be boolean");
         this.url = url;
-        this.path = path;
+        this.path = _.isString(_path) ? path.resolve(_path) : _path;
         this.family = family;
         if(format)
             this.format = format;

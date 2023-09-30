@@ -81,7 +81,7 @@ export default class Audio {
         assert(_.isUndefined(retryFetchs) || _.isFinite(retryFetchs), "Audio retryFetchs must be number");
         assert(_.isUndefined(ignoreCache) || _.isBoolean(ignoreCache), "Audio fadeOutDuration must be boolean");
         this.id = id;
-        this.path = path;
+        this.path = _.isString(path) ? path.resolve(path) : path;
         this.url = url;
         this.startTime = _.defaultTo(startTime, 0);
         this.endTime = endTime;

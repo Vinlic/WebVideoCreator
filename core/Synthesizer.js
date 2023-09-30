@@ -87,12 +87,12 @@ export default class Synthesizer extends EventEmitter {
     showProgress;
     /** @type {Audio[]} - 音频列表 */
     audios = [];
+    /** @type {string} - 临时路径 */
+    tmpDirPath = path.resolve("tmp/synthesizer/");
     /** @type {number} - 启动时间点 */
     _startupTime = null;
     /** @protected @type {string} - 交换文件路径 */
     _swapFilePath;
-    /** @type {string} - 临时路径 */
-    tmpDirPath = path.resolve("tmp/synthesizer/");
     /** @type {number} - 帧计数 */
     _frameCount = 0;
     /** @protected @type {cliProgress.SingleBar|cliProgress.MultiBar} - cli进度 */
@@ -174,9 +174,9 @@ export default class Synthesizer extends EventEmitter {
         this.height = height;
         this.fps = _.defaultTo(fps, 30);
         this.duration = duration;
-        this.outputPath = outputPath ? path.resolve(outputPath) : outputPath;
+        this.outputPath = _.isString(outputPath) ? path.resolve(outputPath) : outputPath;
         this.name = this.outputPath ? path.basename(this.outputPath) : null;
-        this.attachCoverPath = attachCoverPath ? path.resolve(attachCoverPath) : attachCoverPath;
+        this.attachCoverPath = _.isString(attachCoverPath) ? path.resolve(attachCoverPath) : attachCoverPath;
         this.coverCapture = _.defaultTo(coverCapture, false);
         this.coverCaptureTime = coverCaptureTime;
         this.coverCaptureFormat = _.defaultTo(coverCaptureFormat, "jpg");
