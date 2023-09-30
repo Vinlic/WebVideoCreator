@@ -5,6 +5,7 @@ import ChunkVideo from "./api/ChunkVideo.js";
 import examples from "./examples/index.js";
 import * as core from "./core/index.js";
 import * as entity from "./entity/index.js";
+import logger from "./lib/logger.js";
 import util from "./lib/util.js";
 
 import { VIDEO_ENCODER, AUDIO_ENCODER, TRANSITION } from "./lib/const.js";
@@ -29,6 +30,8 @@ export {
     core,
     /** 实体类 */
     entity,
+    /** 日志类 */
+    logger,
     /** 工具类 */
     util
 };
