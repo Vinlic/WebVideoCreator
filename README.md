@@ -43,12 +43,56 @@ npm i web-video-creator
 ```
 如遇到ffmpeg-static下载失败，请先设置环境变量：`FFMPEG_BINARIES_URL=https://cdn.npmmirror.com/binaries/ffmpeg-static`
 
+## 简单使用
+
+```javascript
+import WebVideoCreator, { VIDEO_ENCODER } from "web-video-creator";
+
+const wvc = new WebVideoCreator();
+
+// 配置WVC
+wvc.config({
+    // 根据您的硬件设备选择适合的编码器，这里采用的是Nvidia显卡的h264_nvenc编码器
+    // 编码器选择可参考VIDEO_ENCODER内提供的选项注释
+    mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
+});
+
+// 创建单幕视频
+const video = wvc.createSingleVideo({
+    // 需要渲染的页面地址
+    url: "http://localhost:8080/test.html",
+    // 视频宽度
+    width: 1280,
+    // 视频高度
+    height: 720,
+    // 视频帧率
+    fps: 30,
+    // 视频时长
+    duration: 10000,
+    // 视频输出路径
+    outputPath: "./test.mp4",
+    // 是否在cli显示进度条
+    showProgress: true
+});
+
+// 监听合成完成事件
+video.once("completed", result => {
+    console.log("Render Completed!!!", result);
+});
+
+// 启动合成
+video.start();
+```
+
 ## 单幕合成示例
 
-此处调用示例来自：[examples/single-video.js](./examples/single-video.js)
+<img src="./assets/single-video.gif" />
+
+调用示例代码来自：[examples/single-video.js](./examples/single-video.js)
 
 ```javascript
 import { examples, VIDEO_ENCODER } from "web-video-creator";
+
 await examples.singleVideo({
     // 需要渲染的页面地址
     url: "http://localhost:8080/test.html",
@@ -70,16 +114,20 @@ await examples.singleVideo({
 
 ## 多幕合成示例
 
-此处调用示例来自：[examples/multi-video](./examples/multi-video.js)
+<img src="./assets/muti-video.gif" />
+
+调用示例代码来自：[examples/multi-video.js](./examples/multi-video.js)
 
 ```javascript
 import { examples, VIDEO_ENCODER, TRANSITION } from "web-video-creator";
+
 await examples.multiVideo({
     // 视频块列表
     chunks: [
         {
             url: "http://localhost:8080/scene1.html",
             duration: 10000,
+            // 与下一幕切换时使用圆形裁剪转场
             transition: TRANSITION.CIRCLE_CROP
         },
         {
@@ -120,15 +168,23 @@ await examples.multiVideo({
 目前手上没有更好的测试设备，我将以我的个人主机的性能参数作为参考：
 
 CPU: AMD Ryzen 7 3700X（主频3.6-4.4GHz 8核16线程）
+
 GPU: Nvidia GeForce GTX 1660 SUPER（6GB显存 支持NVENC）
+
 RAM: 16GB（DDR4 2400MHz）
 
 视频类型：SVG动画+GIF+Lottie动画播放
+
 视频分辨率：1280x720
+
 视频帧率：30
+
 视频时长：300s（5分钟）
+
 渲染耗时：61s（1分钟）
+
 实时率：4.844
+
 并行渲染数：16
 
 ---
@@ -137,3 +193,4 @@ RAM: 16GB（DDR4 2400MHz）
 
 - 受制于浏览器的[安全上下文限制](https://w3c.github.io/webappsec-secure-contexts/)，只能访问 localhost / 127.0.0.1 或者使用HTTPS协议且证书有效的域，从安全角度考虑建议使用本机静态服务器（live-server是一个不错的选择）。
 - 暂时不支持在MAC系统中部署，因为无头实验API在那上面会发生崩溃。
+- WebVideoCreator是纯ESM包，无法使用CommonJS风格引入，如果依然希望使用require引入，请参考：https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
