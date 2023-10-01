@@ -181,9 +181,9 @@ export default class Page extends EventEmitter {
             // 注入公共样式
             this.#injectStyle(COMMON_STYLE_CONTENT),
             // 注入MP4Box库
-            this.#injectLibrary(MP4BOX_LIBRARY_SCRIPT_CONTENT + ";window.____MP4Box = MP4Box"),
+            this.#injectLibrary(MP4BOX_LIBRARY_SCRIPT_CONTENT + ";window.____MP4Box = window.MP4Box;window.MP4Box = undefined"),
             // 注入Lottie动画库
-            this.#injectLibrary(LOTTIE_LIBRARY_SCRIPT_CONTENT + ";window.____lottie = lottie")
+            this.#injectLibrary(LOTTIE_LIBRARY_SCRIPT_CONTENT + ";window.____lottie = window.lottie;window.lottie = undefined")
         ]);
     }
 
@@ -810,10 +810,8 @@ class PageError extends Error {
     name = "PageError";
     constructor(message) {
         let stack;
-        if (message instanceof Error) {
-            message = message.message;
-            stack = message.stack;
-        }
+        if (message instanceof Error)
+            message = message.stack;
         super(message);
         stack && (this.stack = stack);
     }
