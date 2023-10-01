@@ -6,7 +6,7 @@
 
 # Introduction
 
-WebVideoCreator (abbreviated as WVC) is a framework for creating videos based on Node.js + Puppeteer + FFmpeg. It performs deterministic rendering, accurately capturing any animations that can be played in HTML5, including CSS3 animations, SVG animations, Lottie animations, GIF animations, APNG animations, and WEBP animations. It also supports any timeline-based animations driven by RAF (requestAnimationFrame), with [anime.js](https://animejs.com/) being a great choice :D. Of course, you can also mischievously use setInterval or setTimeout to control animations.WVC supports embedding mp4 and transparent webm videos, as well as providing features for transition composition, audio synthesis, and font loading. Let's get started with the [quick start](#quick-start).
+WebVideoCreator (abbreviated as WVC) is a framework for creating videos based on Node.js + Puppeteer + FFmpeg. It performs deterministic rendering, accurately capturing any animations that can be played in HTML5, including CSS3 animations, SVG animations, Lottie animations, GIF animations, APNG animations, and WEBP animations. It also supports any timeline-based animations driven by [RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame), with [anime.js](https://animejs.com/) being a great choice :D. Of course, you can also mischievously use setInterval or setTimeout to control animations.WVC supports embedding mp4 and transparent webm videos, as well as providing features for transition composition, audio synthesis, and font loading. Let's get started with the [quick start](#quick-start).
 
 WVC creates a virtual time environment for your cool animated web pages (you can maybe imagine it as something like "The Truman Show"). Its primary responsibility is to transform an environment of "uncertain rendering" into one of "deterministic rendering."
 
@@ -16,7 +16,7 @@ In everyday usage, browsers don't render animations in real-time synchronization
 
 ## Deterministic Rendering Environment
 
-For the rendering code, it remains unaware of the changes, and everything continues as usual. However, the passage of time is no longer unstable. The currentTime returned by RAF, the timing of callbacks for setTimeout and setInterval, Date, and so on, are all determined based on the current progress of rendering. Apart from taking control of the clock, experimental approaches like [WebCodecs API](https://github.com/w3c/webcodecs) have been adopted for handling dynamic images and embedded videos.
+For the rendering code, it remains unaware of the changes, and everything continues as usual. However, the passage of time is no longer unstable. The currentTime returned by RAF, the timing of callbacks for setTimeout and setInterval, Date, performance.now, and so on, are all determined based on the current progress of rendering. Apart from taking control of the clock, experimental approaches like [WebCodecs API](https://github.com/w3c/webcodecs) have been adopted for handling dynamic images and embedded videos.
 
 All of this is made possible with the support of the experimental Headless API provided by Chrome: [HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame).
 
@@ -29,6 +29,14 @@ All of this is made possible with the support of the experimental Headless API p
 - Supports parallel execution of multiple video rendering and composition tasks, making optimal use of system resources.
 - Offers GPU acceleration for rendering and composition, resulting in significant reductions in video rendering time.
 - Can be deployed and run on both Windows and Linux platforms.
+
+# Availability
+
+In theory, all web animation/graphics libraries should work smoothly in the WVC environment. Below is a list of libraries that I have verified to be compatible:
+
+[Anime.js](https://animejs.com/) / [GSAP](https://greensock.com/) / [D3.js](https://d3js.org/) / [Three.js](https://threejs.org/) / [Echart](https://echarts.apache.org/) / [Lottie-Web](http://airbnb.io/lottie/#/web) / [PixiJS](https://pixijs.download/release/docs/index.html) / [Animate.css](https://animate.style/) / [Mo.js](https://mojs.github.io/) / [Tween.js](https://tweenjs.github.io/tween.js/)
+
+It's worth noting that if you manually use [RAF](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame) to drive animations, make sure to receive the timestamp parameter from the callback to set the animation's progress to that time point. Otherwise, frame rate asynchrony may occur.
 
 # Interesting demo
 
