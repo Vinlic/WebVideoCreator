@@ -224,36 +224,36 @@ export default class Page extends EventEmitter {
         // 添加样式标签到页面
         styles && await this.#injectStyle(styles);
         await this.target.evaluate(async _timeout => {
-            // 获取样式表
-            const styleSheets = Array.from(document.styleSheets);
-            // 获取所有引入的字体集
-            const fontFamilys = [];
             try {
+                // 获取样式表
+                const styleSheets = Array.from(document.styleSheets);
+                // 获取所有引入的字体集
+                const fontFamilys = [];
                 styleSheets.forEach((styleSheet) => {
                     const rules = styleSheet.cssRules || styleSheet.rules;
                     if (!rules)
                         return;
                     Array.from(rules).map(rule => {
                         if (rule.constructor.name === "CSSFontFaceRule") {
-                            const fontFamily = rule.style.getPropertyValue('font-family');
-                            fontFamilys.push(fontFamily);
+                            const fontFamily = rule.style.getPropertyValue("font-family");
+                            fontFamilys.push(fontFamily.replace(/^("|')|("|')$/g, ""));
                         }
                     });
                 });
+                // 无字体则跳过加载
+                if (fontFamilys.length == 0)
+                    return;
+                // 等待字体加载完成
+                let timer;
+                await Promise.race([
+                    Promise.all(fontFamilys.map(family => new ____FontFaceObserver(family).load())),
+                    new Promise((_, reject) => timer = ____setTimeout(reject, _timeout))
+                ]);
+                ____clearTimeout(timer);
             }
             catch(err) {
                 console.warn(err.message);
             }
-            // 无字体则跳过加载
-            if (fontFamilys.length == 0)
-                return;
-            // 等待字体加载完成
-            let timer;
-            await Promise.race([
-                Promise.all(fontFamilys.map(family => new ____FontFaceObserver(family).load())),
-                new Promise((_, reject) => timer = ____setTimeout(reject, _timeout))
-            ]);
-            ____clearTimeout(timer);
         }, timeout);
     }
 
