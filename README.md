@@ -6,7 +6,7 @@
 
 # 简介
 
-WebVideoCreator（简称WVC）是一个基于 Node.js + Puppeteer + FFmpeg 创建视频的框架，它执行确定性的渲染，准确的以目标帧率捕获任何可在HTML5播放动画（CSS3动画/SVG动画/Lottie动画/GIF动画/APNG动画/WEBP动画）以及任何基于时间轴使用RAF驱动的动画（[anime.js](https://animejs.com/)是一个不错的选择 :D），当然您也可以调皮的使用setInterval或者setTimeout来控制动画，支持嵌入mp4和透明webm视频，还支持转场合成、音频合成与加载字体。
+WebVideoCreator（简称WVC）是一个基于 Node.js + Puppeteer + FFmpeg 创建视频的框架，它执行确定性的渲染，准确的以目标帧率捕获任何可在HTML5播放动画（CSS3动画/SVG动画/Lottie动画/GIF动画/APNG动画/WEBP动画）以及任何基于时间轴使用RAF驱动的动画（[anime.js](https://animejs.com/)是一个不错的选择 :D），当然您也可以调皮的使用setInterval或者setTimeout来控制动画，支持嵌入mp4和透明webm视频，还支持转场合成、音频合成与加载字体。让我们[快速开始](#快速开始)。
 
 WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以想象成是一个《楚门的世界》），它的主要职责是将一个`不确定性渲染的环境`转化到`确定性渲染的环境`。
 
@@ -30,7 +30,7 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
  - 支持使用GPU加速渲染和合成，可以显著的降低视频渲染耗时。
  - 支持在Windows和Linux平台部署运行。
 
-# 有趣的示例
+# 有趣的Demo
 
 正在生产...
 
@@ -114,7 +114,7 @@ await examples.singleVideo({
 
 ## 多幕合成示例
 
-<img style="width:550px" src="./assets/muti-video.gif" />
+<img style="width:550px" src="./assets/multi-video.gif" />
 
 调用示例代码来自：[examples/multi-video.js](./examples/multi-video.js)
 
@@ -150,6 +150,9 @@ await examples.multiVideo({
 });
 ```
 
+# 功能示例
+
+# API参考
 
 
 # 性能提示
