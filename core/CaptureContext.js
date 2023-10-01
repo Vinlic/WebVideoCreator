@@ -13,7 +13,7 @@ export default class CaptureContext {
     LOTTIE_SELECTOR = "lottie";
 
     /** @type {number} - 启动时间点（毫秒） */
-    startupTime = Math.floor(performance.now());
+    startTime = Date.now();
     /** @type {number} - 当前时间点（毫秒） */
     currentTime = 0;
     /** @type {number} - 当前帧指针 */
@@ -36,7 +36,10 @@ export default class CaptureContext {
     timeoutCallbacks = [];
     /** @type {number} - 计时器自增ID */
     timerId = 0;
+    /** @type {number} - 自增音频ID */
     audioId = 0;
+    /** @type {number} - 应用于Date对象的时间偏移HACK（处理mojs动画） */
+    timeOffset = 0;
     /** @type {Object} - 配置对象 */
     config = {
         /** @type {number} - 渲染帧率 */
@@ -122,6 +125,8 @@ export default class CaptureContext {
                 await Promise.all(mediaRenderPromises);
                 // 根据帧间隔推进当前时间
                 this.currentTime += this.frameInterval;
+                // 时间偏移HACK重置（处理mojs动画）
+                this.timeOffset = 0;
                 // 触发轮询回调列表
                 this._callIntervalCallbacks();
                 // 触发超时回调列表
@@ -361,19 +366,19 @@ export default class CaptureContext {
         };
         // 暂存Date对象
         window.____Date = Date;
-        // 重写Date构造函数
         const ctx = this;
-        window.Date = function(...args) {
+        // 重写Date构造函数
+        window.Date = function Date(...args) {
             if (new.target === undefined)
-                return new window.____Date(ctx.startupTime + ctx.currentTime).toString();
+                return new window.____Date(ctx.startTime + ctx.currentTime).toString();
             if (args.length === 0)
-                return new window.____Date(ctx.startupTime + ctx.currentTime);
+                return new window.____Date(ctx.startTime + ctx.currentTime);
             return new window.____Date(...args);
         }
         // 将挂载的函数
         Object.assign(window.Date, {
             prototype: window.____Date.prototype,
-            now: () => this.startupTime + this.currentTime,
+            now: () => Math.floor(this.startTime + this.currentTime) + (this.timeOffset += 0.01),
             parse: window.____Date.parse.bind(window.____Date),
             UTC: window.____Date.UTC.bind(window.____Date)
         });
