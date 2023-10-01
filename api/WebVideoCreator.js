@@ -1,4 +1,5 @@
 import assert from "assert";
+import ffmpeg from "fluent-ffmpeg";
 import _ from "lodash";
 
 import globalConfig from "../lib/global-config.js";
@@ -27,11 +28,13 @@ export default class WebVideoCreator {
             if (!_.isUndefined(config[key]))
                 globalConfig[key] = config[key];
         }
-        const { browserUseGPU, numBrowserMax, numBrowserMin, numPageMax, numPageMin, mp4Encoder } = globalConfig;
+        const { ffmpegExecutablePath, ffprobeExecutablePath, browserUseGPU, numBrowserMax, numBrowserMin, numPageMax, numPageMin, mp4Encoder } = globalConfig;
         if (!browserUseGPU)
             logger.warn("browserUseGPU is turn off, recommended to turn it on to improve rendering performance");
         if (Object.values(VIDEO_ENCODER.CPU).includes(mp4Encoder))
             logger.warn(`Recommended to use video hard coder to accelerate video synthesis, currently used is [${globalConfig.mp4Encoder}]`);
+        ffmpegExecutablePath && ffmpeg.setFfmpegPath(ffmpegExecutablePath);
+        ffprobeExecutablePath && ffmpeg.setFfprobePath(ffprobeExecutablePath);
         this.pool = new ResourcePool({
             numBrowserMin,
             numBrowserMax,
