@@ -30,6 +30,12 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
  - 支持使用GPU加速渲染和合成，可以显著的降低视频渲染耗时。
  - 支持在Windows和Linux平台部署运行。
 
+# 可用性
+
+理论上所有的Web动画/图形库都能够在WVC环境正常运行，以下仅列出我已验证可用的库：
+
+Anime.js / GSAP / D3.js / Three.js / Echart / Lottie-Web / Animate.css / PixiJS
+
 # 有趣的Demo
 
 正在生产...
