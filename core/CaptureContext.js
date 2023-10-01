@@ -219,7 +219,7 @@ export default class CaptureContext {
                 if (mutation.type === "childList") {
                     if (mutation.addedNodes.length > 0) {
                         for (const addedNode of mutation.addedNodes) {
-                            if(!addedNode.matches)
+                            if (!addedNode.matches)
                                 return;
                             if (addedNode.matches("canvas"))
                                 break;
@@ -362,12 +362,21 @@ export default class CaptureContext {
         // 暂存Date对象
         window.____Date = Date;
         // 重写Date构造函数
-        window.Date = (function (timestamp) {
-            return new window.____Date(timestamp || this.startupTime + this.currentTime)
-        }).bind(this);
-        // 重写Date.now函数
-        window.Date.now = () => this.startupTime + this.currentTime;
-        window.Date.prototype = {};
+        const ctx = this;
+        window.Date = function(...args) {
+            if (new.target === undefined)
+                return new window.____Date(ctx.startupTime + ctx.currentTime).toString();
+            if (args.length === 0)
+                return new window.____Date(ctx.startupTime + ctx.currentTime);
+            return new window.____Date(...args);
+        }
+        // 将挂载的函数
+        Object.assign(window.Date, {
+            prototype: window.____Date.prototype,
+            now: () => this.startupTime + this.currentTime,
+            parse: window.____Date.parse.bind(window.____Date),
+            UTC: window.____Date.UTC.bind(window.____Date)
+        });
         // 重写performance.now函数
         performance.now = () => Date.now();
     }
