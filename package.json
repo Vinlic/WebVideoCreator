@@ -31,7 +31,8 @@
     "puppeteer",
     "chrome",
     "chromium",
-    "ffmpeg"
+    "ffmpeg",
+    "html5"
   ],
   "bugs": "https://github.com/Vinlic/WebVideoCreator/issues",
   "dependencies": {
