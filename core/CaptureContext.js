@@ -383,7 +383,7 @@ export default class CaptureContext {
             UTC: window.____Date.UTC.bind(window.____Date)
         });
         // 重写performance.now函数
-        performance.now = () => Date.now();
+        performance.now = () => this.currentTime;
     }
 
     /**
