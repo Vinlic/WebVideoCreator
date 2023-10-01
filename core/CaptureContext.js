@@ -70,7 +70,7 @@ export default class CaptureContext {
         // 设置准备完毕标志为true
         this.readyFlag = true;
         // 如果存在准备前的启动则调用
-        if(this.readyCallback) {
+        if (this.readyCallback) {
             this.readyCallback();
             return true;
         }
@@ -82,7 +82,7 @@ export default class CaptureContext {
      */
     start() {
         // 如果在准备完毕前启动则延迟到准备完毕再启动
-        if(!this.readyFlag) {
+        if (!this.readyFlag) {
             this.readyCallback = this.start;
             return;
         }
@@ -365,6 +365,7 @@ export default class CaptureContext {
         }).bind(this);
         // 重写Date.now函数
         window.Date.now = () => this.startupTime + this.currentTime;
+        window.Date.prototype = {};
         // 重写performance.now函数
         performance.now = () => Date.now();
     }

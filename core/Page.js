@@ -26,6 +26,8 @@ import util from "../lib/util.js";
 
 // 默认用户UA
 const DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0";
+// 公共样式内容
+const COMMON_STYLE_CONTENT = fs.readFileSync(util.rootPathJoin("lib/common.css"), "utf-8");
 // MP4Box库脚本内容
 const MP4BOX_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/mp4box.js"), "utf-8");
 // Webfont库脚本内容
@@ -176,6 +178,8 @@ export default class Page extends EventEmitter {
         // 页面导航到URL
         await this.target.goto(url);
         await Promise.all([
+            // 注入公共样式
+            this.#injectStyle(COMMON_STYLE_CONTENT),
             // 注入MP4Box库
             this.#injectLibrary(MP4BOX_LIBRARY_SCRIPT_CONTENT + ";window.____MP4Box = MP4Box"),
             // 注入Lottie动画库
@@ -218,9 +222,7 @@ export default class Page extends EventEmitter {
         // 将所有字体声明拼接为样式
         const styles = this.fonts.reduce((style, font) => style + font.toFontFace(), "");
         // 添加样式标签到页面
-        styles && await this.target.addStyleTag({
-            content: styles
-        });
+        styles && await this.#injectStyle(styles);
         await this.target.evaluate(async _timeout => {
             // 获取样式表
             const styleSheets = Array.from(document.styleSheets);
@@ -256,9 +258,24 @@ export default class Page extends EventEmitter {
     }
 
     /**
+     * 注入样式
+     * 
+     * @param {string} content - 样式内容
+     */
+    async #injectStyle(content) {
+        assert(_.isString(content), "inject style content must be string");
+        await this.target.addStyleTag({
+            content
+        });
+    }
+
+    /**
      * 注入脚本库
+     * 
+     * @param {string} content - 脚本内容
      */
     async #injectLibrary(content) {
+        assert(_.isString(content), "inject script content must be string");
         await this.target.addScriptTag({
             content
         });
