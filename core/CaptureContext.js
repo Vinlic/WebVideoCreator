@@ -219,6 +219,8 @@ export default class CaptureContext {
                 if (mutation.type === "childList") {
                     if (mutation.addedNodes.length > 0) {
                         for (const addedNode of mutation.addedNodes) {
+                            if(!addedNode.matches)
+                                return;
                             if (addedNode.matches("canvas"))
                                 break;
                             else if (addedNode.matches(this.SVG_SELECTOR))
