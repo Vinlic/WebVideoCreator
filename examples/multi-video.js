@@ -2,10 +2,10 @@
  * 多幕视频合成示例
  * 
  * 调用代码：
- * import { examples, VIDEO_ENCODER } from "web-video-creator";
+ * import { examples, VIDEO_ENCODER, TRANSITION } from "web-video-creator";
  * await examples.multiVideo({
  *     chunks: [
- *         { url: "http://localhost:8080/scene1.html", duration: 10000 },
+ *         { url: "http://localhost:8080/scene1.html", duration: 10000, transition: TRANSITION.CIRCLE_CROP },
  *         { url: "http://localhost:8080/scene2.html", duration: 10000 }
  *     ],
  *     width: 1280,
