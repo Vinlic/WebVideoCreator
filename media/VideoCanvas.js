@@ -243,7 +243,9 @@ export default class VideoCanvas {
         // 如果元素被移除播放已结束或画布则跳过
         if (this.removed || (!this.loop && this.isEnd()))
             return;
+        console.log(`${frameIndex}/${this.decoder.decodeQueueSize}/${this.config.frameCount}`);
         const frame = await this._acquireFrame(frameIndex);
+        console.log(frameIndex);
         let maskFrame = null;
         if (this.maskBuffer)
             maskFrame = await this._acquireMaskFrame(frameIndex);
@@ -395,6 +397,7 @@ export default class VideoCanvas {
         let timer;
         await Promise.race([
             new Promise(resolve => {
+                this._clearUnclosedFrames();
                 this.waitFrameIndex = frameIndex;
                 this.waitFrameCallback = resolve;
             }),
@@ -416,6 +419,7 @@ export default class VideoCanvas {
         let timer;
         await Promise.race([
             new Promise(resolve => {
+                this._clearUnclosedFrames();
                 this.waitMaskFrameIndex = frameIndex;
                 this.waitMaskFrameCallback = resolve;
             }),
@@ -491,7 +495,7 @@ export default class VideoCanvas {
                         // 指示优先使用硬件加速解码
                         hardwareAcceleration: "prefer-hardware",
                         // 关闭延迟优化，让解码器批量处理解码，降低负载
-                        optimizeForLatency: false
+                        optimizeForLatency: true
                     });
                     resolve(config);
                 });
