@@ -4,6 +4,7 @@ import _ from "lodash";
 
 import ChunkSynthesizer from "../core/ChunkSynthesizer.js";
 import ChunkVideo from "./ChunkVideo.js";
+import Font from "../entity/Font.js";
 import logger from "../lib/logger.js";
 
 /**
@@ -11,6 +12,8 @@ import logger from "../lib/logger.js";
  */
 export default class MultiVideo extends ChunkSynthesizer {
 
+    /** @type {Font[]} - 注册的字体 */
+    fonts = [];
     /** @type {Function} - 页面获取函数 */
     #pageAcquireFn = null;
     /** @type {AsyncLock} - 异步锁 */
@@ -77,9 +80,33 @@ export default class MultiVideo extends ChunkSynthesizer {
     }
 
     /**
+     * 注册字体
+     * 
+     * @param {Font} font - 字体对象
+     */
+    registerFont(font) {
+        if (!(font instanceof Font))
+            font = new Font(font);
+        // 开始加载字体
+        font.load();
+        this.fonts.push(font);
+    }
+
+    /**
+     * 注册多个字体
+     * 
+     * @param {Font[]} fonts - 字体对象列表
+     */
+    registerFonts(fonts = []) {
+        fonts.forEach(font => this.registerFont(font));
+    }
+
+    /**
      * 合成处理
      */
     async #synthesize() {
+        if(this.fonts.length > 0)
+            this.chunks.forEach(chunk => chunk.registerFonts(this.fonts));
         return await new Promise((resolve, reject) => {
             this.once("error", reject);
             this.once("completed", resolve);

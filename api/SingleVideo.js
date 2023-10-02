@@ -3,6 +3,8 @@ import _ from "lodash";
 import AsyncLock from "async-lock";
 
 import Synthesizer from "../core/Synthesizer.js";
+import Page from "../core/Page.js";
+import Font from "../entity/Font.js";
 import logger from "../lib/logger.js";
 import util from "../lib/util.js";
 
@@ -15,6 +17,8 @@ export default class SingleVideo extends Synthesizer {
     url;
     /** @type {number} - 视频时长 */
     duration;
+    /** @type {Font[]} - 注册的字体列表 */
+    fonts = [];
     /** @type {boolean} - 是否自动启动渲染 */
     autostartRender;
     /** @type {boolean} - 是否输出页面控制台日志 */
@@ -85,6 +89,28 @@ export default class SingleVideo extends Synthesizer {
     }
 
     /**
+     * 注册字体
+     * 
+     * @param {Font} font - 字体对象
+     */
+    registerFont(font) {
+        if (!(font instanceof Font))
+            font = new Font(font);
+        // 开始加载字体
+        font.load();
+        this.fonts.push(font);
+    }
+
+    /**
+     * 注册多个字体
+     * 
+     * @param {Font[]} fonts - 字体对象列表
+     */
+    registerFonts(fonts = []) {
+        fonts.forEach(font => this.registerFont(font));
+    }
+
+    /**
      * 合成处理
      */
     async #synthesize() {
@@ -112,6 +138,9 @@ export default class SingleVideo extends Synthesizer {
             });
             // 跳转到您希望渲染的页面，您可以考虑创建一个本地的Web服务器提供页面以提升加载速度和安全性
             await page.goto(url);
+            // 注册字体
+            if(this.fonts.length > 0)
+                page.registerFonts(this.fonts);
             // 等待字体加载完成
             await page.waitForFontsLoaded();
             // 启动合成
