@@ -162,7 +162,7 @@ await examples.multiVideo({
 
 ## 插入音频
 
-只需在需要渲染的html中添加 `<audio>` 元素，你还可以设置循环，WVC会自动为视频合入循环音轨。
+只需在需要渲染的html中添加 `<audio>` 元素，您还可以设置循环，WVC会自动为视频合入循环音轨。
 
 ```html
 <audio src="bgm.mp3" loop/>
@@ -203,6 +203,58 @@ video.addAudio({
 ```
 
 这样的操作同样适用于 MultiVideo 和 ChunkVideo 。
+
+## 插入视频
+
+目前支持 `mp4` 和 `webm` 格式的视频，如果希望插入透明通道的视频请见：[透明通道视频](#透明通道视频)
+
+只需在需要渲染的html中添加 `<video>` 元素，您可以设置循环和静音，请务必为通过属性或样式设置元素宽高，因为在WVC中画布的大小是确定的，否则可能不可见。
+
+```html
+<video src="background.mp4" loop muted style="width: 1280px; height: 720px"/>
+```
+
+和音频一样，它也支持设置一些属性控制视频的行为，这些属性并不总是需要成对出现，你可以根据自己的需求定制。
+
+```html
+<!-- 控制视频在3秒后开始播放并在10秒处停止播放 -->
+<video src="test.mp4" startTime="3000" endTime="10000" style="width: 640px; height: 480px"/>
+<!-- 截取视频第5秒到第15秒的片段并循环播放它 -->
+<video src="test.mp4" seekStart="5000" seekEnd="15000" loop style="width: 640px; height: 480px"/>
+<!-- 控制视频的音频在300毫秒淡入且500毫秒淡出 -->
+<video src="test.mp4" fadeInDuration="300" fadeOutDuration="500" style="width: 640px; height: 480px"/>
+```
+
+在代码中添加和移除 `<video>` 元素来实现音频出入场也是被允许的，WVC将检测到它们。
+
+```javascript
+const audio = document.createElement("video");
+video.src = "test.mp4";
+video.width = 640;
+video.height = 480;
+// 视频在第5秒入场
+setTimeout(() => document.body.appendChild(video), 5000);
+// 视频在第10秒出场
+setTimeout(() => video.remove(), 10000);
+```
+
+### 透明通道视频
+
+透明视频非常适合用于将vtuber数字人合成到视频画面中，结合精美的动画可以获得非常好的观看体验。
+
+透明通道视频格式需为 `webm` ，它会被重新编码为两个mp4容器的视频，分别是原色底视频和蒙版视频后在浏览器canvas中使用进行 `globalCompositeOperation` 进行图像混合。如果您拥有原始mp4视频+蒙版mp4视频也可以直接提供进行合成。
+
+同样的，只需在需要渲染的html中添加 `<video>` 元素，并设置webm格式视频。
+
+```html
+<video src="vtuber.webm" style="width: 480px; height: 640px"/>
+```
+
+webm编解码通常比较耗时，如果您可以直接获得原始mp4视频和蒙版mp4视频是更好的方案，只需增加设置maskSrc即可。
+
+```html
+<video src="vtuber.mp4" maskSrc="vtuber_mask.mp4" style="width: 480px; height: 640px"/>
+```
 
 ## 应用字体
 
