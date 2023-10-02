@@ -243,9 +243,9 @@ export default class VideoCanvas {
         // 如果元素被移除播放已结束或画布则跳过
         if (this.removed || (!this.loop && this.isEnd()))
             return;
-        console.log(`${frameIndex}/${this.decoder.decodeQueueSize}/${this.config.frameCount}`);
+        // console.log(`${frameIndex}/${this.decoder.decodeQueueSize}/${this.config.frameCount}`);
         const frame = await this._acquireFrame(frameIndex);
-        console.log(frameIndex);
+        // console.log(frameIndex);
         let maskFrame = null;
         if (this.maskBuffer)
             maskFrame = await this._acquireMaskFrame(frameIndex);
@@ -331,13 +331,13 @@ export default class VideoCanvas {
      */
     async _fetchData() {
         if (!this.buffer) {
-            console.time();
+            // console.time();
             const response = await captureCtx.fetch("/api/video_preprocess", {
                 method: "POST",
                 body: JSON.stringify(this._exportConfig()),
                 retryFetchs: 0
             });
-            console.timeEnd();
+            // console.timeEnd();
             if (!response)
                 return null;
             const {
