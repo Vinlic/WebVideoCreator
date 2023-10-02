@@ -571,7 +571,7 @@ export default class CaptureContext {
         // 复制目标元素样式
         this._copyElementStyle(e, canvas);
         // 代理目标元素所有属性和行为
-        this._buildElementProxy(e, canvas)
+        this._buildElementProxy(e, canvas);
         // 将目标元素替换为画布
         e.replaceWith(canvas);
         // 将对象加入媒体调度列表
@@ -779,6 +779,7 @@ export default class CaptureContext {
             play: { get: () => () => { } },
             pause: { get: () => () => { } }
         });
+        source.remove = () => target.remove();
     }
 
     /**
