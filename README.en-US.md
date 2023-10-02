@@ -172,7 +172,7 @@ Performance is typically influenced by the complexity of animations and media. Y
 - CPU clock speed has a significant impact on baseline speed. Consumer-grade CPUs often have high clock speeds, which can provide better performance.
 - It is recommended to use GPU acceleration for rendering and composition. If your device has a GPU but it's not being utilized, check the configuration settings or report the issue.
 - Using an SSD (Solid State Drive) can improve hard disk cache write performance during parallel rendering, reducing rendering time.
-- Choosing the right video hardware encoder is essential. The default is software encoding (libx264 for mp4 and vp8 for webm). If you have integrated or dedicated graphics device, remember to configure them to use the supported hardware encoders.
+- Choosing the right video hardware encoder is essential. The default is software encoding (libx264 for mp4 and libvpx for webm). If you have integrated or dedicated graphics device, remember to configure them to use the supported hardware encoders.
 - Some delays may result from network file transfers. It's advisable to deploy the static file server on the same server or access the file server from a local network.
 
 ---
