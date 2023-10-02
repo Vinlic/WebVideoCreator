@@ -178,18 +178,18 @@ video.start();
 只需在需要渲染的html中添加 `<audio>` 元素，您还可以设置循环，WVC会自动为视频合入循环音轨。
 
 ```html
-<audio src="bgm.mp3" loop/>
+<audio src="bgm.mp3" loop></audio>
 ```
 
 还可以设置一些其它属性控制音频的行为，这些属性并不总是需要成对出现，您可以根据自己的需求定制。
 
 ```html
 <!-- 控制音频在3秒后开始播放并在10秒处停止播放 -->
-<audio src="bgm.mp3" startTime="3000" endTime="10000"/>
+<audio src="bgm.mp3" startTime="3000" endTime="10000"></audio>
 <!-- 截取音频第5秒到第15秒的片段并循环播放它 -->
-<audio src="bgm.mp3" seekStart="5000" seekEnd="15000" loop/>
+<audio src="bgm.mp3" seekStart="5000" seekEnd="15000" loop></audio>
 <!-- 控制音频300毫秒淡入且500毫秒淡出 -->
-<audio src="bgm.mp3" fadeInDuration="300" fadeOutDuration="500"/>
+<audio src="bgm.mp3" fadeInDuration="300" fadeOutDuration="500"></audio>
 ```
 
 在代码中添加和移除 `<audio>` 元素来实现音频出入场也是被允许的，WVC将检测到它们。
@@ -225,7 +225,7 @@ video.addAudios([...]);
 目前支持 `mp4` 和 `webm` 格式的视频，只需在需要渲染的html中添加 `<video>` 元素，您可以设置循环和静音，请务必为通过属性或样式设置元素宽高，因为在WVC中画布的大小是确定的，否则可能不可见。
 
 ```html
-<video src="background.mp4" loop muted style="width: 1280px; height: 720px"/>
+<video src="background.mp4" loop muted style="width: 1280px; height: 720px"></video>
 ```
 
 如果希望插入透明通道的视频请见：[透明通道视频](#透明通道视频)，如果您对视频帧率同步或透明视频绘制感兴趣可以参考：[技术实现](#技术实现)。
@@ -234,11 +234,11 @@ video.addAudios([...]);
 
 ```html
 <!-- 控制视频在3秒后开始播放并在10秒处停止播放 -->
-<video src="test.mp4" startTime="3000" endTime="10000" style="width: 640px; height: 480px"/>
+<video src="test.mp4" startTime="3000" endTime="10000" style="width: 640px; height: 480px"></video>
 <!-- 截取视频第5秒到第15秒的片段并循环播放它 -->
-<video src="test.mp4" seekStart="5000" seekEnd="15000" loop style="width: 640px; height: 480px"/>
+<video src="test.mp4" seekStart="5000" seekEnd="15000" loop style="width: 640px; height: 480px"></video>
 <!-- 控制视频的音频在300毫秒淡入且500毫秒淡出 -->
-<video src="test.mp4" fadeInDuration="300" fadeOutDuration="500" style="width: 640px; height: 480px"/>
+<video src="test.mp4" fadeInDuration="300" fadeOutDuration="500" style="width: 640px; height: 480px"></video>
 ```
 
 在代码中添加和移除 `<video>` 元素来实现视频出入场也是被允许的，WVC将检测到它们。
@@ -263,13 +263,13 @@ setTimeout(() => video.remove(), 8000);
 对于使用者是无感的，像下面代码演示中那样，只需需要渲染的html中添加 `<video>` 元素，并设置src为webm格式视频地址即可。
 
 ```html
-<video src="vtuber.webm" style="width: 480px; height: 640px"/>
+<video src="vtuber.webm" style="width: 480px; height: 640px"></video>
 ```
 
 webm编解码通常比较耗时，如果您可以直接获得原始mp4视频和蒙版mp4视频是更好的方案，只需增加设置maskSrc即可。
 
 ```html
-<video src="vtuber.mp4" maskSrc="vtuber_mask.mp4" style="width: 480px; height: 640px"/>
+<video src="vtuber.mp4" maskSrc="vtuber_mask.mp4" style="width: 480px; height: 640px"></video>
 ```
 
 ## 插入动态图像
@@ -291,7 +291,7 @@ WVC已经内置 [lottie-web](http://airbnb.io/lottie/#/web) 动画库，如果�
 只需要插入一个 `<lottie>` 元素并设置src即可。
 
 ```html
-<lottie src="example.json"/>
+<lottie src="example.json"></lottie>
 ```
 
 ## 应用字体
@@ -352,6 +352,8 @@ const video = wvc.createSingleVideo({
 # 分布式渲染方案
 
 如果您有多台设备可以为这些设备部署WVC，它提供了 `MultiVideo` 和 `ChunkVideo`，您可以将动画页面分为很多个分段，如0-10秒、10-20秒...，将它们的参数分发到不同设备的WVC上，在这些设备上创建ChunkVideo实例并执行并行渲染为多个视频 `ts` 分段，将他们回传到核心节点上，并最终输入MultiVideo进行合并以及转场、音轨合成输出。**这个分发以及回传流程WVC还未实现，但它并不难，您可以根据自己的场景进行封装并欢迎为WVC贡献[PR](https://github.com/Vinlic/WebVideoCreator/pulls)！**
+
+<br>
 
 # API参考
 
