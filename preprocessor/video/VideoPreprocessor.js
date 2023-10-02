@@ -2,6 +2,7 @@ import assert from "assert";
 import _ from "lodash";
 
 import Preprocessor from "../base/Preprocessor.js";
+import VideoDownloadTask from "./VideoDownloadTask.js";
 import VideoProcessTask from "./VideoProcessTask.js";
 import VideoConfig from "./VideoConfig.js";
 import { VIDEO_ENCODER, VIDEO_ENCODER_MAP } from "../../lib/const.js";
@@ -38,6 +39,18 @@ export default class VideoPreprocessor extends Preprocessor {
     async process(config) {
         assert(config instanceof VideoConfig, "process config must be VideoConfig");
         return await super.process(config);
+    }
+
+    /**
+     * 创建视频下载任务
+     * 
+     * @param {Object} options - 下载任务选项
+     * @returns {VideoDownloadTask} - 下载任务对象
+     */
+    createDownloadTask(options) {
+        const task = new VideoDownloadTask(options);
+        this.addDownloadTask(task);
+        return task;
     }
 
     /**

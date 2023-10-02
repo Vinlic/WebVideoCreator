@@ -7,6 +7,8 @@ export default class VideoConfig {
 
     /** @type {string} - 视频URL */
     url;
+    /** @type {string} - 蒙版视频URL */
+    maskUrl;
     /** @type {number} - 开始播放时间点（毫秒） */
     startTime;
     /** @type {number} - 结束播放时间（毫秒） */
@@ -39,6 +41,7 @@ export default class VideoConfig {
      * @param {string} options.url - 视频URL
      * @param {number} options.startTime - 开始播放时间点（毫秒）
      * @param {number} options.endTime - 结束播放时间点（毫秒）
+     * @param {string} [options.maskUrl] - 蒙版视频URL
      * @param {string} [options.format] - 视频格式（mp4/webm）
      * @param {number} [options.audioId] - 内部音频ID
      * @param {number} [options.seekStart] - 裁剪开始时间点（毫秒）
@@ -53,10 +56,11 @@ export default class VideoConfig {
      */
     constructor(options) {
         assert(_.isObject(options), "VideoConfig options must be Object");
-        const { url, format, startTime, endTime, audioId, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
+        const { url, maskUrl, format, startTime, endTime, audioId, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
         assert(util.isURL(url), "url is invalid");
         assert(_.isFinite(startTime), "startTime must be number");
         assert(_.isFinite(endTime), "endTime must be number");
+        assert(_.isUndefined(maskUrl) || util.isURL(maskUrl), "maskUrl is invalid");
         assert(_.isUndefined(format) || _.isString(format), "format mudt be string");
         assert(_.isUndefined(audioId) || _.isFinite(audioId), "audioId must be number");
         assert(_.isUndefined(seekStart) || _.isFinite(seekStart), "seekStart must be number");
@@ -67,6 +71,7 @@ export default class VideoConfig {
         assert(_.isUndefined(loop) || _.isBoolean(loop), "loop must be number");
         assert(_.isUndefined(muted) || _.isBoolean(muted), "muted must be number");
         this.url = url;
+        this.maskUrl = maskUrl;
         this.format = _.defaultTo(format, util.getURLExtname(this.url));
         this.startTime = startTime;
         this.endTime = endTime;

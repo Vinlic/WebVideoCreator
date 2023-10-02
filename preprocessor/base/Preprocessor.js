@@ -56,12 +56,12 @@ export default class Preprocessor {
      */
     async process(options) {
         const downloadTask = this.createDownloadTask(options);
-        const filePath = await new Promise((resolve, reject) => {
+        const downloadResult = await new Promise((resolve, reject) => {
             downloadTask
                 .once("completed", resolve)
                 .once("error", reject);
         });
-        const processTask = this.createProcessTask({ filePath, ...options });
+        const processTask = this.createProcessTask({ ...downloadResult, ...options });
         const result = await new Promise((resolve, reject) => {
             processTask
                 .once("completed", resolve)
@@ -74,6 +74,7 @@ export default class Preprocessor {
      * 创建下载任务
      * 
      * @param {Object} options - 下载任务选项
+     * @returns {DownloadTask} - 下载任务对象
      */
     createDownloadTask(options) {
         const task = new DownloadTask(options);
@@ -83,6 +84,8 @@ export default class Preprocessor {
 
     /**
      * 添加处理任务
+     * 
+     * @param {Task} task - 任务对象
      */
     addDownloadTask(task) {
         assert(task instanceof DownloadTask, "task must be DownloadTask instance");
@@ -98,6 +101,7 @@ export default class Preprocessor {
      * 创建处理任务
      * 
      * @param {Object} options - 处理任务选项
+     * @returns {ProcessTask} - 处理任务对象
      */
     createProcessTask(options) {
         const task = new ProcessTask(options);
@@ -107,6 +111,8 @@ export default class Preprocessor {
 
     /**
      * 添加处理任务
+     * 
+     * @param {Task} task - 任务对象
      */
     addProcessTask(task) {
         assert(task instanceof ProcessTask, "task must be ProcessTask instace");

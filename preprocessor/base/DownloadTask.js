@@ -36,19 +36,23 @@ export default class DownloadTask extends Task {
     /**
      * 启动任务
      */
-    start() {
+    start(multiDownload = false) {
         super.start();
-        this.#downloadFile(this.url)
-            .then(result => this._emitCompleted(result))
-            .catch(err => this._emitError(err));
+        if (!multiDownload) {
+            this._downloadFile(this.url)
+                .then(filePath => this._emitCompleted({ filePath }))
+                .catch(err => this._emitError(err));
+        }
     }
 
     /**
      * 下载文件
      *
+     * @protected
      * @param {string} url 资源URL
+     * @param {string[]|RegExp[]} [mimesLimit] - MIME类型限制列表
      */
-    async #downloadFile(url) {
+    async _downloadFile(url, mimesLimit) {
         const filePath = path.join(this.tmpDirPath, util.urlToPath(url));
         await downloadLock.acquire(util.crc32(url), async () => {
             if (!this.ignoreCache && await fs.pathExists(filePath)) return filePath;
@@ -56,10 +60,7 @@ export default class DownloadTask extends Task {
             const writeStream = fs.createWriteStream(`${filePath}.tmp`);
             await util.download(url, writeStream, {
                 onProgress: v => this._updateProgress(v),
-                mimesLimit: [
-                    /^video\//,
-                    /^application\/octet-stream/
-                ]
+                mimesLimit
             });
             await fs.move(`${filePath}.tmp`, filePath);
         });

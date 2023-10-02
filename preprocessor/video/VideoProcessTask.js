@@ -70,12 +70,13 @@ export default class VideoProcessTask extends ProcessTask {
      */
     constructor(options) {
         super(options);
-        const { filePath, format, startTime, endTime, audioId, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, videoEncoder } = options;
+        const { filePath, maskFilePath, format, startTime, endTime, audioId, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, videoEncoder } = options;
         assert(_.isString(filePath), "filePath must be string");
         assert(_.isString(format) && ["mp4", "webm"].includes(format), "format must be string");
         assert(_.isFinite(startTime), "startTime must be number");
         assert(_.isFinite(endTime), "endTime must be number");
         assert(_.isFinite(audioId), "audioId must be number");
+        assert(_.isUndefined(maskFilePath) || _.isString(maskFilePath), "maskFilePath must be string");
         assert(_.isUndefined(seekStart) || _.isFinite(seekStart), "seekStart must be number");
         assert(_.isUndefined(seekEnd) || _.isFinite(seekEnd), "seekEnd must be number");
         assert(_.isUndefined(fadeInDuration) || _.isFinite(fadeInDuration), "fadeInDuration must be number");
@@ -85,6 +86,7 @@ export default class VideoProcessTask extends ProcessTask {
         assert(_.isUndefined(muted) || _.isBoolean(muted), "muted must be number");
         assert(_.isUndefined(videoEncoder) || _.isString(videoEncoder), "videoEncoder must be string");
         this.filePath = filePath;
+        this.maskFilePath = maskFilePath;
         this.format = format;
         this.startTime =startTime;
         this.endTime = endTime;

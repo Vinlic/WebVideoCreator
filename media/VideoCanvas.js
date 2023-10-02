@@ -11,6 +11,8 @@ export default class VideoCanvas {
 
     /** @type {string} - 视频URL */
     url;
+    /** @type {string} - 蒙版视频URL */
+    maskUrl;
     /** @type {string} - 视频格式 */
     format;
     /** @type {number} - 开始播放时间点（毫秒） */
@@ -90,6 +92,7 @@ export default class VideoCanvas {
      * @param {number} options.startTime - 开始播放时间点（毫秒）
      * @param {number} options.endTime - 结束播放时间点（毫秒）
      * @param {number} options.audioId = 内部音频ID
+     * @param {string} [options.maskUrl] - 蒙版视频URL
      * @param {string} [options.format] - 视频格式（mp4/webm）
      * @param {number} [options.seekStart=0] - 裁剪开始时间点（毫秒）
      * @param {number} [options.seekEnd] - 裁剪结束时间点（毫秒）
@@ -104,11 +107,12 @@ export default class VideoCanvas {
     constructor(options) {
         const u = ____util;
         u.assert(u.isObject(options), "VideoCanvas options must be Object");
-        const { url, startTime, endTime, audioId, format, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
+        const { url, maskUrl, startTime, endTime, audioId, format, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
         u.assert(u.isString(url), "url must be string");
         u.assert(u.isNumber(startTime), "startTime must be number");
         u.assert(u.isNumber(endTime), "endTime must be number");
         u.assert(u.isNumber(audioId), "audioId must be number");
+        u.assert(u.isUndefined(maskUrl) || u.isString(maskUrl), "maskUrl must be string");
         u.assert(u.isUndefined(format) || u.isString(format), "format must be string");
         u.assert(u.isUndefined(seekStart) || u.isNumber(seekStart), "seekStart must be number");
         u.assert(u.isUndefined(seekEnd) || u.isNumber(seekEnd), "seekEnd must be number");
@@ -120,6 +124,7 @@ export default class VideoCanvas {
         u.assert(u.isUndefined(retryFetchs) || u.isNumber(retryFetchs), "retryFetchs must be number");
         u.assert(u.isUndefined(ignoreCache) || u.isBoolean(ignoreCache), "ignoreCache must be boolean");
         this.url = url;
+        this.maskUrl = maskUrl;
         this.startTime = startTime;
         this.endTime = endTime;
         this.audioId = audioId;
@@ -238,7 +243,6 @@ export default class VideoCanvas {
         // 如果元素被移除播放已结束或画布则跳过
         if (this.removed || (!this.loop && this.isEnd()))
             return;
-        // console.log(`${frameIndex}/${this.decoder.decodeQueueSize}/${this.config.frameCount}`);
         const frame = await this._acquireFrame(frameIndex);
         let maskFrame = null;
         if (this.maskBuffer)
@@ -326,7 +330,7 @@ export default class VideoCanvas {
     async _fetchData() {
         if (!this.buffer) {
             console.time();
-            const response = await captureCtx.fetch("video_preprocess", {
+            const response = await captureCtx.fetch("/api/video_preprocess", {
                 method: "POST",
                 body: JSON.stringify(this._exportConfig()),
                 retryFetchs: 0
@@ -520,6 +524,7 @@ export default class VideoCanvas {
     _exportConfig() {
         return {
             url: this.url,
+            maskUrl: this.maskUrl,
             format: this.format,
             startTime: this.startTime,
             endTime: this.endTime,

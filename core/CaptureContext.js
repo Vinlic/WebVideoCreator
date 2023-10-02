@@ -531,6 +531,8 @@ export default class CaptureContext {
             audioId: this.audioId++,
             // 视频来源
             url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
+            // 蒙版视频来源
+            maskUrl: this._currentUrlJoin(e.getAttribute("maskSrc")) || undefined,
             // 视频格式
             format: e.getAttribute("format") || undefined,
             // 视频宽度
