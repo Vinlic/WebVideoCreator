@@ -20,6 +20,8 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
 
 这一切的前提由Chrome提供的无头实验API支持：[HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame)
 
+<br>
+
 # 特性
 
  - 基于Node.js开发，使用非常简单，易于扩展和开发。
@@ -30,7 +32,9 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
  - 支持使用GPU加速渲染和合成，可以显著的降低视频渲染耗时。
  - 支持在Windows和Linux平台部署运行。
 
-# 可用性
+<br>
+
+# 支持的动画库
 
 理论上所有的Web动画/图形库都能够在WVC环境正常运行，以下仅列出我已验证可用的库：
 
@@ -38,9 +42,13 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
 
 需要注意的是，如果您手动使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动动画，请确保从回调中接收timestamp参数设置动画的进度到该时间点，否则可能出现帧率不同步。
 
+<br>
+
 # 有趣的Demo
 
 正在生产...
+
+<br>
 
 # 快速开始
 
@@ -50,6 +58,76 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
 npm i web-video-creator
 ```
 如遇到ffmpeg-static下载失败，请先设置环境变量：`FFMPEG_BINARIES_URL=https://cdn.npmmirror.com/binaries/ffmpeg-static`
+
+## 运行示例
+
+目前WVC提供了两个简易的示例，分别演示单幕和多幕视频渲染合成。
+
+### 单幕合成示例
+
+<img style="width:550px" src="./assets/single-video.gif" />
+
+调用示例代码来自：[examples/single-video.js](./examples/single-video.js)
+
+```javascript
+import { examples, VIDEO_ENCODER } from "web-video-creator";
+
+await examples.singleVideo({
+    // 需要渲染的页面地址
+    url: "http://localhost:8080/test.html",
+    // 视频宽度
+    width: 1280,
+    // 视频高度
+    height: 720,
+    // 视频帧率
+    fps: 30,
+    // 视频时长
+    duration: 10000,
+    // 根据您的硬件设备选择适合的编码器，这里采用的是Nvidia显卡的h264_nvenc编码器
+    // 编码器选择可参考VIDEO_ENCODER内提供的选项注释
+    videoEncoder: VIDEO_ENCODER.NVIDIA.H264,
+    // 视频输出路径
+    outputPath: "./test.mp4"
+});
+```
+
+### 多幕合成示例
+
+<img style="width:550px" src="./assets/multi-video.gif" />
+
+调用示例代码来自：[examples/multi-video.js](./examples/multi-video.js)
+
+```javascript
+import { examples, VIDEO_ENCODER, TRANSITION } from "web-video-creator";
+
+await examples.multiVideo({
+    // 视频块列表
+    chunks: [
+        {
+            url: "http://localhost:8080/scene1.html",
+            duration: 10000,
+            // 与下一幕切换时使用圆形裁剪转场
+            transition: TRANSITION.CIRCLE_CROP
+        },
+        {
+            url: "http://localhost:8080/scene2.html",
+            duration: 10000
+        },
+        ...
+    ],
+    // 视频宽度
+    width: 1280,
+    // 视频高度
+    height: 720,
+    // 视频帧率
+    fps: 30,
+    // 根据您的硬件设备选择适合的编码器，这里采用的是Nvidia显卡的h264_nvenc编码器
+    // 编码器选择可参考VIDEO_ENCODER内提供的选项注释
+    videoEncoder: VIDEO_ENCODER.NVIDIA.H264,
+    // 视频输出路径
+    outputPath: "./test.mp4"
+});
+```
 
 ## 简单使用
 
@@ -92,76 +170,6 @@ video.once("completed", result => {
 video.start();
 ```
 
-## 单幕合成示例
-
-<img style="width:550px" src="./assets/single-video.gif" />
-
-调用示例代码来自：[examples/single-video.js](./examples/single-video.js)
-
-```javascript
-import { examples, VIDEO_ENCODER } from "web-video-creator";
-
-await examples.singleVideo({
-    // 需要渲染的页面地址
-    url: "http://localhost:8080/test.html",
-    // 视频宽度
-    width: 1280,
-    // 视频高度
-    height: 720,
-    // 视频帧率
-    fps: 30,
-    // 视频时长
-    duration: 10000,
-    // 根据您的硬件设备选择适合的编码器，这里采用的是Nvidia显卡的h264_nvenc编码器
-    // 编码器选择可参考VIDEO_ENCODER内提供的选项注释
-    videoEncoder: VIDEO_ENCODER.NVIDIA.H264,
-    // 视频输出路径
-    outputPath: "./test.mp4"
-});
-```
-
-## 多幕合成示例
-
-<img style="width:550px" src="./assets/multi-video.gif" />
-
-调用示例代码来自：[examples/multi-video.js](./examples/multi-video.js)
-
-```javascript
-import { examples, VIDEO_ENCODER, TRANSITION } from "web-video-creator";
-
-await examples.multiVideo({
-    // 视频块列表
-    chunks: [
-        {
-            url: "http://localhost:8080/scene1.html",
-            duration: 10000,
-            // 与下一幕切换时使用圆形裁剪转场
-            transition: TRANSITION.CIRCLE_CROP
-        },
-        {
-            url: "http://localhost:8080/scene2.html",
-            duration: 10000
-        },
-        ...
-    ],
-    // 视频宽度
-    width: 1280,
-    // 视频高度
-    height: 720,
-    // 视频帧率
-    fps: 30,
-    // 根据您的硬件设备选择适合的编码器，这里采用的是Nvidia显卡的h264_nvenc编码器
-    // 编码器选择可参考VIDEO_ENCODER内提供的选项注释
-    videoEncoder: VIDEO_ENCODER.NVIDIA.H264,
-    // 视频输出路径
-    outputPath: "./test.mp4"
-});
-```
-
-# 配置项
-
-## 兼容渲染模式
-
 # 功能示例
 
 ## 插入音频
@@ -188,29 +196,32 @@ await examples.multiVideo({
 ```javascript
 const audio = document.createElement("audio");
 audio.src = "bgm.mp3";
-// 音频在视频第5秒入场
-setTimeout(() => document.body.appendChild(audio), 5000);
-// 音频在视频第10秒出场
-setTimeout(() => audio.remove(), 10000);
+// 音频在视频第3秒入场
+setTimeout(() => document.body.appendChild(audio), 3000);
+// 音频在视频第8秒出场
+setTimeout(() => audio.remove(), 80000);
 ```
 
 许多时候您可能并不希望侵入修改html内容，可以使用 `addAudio` 将音频添加到视频中。
 
 ```javascript
 const video = wvc.createSingleVideo({ ... });
+// 添加单个音频
 video.addAudio({
     // url: "http://.../bgm.mp3"
     path: "bgm.mp3",
     startTime: 500,
     loop: true
 });
+// 添加多个音频
+video.addAudios([...]);
 ```
 
 这样的操作同样适用于 MultiVideo 和 ChunkVideo 。
 
 ## 插入视频
 
-目前支持 `mp4` 和 `webm` 格式的视频，如果希望插入透明通道的视频请见：[透明通道视频](#透明通道视频)
+目前支持 `mp4` 和 `webm` 格式的视频，如果希望插入透明通道的视频请见：[透明通道视频](#透明通道视频)，如果您对视频帧率同步或透明视频绘制感兴趣可以参考：[技术实现](#技术实现)
 
 只需在需要渲染的html中添加 `<video>` 元素，您可以设置循环和静音，请务必为通过属性或样式设置元素宽高，因为在WVC中画布的大小是确定的，否则可能不可见。
 
@@ -229,17 +240,17 @@ video.addAudio({
 <video src="test.mp4" fadeInDuration="300" fadeOutDuration="500" style="width: 640px; height: 480px"/>
 ```
 
-在代码中添加和移除 `<video>` 元素来实现音频出入场也是被允许的，WVC将检测到它们。
+在代码中添加和移除 `<video>` 元素来实现视频出入场也是被允许的，WVC将检测到它们。
 
 ```javascript
-const audio = document.createElement("video");
+const video = document.createElement("video");
 video.src = "test.mp4";
 video.width = 640;
 video.height = 480;
-// 视频在第5秒入场
-setTimeout(() => document.body.appendChild(video), 5000);
-// 视频在第10秒出场
-setTimeout(() => video.remove(), 10000);
+// 视频在第3秒入场
+setTimeout(() => document.body.appendChild(video), 3000);
+// 视频在第8秒出场
+setTimeout(() => video.remove(), 8000);
 ```
 
 ### 透明通道视频
@@ -260,6 +271,28 @@ webm编解码通常比较耗时，如果您可以直接获得原始mp4视频和�
 <video src="vtuber.mp4" maskSrc="vtuber_mask.mp4" style="width: 480px; height: 640px"/>
 ```
 
+## 插入动态图像
+
+动态图像指的是 `gif` / `apng` / `webp` 格式的序列帧动画，他们可以在浏览器中自然播放，帧率通常是不可控的，但WVC代理了它们的绘制，img元素被替换为canvas并通过ImageDecoder解码绘制每一帧，让序列帧动画按照虚拟时间同步绘制。
+
+以下这些动图都能够正常绘制，你也可以照常给他们设置样式。
+
+```html
+<img src="test.gif"/>
+<img src="test.apng"/>
+<img src="test.webp"/>
+```
+
+## 插入Lottie动画
+
+WVC已经内置 [lottie-web](http://airbnb.io/lottie/#/web) 动画库，如果您的页面有自己实现的lottie动效则可以忽略本内容，因为它们也能够正常工作。
+
+只需要插入一个 `<lottie>` 元素并设置src即可。
+
+```html
+<lottie src="example.json"/>
+```
+
 ## 应用字体
 
 WVC能够检测样式表中的 `@font-face` 声明并等待字体加载完成再开始渲染，您需要确保字体能够正常加载，否则可能无法启动渲染。
@@ -274,10 +307,36 @@ WVC能够检测样式表中的 `@font-face` 声明并等待字体加载完成再
 <p style='font-family: "FontTest"'>Hello World</p>
 ```
 
+或者，可以通过代码注册本地或远程的字体。
 
+```javascript
+const video = wvc.createSingleVideo({ ... });
+// 注册单个字体
+video.registerFont({
+    // url: "http://.../font.ttf"
+    path: "font.ttf",
+    family: "FontTest",
+    format: "truetype"
+});
+// 注册多个字体
+video.registerFonts([...]);
+```
+
+<br>
 
 # API参考
 
+## 高级别API
+
+大部分时候，建议使用高级别API，因为它足够的简单，但可能不够灵活。
+
+[API Reference High Level](./docs/api-reference-high-level.md)
+
+## 低级别API
+
+[API Reference Low Level](./docs/api-reference-low-level.md)
+
+<br>
 
 # 性能提示
 
@@ -316,8 +375,15 @@ RAM: 16GB（DDR4 2400MHz）
 
 ---
 
+<br>
+
 # 局限性
 
 - 受制于浏览器的[安全上下文限制](https://w3c.github.io/webappsec-secure-contexts/)，只能访问 localhost / 127.0.0.1 或者使用HTTPS协议且证书有效的域，从安全角度考虑建议使用本机静态服务器（live-server是一个不错的选择）。
 - 在Mac系统中使用无头实验API在会发生崩溃，需要改为兼容渲染模式才能运行，但兼容渲染模式存在诸多问题，不建议在Mac系统使用，详见[兼容渲染模式](#兼容渲染模式)
 - WebVideoCreator是纯ESM包，无法使用CommonJS风格引入，如果依然希望使用require引入，请参考：https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
+
+<br>
+
+# 技术实现
+正在编写中...
