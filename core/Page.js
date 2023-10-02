@@ -250,7 +250,7 @@ export default class Page extends EventEmitter {
                     Promise.all(fontFamilys.map(family => new ____FontFaceObserver(family).load())),
                     new Promise((_, reject) => timer = setTimeout(reject, _timeout))
                 ]);
-                ____clearTimeout(timer);
+                clearTimeout(timer);
             }
             catch (err) {
                 console.warn(err.message);
