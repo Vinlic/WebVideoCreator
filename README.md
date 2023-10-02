@@ -222,10 +222,10 @@ video.addAudios([...]);
 
 ## 插入视频
 
-目前支持 `mp4` 和 `webm` 格式的视频，只需在需要渲染的html中添加 `<video>` 元素，您可以设置循环和静音，请务必为通过属性或样式设置元素宽高，因为在WVC中画布的大小是确定的，否则可能不可见。
+目前支持 `mp4` 和 `webm` 格式的视频，只需在需要渲染的html中添加 `<video>` 元素，您可以设置循环和静音。
 
 ```html
-<video src="background.mp4" loop muted style="width: 1280px; height: 720px"></video>
+<video src="background.mp4" loop muted></video>
 ```
 
 如果希望插入透明通道的视频请见：[透明通道视频](#透明通道视频)，如果您对视频帧率同步或透明视频绘制感兴趣可以参考：[技术实现](#技术实现)。
@@ -234,11 +234,11 @@ video.addAudios([...]);
 
 ```html
 <!-- 控制视频在3秒后开始播放并在10秒处停止播放 -->
-<video src="test.mp4" startTime="3000" endTime="10000" style="width: 640px; height: 480px"></video>
+<video src="test.mp4" startTime="3000" endTime="10000"></video>
 <!-- 截取视频第5秒到第15秒的片段并循环播放它 -->
-<video src="test.mp4" seekStart="5000" seekEnd="15000" loop style="width: 640px; height: 480px"></video>
+<video src="test.mp4" seekStart="5000" seekEnd="15000" loop></video>
 <!-- 控制视频的音频在300毫秒淡入且500毫秒淡出 -->
-<video src="test.mp4" fadeInDuration="300" fadeOutDuration="500" style="width: 640px; height: 480px"></video>
+<video src="test.mp4" fadeInDuration="300" fadeOutDuration="500"></video>
 ```
 
 在代码中添加和移除 `<video>` 元素来实现视频出入场也是被允许的，WVC将检测到它们。
@@ -246,8 +246,6 @@ video.addAudios([...]);
 ```javascript
 const video = document.createElement("video");
 video.src = "test.mp4";
-video.width = 640;
-video.height = 480;
 // 视频在第3秒入场
 setTimeout(() => document.body.appendChild(video), 3000);
 // 视频在第8秒出场
@@ -263,13 +261,13 @@ setTimeout(() => video.remove(), 8000);
 对于使用者是无感的，像下面代码演示中那样，只需需要渲染的html中添加 `<video>` 元素，并设置src为webm格式视频地址即可。
 
 ```html
-<video src="vtuber.webm" style="width: 480px; height: 640px"></video>
+<video src="vtuber.webm"></video>
 ```
 
 webm编解码通常比较耗时，如果您可以直接获得原始mp4视频和蒙版mp4视频是更好的方案，只需增加设置maskSrc即可。
 
 ```html
-<video src="vtuber.mp4" maskSrc="vtuber_mask.mp4" style="width: 480px; height: 640px"></video>
+<video src="vtuber.mp4" maskSrc="vtuber_mask.mp4"></video>
 ```
 
 ## 插入动态图像

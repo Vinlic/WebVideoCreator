@@ -223,10 +223,10 @@ This operation also applies to MultiVideo and ChunkVideo.
 
 ## Inserting Video
 
-Currently, WVC supports `mp4` and `webm` video formats. To insert a video into your rendered HTML, include a `<video>` element with the desired video file. You can set attributes like `loop` and `muted`. Be sure to define the width and height through attributes or styles, as the canvas size in WVC is fixed, and otherwise, the video may not be visible.
+Currently, WVC supports `mp4` and `webm` video formats. To insert a video into your rendered HTML, include a `<video>` element with the desired video file. You can set attributes like `loop` and `muted`.
 
 ```html
-<video src="background.mp4" loop muted style="width: 1280px; height: 720px"></video
+<video src="background.mp4" loop muted></video
 ```
 
 If you wish to insert a video with a transparent channel, see: [Transparent Channel Videos](#transparent-channel-videos). If you are interested in video frame rate synchronization or transparent video rendering, you can refer to: [Technical Implementation](#technical-implementation).
@@ -235,11 +235,11 @@ Similar to audio, you can set various attributes to control the video's behavior
 
 ```html
 <!-- Start playing the video after 3 seconds and stop it at 10 seconds -->
-<video src="test.mp4" startTime="3000" endTime="10000" style="width: 640px; height: 480px"></video>
+<video src="test.mp4" startTime="3000" endTime="10000"></video>
 <!-- Loop a segment of the video from the 5th second to the 15th second -->
-<video src="test.mp4" seekStart="5000" seekEnd="15000" loop style="width: 640px; height: 480px"></video>
+<video src="test.mp4" seekStart="5000" seekEnd="15000" loop></video>
 <!-- Apply a 300ms fade-in and 500ms fade-out to the video -->
-<video src="test.mp4" fadeInDuration="300" fadeOutDuration="500" style="width: 640px; height: 480px"></video>
+<video src="test.mp4" fadeInDuration="300" fadeOutDuration="500"></video>
 ```
 
 You can dynamically add and remove `<video>` elements in your code to control video entering and exiting the scene. WVC will detect them.
@@ -247,8 +247,6 @@ You can dynamically add and remove `<video>` elements in your code to control vi
 ```javascript
 const video = document.createElement("video");
 video.src = "test.mp4";
-video.width = 640;
-video.height = 480;
 // Video enters the scene at 3 seconds
 setTimeout(() => document.body.appendChild(video), 3000);
 // Video exits the scene at 8 seconds
@@ -262,13 +260,13 @@ Transparent videos are great for compositing digital avatars (e.g., VTubers) int
 For users, it's seamless. You just need to include a `<video>` element in your HTML with the `src` set to the webm video file.
 
 ```html
-<video src="vtuber.webm" style="width: 480px; height: 640px"></video>
+<video src="vtuber.webm"></video>
 ```
 
 Webm encoding and decoding can be time-consuming. If you can obtain the original mp4 video and the mask mp4 video, it's a better solution. Just add the `maskSrc` attribute.
 
 ```html
-<video src="vtuber.mp4" maskSrc="vtuber_mask.mp4" style="width: 480px; height: 640px"></video>
+<video src="vtuber.mp4" maskSrc="vtuber_mask.mp4"></video>
 ```
 
 ## Inserting Animated Images
