@@ -179,18 +179,18 @@ video.start();
 To add audio to your rendered HTML, simply include an `<audio>` element with the desired audio file. You can also set attributes like `loop`, and WVC will automatically include the audio track for looping in the video.
 
 ```html
-<audio src="bgm.mp3" loop/>
+<audio src="bgm.mp3" loop></audio>
 ```
 
 You can also set various attributes to control the audio's behavior. These attributes do not always need to be paired, so you can customize them according to your needs.
 
 ```html
 <!-- Start playing the audio after 3 seconds and stop it at 10 seconds -->
-<audio src="bgm.mp3" startTime="3000" endTime="10000"/>
+<audio src="bgm.mp3" startTime="3000" endTime="10000"></audio>
 <!-- Loop a segment of the audio from the 5th second to the 15th second -->
-<audio src="bgm.mp3" seekStart="5000" seekEnd="15000" loop/>
+<audio src="bgm.mp3" seekStart="5000" seekEnd="15000" loop></audio>
 <!-- Apply a 300ms fade-in and 500ms fade-out to the audio -->
-<audio src="bgm.mp3" fadeInDuration="300" fadeOutDuration="500"/>
+<audio src="bgm.mp3" fadeInDuration="300" fadeOutDuration="500"></audio>
 ```
 
 You can also dynamically add and remove `<audio>` elements in your code to control audio entering and exiting the scene. WVC will detect them.
@@ -226,7 +226,7 @@ This operation also applies to MultiVideo and ChunkVideo.
 Currently, WVC supports `mp4` and `webm` video formats. To insert a video into your rendered HTML, include a `<video>` element with the desired video file. You can set attributes like `loop` and `muted`. Be sure to define the width and height through attributes or styles, as the canvas size in WVC is fixed, and otherwise, the video may not be visible.
 
 ```html
-<video src="background.mp4" loop muted style="width: 1280px; height: 720px"/>
+<video src="background.mp4" loop muted style="width: 1280px; height: 720px"></video
 ```
 
 If you wish to insert a video with a transparent channel, see: [Transparent Channel Videos](#transparent-channel-videos). If you are interested in video frame rate synchronization or transparent video rendering, you can refer to: [Technical Implementation](#technical-implementation).
@@ -235,11 +235,11 @@ Similar to audio, you can set various attributes to control the video's behavior
 
 ```html
 <!-- Start playing the video after 3 seconds and stop it at 10 seconds -->
-<video src="test.mp4" startTime="3000" endTime="10000" style="width: 640px; height: 480px"/>
+<video src="test.mp4" startTime="3000" endTime="10000" style="width: 640px; height: 480px"></video>
 <!-- Loop a segment of the video from the 5th second to the 15th second -->
-<video src="test.mp4" seekStart="5000" seekEnd="15000" loop style="width: 640px; height: 480px"/>
+<video src="test.mp4" seekStart="5000" seekEnd="15000" loop style="width: 640px; height: 480px"></video>
 <!-- Apply a 300ms fade-in and 500ms fade-out to the video -->
-<video src="test.mp4" fadeInDuration="300" fadeOutDuration="500" style="width: 640px; height: 480px"/>
+<video src="test.mp4" fadeInDuration="300" fadeOutDuration="500" style="width: 640px; height: 480px"></video>
 ```
 
 You can dynamically add and remove `<video>` elements in your code to control video entering and exiting the scene. WVC will detect them.
@@ -262,13 +262,13 @@ Transparent videos are great for compositing digital avatars (e.g., VTubers) int
 For users, it's seamless. You just need to include a `<video>` element in your HTML with the `src` set to the webm video file.
 
 ```html
-<video src="vtuber.webm" style="width: 480px; height: 640px"/>
+<video src="vtuber.webm" style="width: 480px; height: 640px"></video>
 ```
 
 Webm encoding and decoding can be time-consuming. If you can obtain the original mp4 video and the mask mp4 video, it's a better solution. Just add the `maskSrc` attribute.
 
 ```html
-<video src="vtuber.mp4" maskSrc="vtuber_mask.mp4" style="width: 480px; height: 640px"/>
+<video src="vtuber.mp4" maskSrc="vtuber_mask.mp4" style="width: 480px; height: 640px"></video>
 ```
 
 ## Inserting Animated Images
@@ -290,7 +290,7 @@ WVC comes with the built-in [lottie-web](http://airbnb.io/lottie/#/web) animatio
 Simply insert a `<lottie>` element and set the `src` attribute.
 
 ```html
-<lottie src="example.json"/>
+<lottie src="example.json"></lottie>
 ```
 
 ## Applying Fonts
