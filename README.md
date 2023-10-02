@@ -158,6 +158,10 @@ await examples.multiVideo({
 });
 ```
 
+# 配置项
+
+## 兼容渲染模式
+
 # 功能示例
 
 ## 插入音频
@@ -244,7 +248,7 @@ setTimeout(() => video.remove(), 10000);
 
 透明通道视频格式需为 `webm` ，它会被重新编码为两个mp4容器的视频，分别是原色底视频和蒙版视频后在浏览器canvas中使用进行 `globalCompositeOperation` 进行图像混合。如果您拥有原始mp4视频+蒙版mp4视频也可以直接提供进行合成。
 
-同样的，只需在需要渲染的html中添加 `<video>` 元素，并设置webm格式视频。
+同样的，只需在需要渲染的html中添加 `<video>` 元素，并设置src为webm格式视频地址。
 
 ```html
 <video src="vtuber.webm" style="width: 480px; height: 640px"/>
@@ -258,7 +262,17 @@ webm编解码通常比较耗时，如果您可以直接获得原始mp4视频和�
 
 ## 应用字体
 
+WVC能够检测样式表中的 `@font-face` 声明并等待字体加载完成再开始渲染，您需要确保字体能够正常加载，否则可能无法启动渲染。
 
+```html
+<style>
+    @font-face {
+        font-family: "FontTest";
+        src: url("font.ttf") format("truetype");
+    }
+</style>
+<p style='font-family: "FontTest"'>Hello World</p>
+```
 
 
 
@@ -305,5 +319,5 @@ RAM: 16GB（DDR4 2400MHz）
 # 局限性
 
 - 受制于浏览器的[安全上下文限制](https://w3c.github.io/webappsec-secure-contexts/)，只能访问 localhost / 127.0.0.1 或者使用HTTPS协议且证书有效的域，从安全角度考虑建议使用本机静态服务器（live-server是一个不错的选择）。
-- 暂时不支持在MAC系统中部署，因为无头实验API在那上面会发生崩溃。
+- 在Mac系统中使用无头实验API在会发生崩溃，需要改为兼容渲染模式才能运行，但兼容渲染模式存在诸多问题，不建议在Mac系统使用，详见[兼容渲染模式](#兼容渲染模式)
 - WebVideoCreator是纯ESM包，无法使用CommonJS风格引入，如果依然希望使用require引入，请参考：https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
