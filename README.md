@@ -6,7 +6,7 @@
 
 # 简介
 
-WebVideoCreator（简称WVC）是一个基于 Node.js + Puppeteer + FFmpeg 创建视频的框架，它执行确定性的渲染，准确的以目标帧率捕获任何可在HTML5播放动画（CSS3动画/SVG动画/Lottie动画/GIF动画/APNG动画/WEBP动画）以及任何基于时间轴使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动的动画（[anime.js](https://animejs.com/)是一个不错的选择 :D），当然您也可以调皮的使用setInterval或者setTimeout来控制动画，支持嵌入mp4和透明webm视频，还支持转场合成、音频合成与加载字体。让我们[快速开始](#快速开始)。
+WebVideoCreator（简称WVC）是一个基于 Node.js + Puppeteer + FFmpeg 创建视频的框架，它执行确定性的渲染，准确的以目标帧率捕获任何可在HTML5播放动画（CSS3动画/SVG动画/Lottie动画/GIF动画/APNG动画/WEBP动画）以及任何基于时间轴使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动的动画（[anime.js](https://animejs.com/)是一个不错的选择 :D），当然您也可以调皮的使用setInterval或者setTimeout来控制动画，支持嵌入mp4和透明webm视频，还支持转场合成、音频合成与字体等功能。让我们[快速开始](#快速开始)。
 
 WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以想象成是一个《楚门的世界》），它的主要职责是将一个 **不确定性渲染的环境** 转化到 **确定性渲染的环境**。
 
@@ -16,7 +16,7 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
 
 ### 确定性的渲染环境
 
-对于执行渲染的代码来说它是无感的，一切照常发生，只是时间流速不再不稳定，RAF返回的currentTime、setTimeout/setInterval回调的调用时机、Date、performance.now等，都是根据当前已渲染的进度决定的。除了接管时钟，对于动态图像和内嵌视频这类通常不由开发者控制的媒体，采用了一些实验性的 [WebCodecs API](https://github.com/w3c/webcodecs) 进行了接管。
+对于执行渲染的代码来说它是无感的，一切照常发生，只是时间流速变得可控，RAF返回的currentTime、setTimeout/setInterval回调的调用时机、Date、performance.now等，都是根据当前已渲染的进度决定的。除了接管时钟，对于动态图像和内嵌视频这类通常不由开发者控制的媒体，采用了一些实验性的 [WebCodecs API](https://github.com/w3c/webcodecs) 进行了接管。
 
 这一切的前提由Chrome提供的无头实验API支持：[HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame)
 
@@ -180,7 +180,7 @@ video.start();
 <audio src="bgm.mp3" loop/>
 ```
 
-还可以设置一些其它属性控制音频的行为，这些属性并不总是需要成对出现，你可以根据自己的需求定制。
+还可以设置一些其它属性控制音频的行为，这些属性并不总是需要成对出现，您可以根据自己的需求定制。
 
 ```html
 <!-- 控制音频在3秒后开始播放并在10秒处停止播放 -->
@@ -221,15 +221,15 @@ video.addAudios([...]);
 
 ## 插入视频
 
-目前支持 `mp4` 和 `webm` 格式的视频，如果希望插入透明通道的视频请见：[透明通道视频](#透明通道视频)，如果您对视频帧率同步或透明视频绘制感兴趣可以参考：[技术实现](#技术实现)
-
-只需在需要渲染的html中添加 `<video>` 元素，您可以设置循环和静音，请务必为通过属性或样式设置元素宽高，因为在WVC中画布的大小是确定的，否则可能不可见。
+目前支持 `mp4` 和 `webm` 格式的视频，只需在需要渲染的html中添加 `<video>` 元素，您可以设置循环和静音，请务必为通过属性或样式设置元素宽高，因为在WVC中画布的大小是确定的，否则可能不可见。
 
 ```html
 <video src="background.mp4" loop muted style="width: 1280px; height: 720px"/>
 ```
 
-和音频一样，它也支持设置一些属性控制视频的行为，这些属性并不总是需要成对出现，你可以根据自己的需求定制。
+如果希望插入透明通道的视频请见：[透明通道视频](#透明通道视频)，如果您对视频帧率同步或透明视频绘制感兴趣可以参考：[技术实现](#技术实现)。
+
+和音频一样，它也支持设置一些属性控制视频的行为，这些属性并不总是需要成对出现，您可以根据自己的需求定制。
 
 ```html
 <!-- 控制视频在3秒后开始播放并在10秒处停止播放 -->
@@ -257,9 +257,9 @@ setTimeout(() => video.remove(), 8000);
 
 透明视频非常适合用于将vtuber数字人合成到视频画面中，结合精美的动画可以获得非常好的观看体验。
 
-透明通道视频格式需为 `webm` ，它会被重新编码为两个mp4容器的视频，分别是原色底视频和蒙版视频后在浏览器canvas中使用进行 `globalCompositeOperation` 进行图像混合。如果您拥有原始mp4视频+蒙版mp4视频也可以直接提供进行合成。
+透明通道视频格式需为 `webm` ，在内部它会被重新编码为两个mp4容器的视频，分别是原色底视频和蒙版视频后在浏览器canvas中使用进行 `globalCompositeOperation` 进行图像混合并绘制。
 
-同样的，只需在需要渲染的html中添加 `<video>` 元素，并设置src为webm格式视频地址。
+对于使用者是无感的，像下面代码演示中那样，只需需要渲染的html中添加 `<video>` 元素，并设置src为webm格式视频地址即可。
 
 ```html
 <video src="vtuber.webm" style="width: 480px; height: 640px"/>
@@ -275,7 +275,7 @@ webm编解码通常比较耗时，如果您可以直接获得原始mp4视频和�
 
 动态图像指的是 `gif` / `apng` / `webp` 格式的序列帧动画，他们可以在浏览器中自然播放，帧率通常是不可控的，但WVC代理了它们的绘制，img元素被替换为canvas并通过ImageDecoder解码绘制每一帧，让序列帧动画按照虚拟时间同步绘制。
 
-以下这些动图都能够正常绘制，你也可以照常给他们设置样式。
+以下这些动图都能够正常绘制，您也可以照常给他们设置样式。
 
 ```html
 <img src="test.gif"/>
@@ -295,7 +295,7 @@ WVC已经内置 [lottie-web](http://airbnb.io/lottie/#/web) 动画库，如果�
 
 ## 应用字体
 
-WVC能够检测样式表中的 `@font-face` 声明并等待字体加载完成再开始渲染，您需要确保字体能够正常加载，否则可能无法启动渲染。
+WVC能够检测样式表中的 `@font-face` 声明并等待字体加载完成再开始渲染。
 
 ```html
 <style>
@@ -320,6 +320,30 @@ video.registerFont({
 });
 // 注册多个字体
 video.registerFonts([...]);
+```
+
+您需要确保字体能够正常加载，否则可能无法启动渲染。
+
+## 延迟启动渲染
+
+WVC默认页面导航完成后立即启动渲染，如果希望在渲染之前进行一些工作，可以在选项中禁用自动启动渲染，禁用后请记得在您的页面中调用 `captureCtx.start()`，否则将永远阻塞。
+
+```javascript
+const video = wvc.createSingleVideo({
+    url: "http://localhost:8080/test.html",
+    width: 1280,
+    height: 720,
+    duration: 10000,
+    // 禁用自动启动渲染
+    autostartRender: false
+});
+```
+页面代码中在您觉得合适的时机调用启动。
+```html
+<script>
+    // 5秒后启动渲染
+    setTimeout(() => captureCtx.start(), 5000);
+</script>
 ```
 
 <br>
@@ -352,6 +376,8 @@ video.registerFonts([...]);
 ---
 
 目前手上没有更好的测试设备，我将以我的个人主机的性能参数作为参考：
+
+系统：Windows10（在Linux系统中性能表现更好）
 
 CPU: AMD Ryzen 7 3700X（主频3.6-4.4GHz 8核16线程）
 
