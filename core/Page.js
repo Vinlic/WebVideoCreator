@@ -16,6 +16,7 @@ import MP4Demuxer from "../media/MP4Demuxer.js";
 import VideoConfig from "../preprocessor/video/VideoConfig.js";
 import Audio from "../entity/Audio.js";
 import Font from "../entity/Font.js";
+import globalConfig from "../lib/global-config.js";
 import logger from "../lib/logger.js";
 import innerUtil from "../lib/inner-util.js";
 import util from "../lib/util.js";
@@ -192,7 +193,7 @@ export default class Page extends EventEmitter {
      * 
      * @param {Font} font - 字体对象
      */
-    async registerFont(font) {
+    registerFont(font) {
         if (!(font instanceof Font))
             font = new Font(font);
         // 开始加载字体
@@ -205,7 +206,7 @@ export default class Page extends EventEmitter {
      * 
      * @param {Font[]} fonts - 字体对象列表
      */
-    async registerFonts(fonts = []) {
+    registerFonts(fonts = []) {
         fonts.forEach(font => this.registerFont(font));
     }
 
@@ -251,7 +252,7 @@ export default class Page extends EventEmitter {
                 ]);
                 ____clearTimeout(timer);
             }
-            catch(err) {
+            catch (err) {
                 console.warn(err.message);
             }
         }, timeout);
@@ -475,29 +476,39 @@ export default class Page extends EventEmitter {
      */
     async #captureFrame() {
         try {
-            let timer;
-            // 帧数据捕获
-            const frameData = await Promise.race([
-                this.#cdpSession.send("HeadlessExperimental.beginFrame", {
-                    screenshot: {
-                        // 帧图格式（jpg, png)
-                        format: this.frameFormat,
-                        // 帧图质量（0-100）
-                        quality: this.frameQuality
-                    }
-                }),
-                // 帧渲染超时
-                new Promise(resolve => timer = setTimeout(() => resolve(false), this.beginFrameTimeout))
-            ]);
-            clearTimeout(timer);
-            // 帧渲染超时处理
-            if (frameData === false) {
-                this.#setState(Page.STATE.UNAVAILABLED);
-                throw new Error("beginFrame wait timeout");
+            if (!globalConfig.compatibleRenderingMode) {
+                let timer;
+                // 帧数据捕获
+                const frameData = await Promise.race([
+                    this.#cdpSession.send("HeadlessExperimental.beginFrame", {
+                        screenshot: {
+                            // 帧图格式（jpg, png)
+                            format: this.frameFormat,
+                            // 帧图质量（0-100）
+                            quality: this.frameQuality
+                        }
+                    }),
+                    // 帧渲染超时处理
+                    new Promise(resolve => timer = setTimeout(() => resolve(false), this.beginFrameTimeout))
+                ]);
+                clearTimeout(timer);
+                // 帧渲染超时处理
+                if (frameData === false) {
+                    this.#setState(Page.STATE.UNAVAILABLED);
+                    throw new Error("beginFrame wait timeout");
+                }
+                if (!frameData) return true;
+                this.emit("frame", Buffer.from(frameData.screenshotData, "base64"));
             }
-            if (!frameData.screenshotData) return true;
-            // 帧数据回调
-            this.emit("frame", Buffer.from(frameData.screenshotData, "base64"));
+            else {
+                const screenshotData = await this.target.screenshot({
+                    type: "jpeg",
+                    quality: 80,
+                    optimizeForSpeed: true
+                });
+                // 帧数据回调
+                this.emit("frame", screenshotData);
+            }
             return true;
         }
         catch (err) {
@@ -576,10 +587,10 @@ export default class Page extends EventEmitter {
             const { pathname } = new URL(url);
             // console.log(pathname);
             // 视频预处理API
-            if (method == "POST" && pathname == "/video_preprocess") {
+            if (method == "POST" && pathname == "/api/video_preprocess") {
                 const data = _.attempt(() => JSON.parse(request.postData()));
                 if (_.isError(data))
-                    throw new Error("api /video_preprocess only accept JSON data");
+                    throw new Error("api /api/video_preprocess only accept JSON data");
                 const buffer = await this.#preprocessVideo(new VideoConfig(data));
                 await request.respond({
                     status: 200,
@@ -611,6 +622,7 @@ export default class Page extends EventEmitter {
                 await request.continue();
         })()
             .catch(err => {
+                logger.error(err);
                 // 发生错误响应500
                 request.respond({
                     status: 500,
