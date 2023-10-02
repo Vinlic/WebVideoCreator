@@ -335,11 +335,9 @@ export default class CaptureContext {
         // 暂存setTimeout函数
         window.____setTimeout = window.setTimeout;
         // 重写setTimeout函数
-        window.setTimeout = (fn, timeout) => {
+        window.setTimeout = (fn, timeout = 0) => {
             if (typeof fn !== "function")
                 throw new TypeError("setTimeout function must be Function");
-            if (isNaN(timeout))
-                throw new TypeError("setTimeout timeout must be number");
             this.timerId++;
             this.timeoutCallbacks.push([this.timerId, this.currentTime, timeout, fn]);
             return this.timerId;
