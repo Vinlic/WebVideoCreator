@@ -508,6 +508,12 @@ export default class VideoCanvas {
         demuxer.load(data);
         // 等待解码配置
         const config = await waitConfigPromise;
+        // 画布宽度为0时使用解码宽度初始化
+        if(this.canvas.width === 0)
+            this.canvas.width = config.codedWidth;
+        // 画布高度为0时使用解码高度初始化
+        if(this.canvas.height === 0)
+            this.canvas.height = config.codedHeight;
         // 检查视频解码器是否支持当前配置
         await VideoDecoder.isConfigSupported(config);
         if(decoder.state == "configured") {
