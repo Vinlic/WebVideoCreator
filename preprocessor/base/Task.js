@@ -1,3 +1,4 @@
+import path from "path";
 import assert from "assert";
 import uniqid from "uniqid";
 import EventEmitter from "eventemitter3";

@@ -142,8 +142,8 @@ export default class Synthesizer extends EventEmitter {
         assert(_.isFinite(width) && width % 2 === 0, "width must be even number");
         assert(_.isFinite(height) && height % 2 === 0, "height must be even number");
         assert(_.isFinite(duration), "synthesis duration must be number");
-        assert(_.isString(fps) || _.isFinite(fps), "synthesis fps must be number");
         assert(_.isString(outputPath) || this._isVideoChunk(), "outputPath must be string");
+        assert(_.isUndefined(fps) || _.isFinite(fps), "synthesis fps must be number");
         assert(_.isUndefined(format) || SUPPORT_FORMAT.includes(format), `format ${format} is not supported`);
         assert(_.isUndefined(attachCoverPath) || _.isString(attachCoverPath), "attachCoverPath must be string");
         assert(_.isUndefined(coverCapture) || _.isBoolean(coverCapture), "coverCapture must be boolean");

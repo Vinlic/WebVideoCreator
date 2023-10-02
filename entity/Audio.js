@@ -66,10 +66,10 @@ export default class Audio {
      */
     constructor(options) {
         assert(_.isObject(options), "addAudio options must be object");
-        const { id, path, url, startTime, endTime, loop, volume, seekStart, seekEnd,
+        const { id, path: _path, url, startTime, endTime, loop, volume, seekStart, seekEnd,
             fadeInDuration, fadeOutDuration, retryFetchs, ignoreCache } = options;
         assert(_.isUndefined(id) || _.isFinite(id), "Audio id must be number");
-        assert(_.isString(path) || _.isString(url), "Audio path or url must be string");
+        assert(_.isString(_path) || _.isString(url), "Audio path or url must be string");
         assert(_.isUndefined(startTime) || _.isFinite(startTime), "Audio startTime must be number");
         assert(_.isUndefined(endTime) || _.isFinite(endTime), "Audio endTime must be number");
         assert(_.isUndefined(loop) || _.isBoolean(loop), "Audio loop must be boolean");
@@ -81,7 +81,7 @@ export default class Audio {
         assert(_.isUndefined(retryFetchs) || _.isFinite(retryFetchs), "Audio retryFetchs must be number");
         assert(_.isUndefined(ignoreCache) || _.isBoolean(ignoreCache), "Audio fadeOutDuration must be boolean");
         this.id = id;
-        this.path = _.isString(path) ? path.resolve(path) : path;
+        this.path = _.isString(_path) ? path.resolve(_path) : _path;
         this.url = url;
         this.startTime = _.defaultTo(startTime, 0);
         this.endTime = endTime;
