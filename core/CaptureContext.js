@@ -360,7 +360,7 @@ export default class CaptureContext {
             if (this.stopFlag)
                 return;
             // 下一个事件循环再调用
-            window.____setTimeout(() => fn(this.currentTime), 0);
+            window.____requestAnimationFrame(() => fn(this.currentTime));
         };
         // 暂存Date对象
         window.____Date = Date;
