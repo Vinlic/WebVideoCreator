@@ -8,13 +8,13 @@
 
 WebVideoCreator（简称WVC）是一个基于 Node.js + Puppeteer + FFmpeg 创建视频的框架，它执行确定性的渲染，准确的以目标帧率捕获任何可在HTML5播放动画（CSS3动画/SVG动画/Lottie动画/GIF动画/APNG动画/WEBP动画）以及任何基于时间轴使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动的动画（[anime.js](https://animejs.com/)是一个不错的选择 :D），当然您也可以调皮的使用setInterval或者setTimeout来控制动画，支持嵌入mp4和透明webm视频，还支持转场合成、音频合成与加载字体。让我们[快速开始](#快速开始)。
 
-WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以想象成是一个《楚门的世界》），它的主要职责是将一个`不确定性渲染的环境`转化到`确定性渲染的环境`。
+WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以想象成是一个《楚门的世界》），它的主要职责是将一个 **不确定性渲染的环境** 转化到 **确定性渲染的环境**。
 
-## 不确定性的渲染环境
+### 不确定性的渲染环境
 
 在日常使用中，浏览器在执行动画渲染时并不是“实时同步”的，当系统负载较高时可能出现掉帧导致动画看上去不够平滑，并且为了提高性能浏览器通常会将部分解码/渲染任务交由其它线程处理，这导致动画间时间轴并不同步（video元素是一个典例:P）。这些对于视频渲染是不可靠的，视频的每一帧动画效果应该是确定性的。
 
-## 确定性的渲染环境
+### 确定性的渲染环境
 
 对于执行渲染的代码来说它是无感的，一切照常发生，只是时间流速不再不稳定，RAF返回的currentTime、setTimeout/setInterval回调的调用时机、Date、performance.now等，都是根据当前已渲染的进度决定的。除了接管时钟，对于动态图像和内嵌视频这类通常不由开发者控制的媒体，采用了一些实验性的 [WebCodecs API](https://github.com/w3c/webcodecs) 进行了接管。
 
@@ -159,6 +159,56 @@ await examples.multiVideo({
 ```
 
 # 功能示例
+
+## 插入音频
+
+只需在需要渲染的html中添加 `<audio>` 元素，你还可以设置循环，WVC会自动为视频合入循环音轨。
+
+```html
+<audio src="bgm.mp3" loop/>
+```
+
+还可以设置一些其它属性控制音频的行为，这些属性并不总是需要成对出现，你可以根据自己的需求定制。
+
+```html
+<!-- 控制音频在3秒后开始播放并在10秒处停止播放 -->
+<audio src="bgm.mp3" startTime="3000" endTime="10000"/>
+<!-- 截取音频第5秒到第15秒的片段并循环播放它 -->
+<audio src="bgm.mp3" seekStart="5000" seekEnd="15000" loop/>
+<!-- 控制音频300毫秒淡入且500毫秒淡出 -->
+<audio src="bgm.mp3" fadeInDuration="300" fadeOutDuration="500"/>
+```
+
+在代码中添加和移除 `<audio>` 元素来实现音频出入场也是被允许的，WVC将检测到它们。
+
+```javascript
+const audio = document.createElement("audio");
+audio.src = "bgm.mp3";
+// 音频在视频第5秒入场
+setTimeout(() => document.body.appendChild(audio), 5000);
+// 音频在视频第10秒出场
+setTimeout(() => audio.remove(), 10000);
+```
+
+许多时候您可能并不希望侵入修改html内容，可以使用 `addAudio` 将音频添加到视频中。
+
+```javascript
+const video = wvc.createSingleVideo({ ... });
+video.addAudio({
+    // url: "http://.../bgm.mp3"
+    path: "bgm.mp3",
+    startTime: 500,
+    loop: true
+});
+```
+
+这样的操作同样适用于 MultiVideo 和 ChunkVideo 。
+
+## 应用字体
+
+
+
+
 
 # API参考
 
