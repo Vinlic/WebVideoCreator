@@ -204,7 +204,7 @@ audio.src = "bgm.mp3";
 // 音频在视频第3秒入场
 setTimeout(() => document.body.appendChild(audio), 3000);
 // 音频在视频第8秒出场
-setTimeout(() => audio.remove(), 80000);
+setTimeout(() => audio.remove(), 8000);
 ```
 
 许多时候您可能并不希望侵入修改html内容，可以使用 `addAudio` 将音频添加到视频中。
@@ -344,8 +344,10 @@ const video = wvc.createSingleVideo({
 页面代码中，在您觉得合适的时机调用启动。
 ```html
 <script>
-    // 5秒后启动渲染
-    setTimeout(() => captureCtx.start(), 5000);
+    // 数据加载完成后启动渲染
+    loadData()
+        .then(() => captureCtx.start())
+        .catch(err => console.error(err));
 </script>
 ```
 

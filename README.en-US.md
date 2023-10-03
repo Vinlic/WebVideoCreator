@@ -207,7 +207,7 @@ audio.src = "bgm.mp3";
 // Audio enters the scene at 3 seconds
 setTimeout(() => document.body.appendChild(audio), 3000);
 // Audio exits the scene at 8 seconds
-setTimeout(() => audio.remove(), 80000);
+setTimeout(() => audio.remove(), 8000);
 ```
 
 In many cases, you may prefer not to modify the HTML content. In such cases, you can use `addAudio` to add audio to the video.
@@ -349,8 +349,10 @@ In your page code, call the start function when appropriate.
 
 ```html
 <script>
-    // Start rendering after 5 seconds
-    setTimeout(() => captureCtx.start(), 5000);
+    // 数据加载完成后启动渲染
+    loadData()
+        .then(() => captureCtx.start())
+        .catch(err => console.error(err));
 </script>
 ```
 
