@@ -60,6 +60,8 @@ export default class CaptureContext {
         this._consoleRewrite();
         // 元素行为重写
         this._elementRewrite();
+        // 时间虚拟化重写
+        this._timeVirtualizationRewrite();
     }
 
     /**
@@ -89,8 +91,6 @@ export default class CaptureContext {
         }
         // 检查配置
         this._checkConfig();
-        // 时间虚拟化重写
-        this._timeVirtualizationRewrite();
         // 插入捕获辅助元素
         this._insertCaptureHelper();
         // 转换元素为媒体元素
