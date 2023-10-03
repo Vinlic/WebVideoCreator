@@ -309,6 +309,8 @@ export default class Page extends EventEmitter {
             const { width, height, ..._options } = this.target.viewport() || {};
             if (width != this.width || height != this.height)
                 await this.setViewport({ width, height, ..._options });
+            // 将鼠标移动到屏幕中央
+            await this.target.mouse.move(width / 2, height / 2);
             // 开始CDP会话
             await this.#startCDPSession();
             // 设置CSS动画播放速度
