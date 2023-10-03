@@ -45,9 +45,13 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
 
 <br>
 
-# 有趣的Demo
+# 视频DEMO
 
-正在生产...
+我们还缺少动画设计师，不过还是从开放的平台中使用WVC捕获渲染了一些优秀的动画Demo。
+
+在这里查看所有DEMO：**[渲染示例页面](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)**
+
+<img src="assets/demo.gif"/>
 
 <br>
 

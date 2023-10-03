@@ -45,9 +45,15 @@ Please note that if you manually use [RAF](https://developer.mozilla.org/en-US/d
 
 <br>
 
-# Interesting demo
+# Video Demos
 
-...
+While we may be missing an animation designer, we've still managed to capture and render some excellent animation demos from open platforms using WVC.
+
+Please visit the **[Rendering Example Page](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)** for more details.
+
+<img src="assets/demo.gif"/>
+
+<br>
 
 # Quick Start
 
