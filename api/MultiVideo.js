@@ -81,7 +81,6 @@ export default class MultiVideo extends ChunkSynthesizer {
         _.isFinite(this.fps) && (chunk.fps = _.defaultTo(chunk.fps, this.fps));
         if (!(chunk instanceof ChunkVideo))
             chunk = new ChunkVideo(chunk);
-        
         super.input(chunk, transition);
         chunk.onPageAcquire(async () => await this.#acquirePage());
     }

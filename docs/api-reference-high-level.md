@@ -195,7 +195,7 @@
 
 添加多个音频
 
-### MultiVideo.input(chunk, [transtion])
+### MultiVideo.input(chunk, [[transtion](#transition)])
 
 输入分块视频，可以选择加入转场效果
 
@@ -250,3 +250,30 @@
 ### ChunkVideo.startAndWait(): Promise
 
 启动分块视频渲染合成并等待完成
+
+# Transition
+
+转场参数，目前使用的是 [Xfade](https://trac.ffmpeg.org/wiki/Xfade) 转场滤镜。
+
+<table width="100%">
+    <thead >
+        <tr>
+            <th>参数</th>
+            <th>类型</th>
+            <th>说明</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>id</td>
+            <td>string</td>
+            <td>转场ID（与滤镜名称一致）</td>
+        </tr>
+        <tr>
+            <td>duration</td>
+            <td>string</td>
+            <td>转场时长（毫秒）</td>
+        </tr>
+    </tbody>
+</table>
+

@@ -26,7 +26,7 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
 
  - 基于Node.js开发，使用非常简单，易于扩展和开发。
  - 视频处理速度非常快，最快5分钟视频可在1分钟内完成渲染。
- - 支持单幕和多幕视频渲染合成，多幕视频可应用转场效果。
+ - 支持单幕和多幕视频渲染合成，多幕视频可应用[转场效果](#插入转场效果)。
  - 支持分块视频合成，可以将分块分发到多个设备上渲染回传再合成为多幕视频，大幅降低长视频渲染耗时。
  - 支持并行多个视频渲染合成任务，充分利用系统资源。
  - API支持进行[分布式渲染](#分布式渲染方案)封装，只需对WVC进行一些封装即可将大量视频分块分发到多个设备渲染并最终取回合并输出
@@ -62,82 +62,15 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
 ```shell
 npm i web-video-creator
 ```
+
 如遇到ffmpeg-static下载失败，请先设置环境变量：`FFMPEG_BINARIES_URL=https://cdn.npmmirror.com/binaries/ffmpeg-static`
 
-## 运行示例
-
-目前WVC提供了两个简易的示例，分别演示单幕和多幕视频渲染合成。
-
-### 单幕合成示例
+## 渲染单幕视频
 
 <img style="width:550px" src="./assets/single-video.gif" />
 
-调用示例代码来自：[examples/single-video.js](./examples/single-video.js)
-
 ```javascript
-import { examples, VIDEO_ENCODER } from "web-video-creator";
-
-await examples.singleVideo({
-    // 需要渲染的页面地址
-    url: "http://localhost:8080/test.html",
-    // 视频宽度
-    width: 1280,
-    // 视频高度
-    height: 720,
-    // 视频帧率
-    fps: 30,
-    // 视频时长
-    duration: 10000,
-    // 根据您的硬件设备选择适合的编码器，这里采用的是Nvidia显卡的h264_nvenc编码器
-    // 编码器选择可参考VIDEO_ENCODER内提供的选项注释
-    videoEncoder: VIDEO_ENCODER.NVIDIA.H264,
-    // 视频输出路径
-    outputPath: "./test.mp4"
-});
-```
-
-### 多幕合成示例
-
-<img style="width:550px" src="./assets/multi-video.gif" />
-
-调用示例代码来自：[examples/multi-video.js](./examples/multi-video.js)
-
-```javascript
-import { examples, VIDEO_ENCODER, TRANSITION } from "web-video-creator";
-
-await examples.multiVideo({
-    // 视频块列表
-    chunks: [
-        {
-            url: "http://localhost:8080/scene1.html",
-            duration: 10000,
-            // 与下一幕切换时使用圆形裁剪转场
-            transition: TRANSITION.CIRCLE_CROP
-        },
-        {
-            url: "http://localhost:8080/scene2.html",
-            duration: 10000
-        },
-        ...
-    ],
-    // 视频宽度
-    width: 1280,
-    // 视频高度
-    height: 720,
-    // 视频帧率
-    fps: 30,
-    // 根据您的硬件设备选择适合的编码器，这里采用的是Nvidia显卡的h264_nvenc编码器
-    // 编码器选择可参考VIDEO_ENCODER内提供的选项注释
-    videoEncoder: VIDEO_ENCODER.NVIDIA.H264,
-    // 视频输出路径
-    outputPath: "./test.mp4"
-});
-```
-
-## 简单使用
-
-```javascript
-import WebVideoCreator, { VIDEO_ENCODER } from "web-video-creator";
+import WebVideoCreator, { VIDEO_ENCODER, logger } from "web-video-creator";
 
 const wvc = new WebVideoCreator();
 
@@ -168,14 +101,133 @@ const video = wvc.createSingleVideo({
 
 // 监听合成完成事件
 video.once("completed", result => {
-    console.log("Render Completed!!!", result);
+    logger.success(`Render Completed!!!\nvideo duration: ${Math.floor(result.duration / 1000)}s\ntakes: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
 });
 
 // 启动合成
 video.start();
 ```
 
-# 功能示例
+## 渲染多幕视频
+
+<img style="width:550px" src="./assets/multi-video.gif" />
+
+```javascript
+import WebVideoCreator, { VIDEO_ENCODER, TRANSITION, logger } from "web-video-creator";
+
+const wvc = new WebVideoCreator();
+
+// 配置WVC
+wvc.config({
+    // 根据您的硬件设备选择适合的编码器，这里采用的是Nvidia显卡的h264_nvenc编码器
+    // 编码器选择可参考VIDEO_ENCODER内提供的选项注释
+    mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
+});
+
+// 创建多幕视频
+const video = wvc.createMultiVideo({
+    // 视频宽度
+    width: 1280,
+    // 视频高度
+    height: 720,
+    // 视频帧率
+    fps: 30,
+    // 视频段参数
+    chunks: [
+        {
+            url: "http://localhost:8080/scene-1.html",
+            duration: 10000,
+            // 在第一和第二幕之间插入转场
+            transition: TRANSITION.CIRCLE_CROP
+        },
+        {
+            url: "http://localhost:8080/scene-2.html",
+            duration: 10000
+        }
+    ],
+    // 视频输出路径
+    outputPath: "./test.mp4",
+    // 是否在cli显示进度条
+    showProgress: true
+});
+
+// 监听合成完成事件
+video.once("completed", result => {
+    logger.success(`Render Completed!!!\nvideo duration: ${Math.floor(result.duration / 1000)}s\ntakes: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
+});
+
+// 启动合成
+video.start();
+```
+
+## 渲染分块视频合并为多幕视频
+
+<img style="width:550px" src="./assets/chunk-video.gif" />
+
+```javascript
+import WebVideoCreator, { VIDEO_ENCODER, TRANSITION, logger } from "web-video-creator";
+
+const wvc = new WebVideoCreator();
+
+// 配置WVC
+wvc.config({
+    // 根据您的硬件设备选择适合的编码器，这里采用的是Nvidia显卡的h264_nvenc编码器
+    // 编码器选择可参考VIDEO_ENCODER内提供的选项注释
+    mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
+});
+
+// 创建分块视频1
+const chunk1 = wvc.createChunkVideo({
+    url: "http://localhost:8080/scene-1.html",
+    width: 1280,
+    height: 720,
+    fps: 30,
+    duration: 10000,
+    showProgress: true
+});
+
+// 创建分块视频2
+const chunk2 = wvc.createChunkVideo({
+    url: "http://localhost:8080/scene-2.html",
+    width: 1280,
+    height: 720,
+    fps: 30,
+    duration: 10000,
+    showProgress: true
+});
+
+// 等待分块们渲染完成
+await Promise.all([chunk1.startAndWait(), chunk2.startAndWait()]);
+
+// 设置chunk1和chunk2之间的转场效果为淡入淡出
+chunk1.setTransition({ id: TRANSITION.FADE, duration: 500 });
+// 不设置时长可以直接提供效果ID
+// chunk1.setTransition(TRANSITION.FADE);
+
+// 创建多幕视频
+const video = wvc.createMultiVideo({
+    width: 1280,
+    height: 720,
+    fps: 30,
+    // 视频段
+    chunks: [
+        chunk1,
+        chunk2
+    ],
+    // 视频输出路径
+    outputPath: "./test.mp4",
+    // 是否在cli显示进度条
+    showProgress: true
+});
+
+// 监听合成完成事件
+video.once("completed", result => {
+    logger.success(`Render Completed!!!\nvideo duration: ${Math.floor(result.duration / 1000)}s\ntakes: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
+});
+
+// 启动合成
+video.start();
+```
 
 ## 插入音频
 
@@ -327,6 +379,47 @@ video.registerFonts([...]);
 
 您需要确保字体能够正常加载，否则可能无法启动渲染。
 
+## 插入转场效果
+
+WVC支持使用FFmpeg所支持的 [Xfade](https://trac.ffmpeg.org/wiki/Xfade) 滤镜来合成转场效果，可参考[转场列表](./docs/transition.md)、
+
+每个分块视频参数都能够设置转场效果和持续时长。
+
+```javascript
+import WebVideoCreator, { TRANSITION } from "web-video-creator";
+
+...
+
+const video = wvc.createMultiVideo({
+    ...
+    // 视频段参数
+    chunks: [
+        {
+            url: "http://localhost:8080/scene-1.html",
+            duration: 10000,
+            // 在第一和第二幕之间插入淡入淡出转场
+            transition: {
+                id: TRANSITION.FADE,
+                duration: 500
+            },
+            // 如果不需要设置时长也可以直接设置转场ID
+            // transition: TRANSITION.FADE
+        },
+        {
+            url: "http://localhost:8080/scene-2.html",
+            duration: 10000
+        }
+    ],
+    ...
+});
+
+...
+```
+
+需要注意的是，应用转场会导致视频总时长缩短，转场效果实际上是两段视频的部分重叠，两段5秒的视频插入转场，会合成时长为9秒的视频。
+
+Lottie动画也很适合作为转场效果，您可以在一段视频的尾部播放一半时长的全屏Lottie动画，然后在下一段视频开头播放另一半时长的全屏Lottie动画实现更动感的转场效果。
+
 ## 延迟启动渲染
 
 WVC默认页面导航完成后立即启动渲染，如果希望在渲染之前进行一些工作，可以在选项中禁用自动启动渲染，禁用后请记得在您的页面中调用 `captureCtx.start()`，否则将永远阻塞。
@@ -352,6 +445,10 @@ const video = wvc.createSingleVideo({
 ```
 
 <br>
+
+## 调试日志输出
+
+
 
 # 分布式渲染方案
 

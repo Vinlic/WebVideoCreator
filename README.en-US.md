@@ -65,93 +65,25 @@ npm i web-video-creator
 
 If you encounter issues with the download of `ffmpeg-static`, please set the environment variable: `FFMPEG_BINARIES_URL=https://cdn.npmmirror.com/binaries/ffmpeg-static`.
 
-## Running Examples
-
-Currently, WVC provides two simple examples demonstrating rendering and compositing of single and multi-scene videos.
-
-### Single Scene Compositing Example
+## Rendering Single Video
 
 <img style="width:550px" src="./assets/single-video.gif" />
 
-Sample code for calling is located at: [examples/single-video.js](./examples/single-video.js).
-
 ```javascript
-import { examples, VIDEO_ENCODER } from "web-video-creator";
-
-await examples.singleVideo({
-    // URL of the page to render
-    url: "http://localhost:8080/test.html",
-    // Video width
-    width: 1280,
-    // Video height
-    height: 720,
-    // Video frame rate
-    fps: 30,
-    // Video duration
-    duration: 10000,
-    // Choose an appropriate encoder based on your hardware. Here, we use the h264_nvenc encoder for Nvidia GPUs.
-    // Refer to the options provided in VIDEO_ENCODER for encoder choices.
-    videoEncoder: VIDEO_ENCODER.NVIDIA.H264,
-    // Video output path
-    outputPath: "./test.mp4"
-});
-```
-
-### Multi-Scene Compositing Example
-
-<img style="width:550px" src="./assets/multi-video.gif" />
-
-Sample code for calling is located at: [examples/multi-video.js](./examples/multi-video.js).
-
-```javascript
-import { examples, VIDEO_ENCODER, TRANSITION } from "web-video-creator";
-
-await examples.multiVideo({
-    // List of video chunks
-    chunks: [
-        {
-            url: "http://localhost:8080/scene1.html",
-            duration: 10000,
-            // Use circular crop transition when switching to the next scene
-            transition: TRANSITION.CIRCLE_CROP
-        },
-        {
-            url: "http://localhost:8080/scene2.html",
-            duration: 10000
-        },
-        // ...
-    ],
-    // Video width
-    width: 1280,
-    // Video height
-    height: 720,
-    // Video frame rate
-    fps: 30,
-    // Choose an appropriate encoder based on your hardware. Here, we use the h264_nvenc encoder for Nvidia GPUs.
-    // Refer to the options provided in VIDEO_ENCODER for encoder choices.
-    videoEncoder: VIDEO_ENCODER.NVIDIA.H264,
-    // Video output path
-    outputPath: "./test.mp4"
-});
-```
-
-## Basic Usage
-
-```javascript
-import WebVideoCreator, { VIDEO_ENCODER } from "web-video-creator";
+import WebVideoCreator, { VIDEO_ENCODER, logger } from "web-video-creator";
 
 const wvc = new WebVideoCreator();
 
 // Configure WVC
 wvc.config({
-    // Choose an appropriate encoder based on your hardware. Here, we use the h264_nvenc encoder for Nvidia GPUs.
-    // Refer to the options provided in VIDEO_ENCODER for encoder choices.
+    // Choose an appropriate encoder based on your hardware. Here, we are using the h264_nvenc encoder for Nvidia graphics cards.
+    // You can refer to the options provided in VIDEO_ENCODER for encoder selection.
     mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
 });
 
-// Create a single scene video
+// Create a single-scene video
 const video = wvc.createSingleVideo({
-    // URL of the page to render
+    // URL of the page to be rendered
     url: "http://localhost:8080/test.html",
     // Video width
     width: 1280,
@@ -161,24 +93,139 @@ const video = wvc.createSingleVideo({
     fps: 30,
     // Video duration
     duration: 10000,
-    // Video output path
+    // Output path for the video
     outputPath: "./test.mp4",
-    // Display progress bar in the CLI
+    // Display progress bar in the command line
     showProgress: true
 });
 
 // Listen for the completion event
 video.once("completed", result => {
-    console.log("Render Completed!!!", result);
+    logger.success(`Render Completed!!!\nvideo duration: ${Math.floor(result.duration / 1000)}s\ntakes: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
 });
 
 // Start rendering
 video.start();
 ```
 
-<br>
+## Rendering Multi Video
 
-# Feature Examples
+<img style="width:550px" src="./assets/multi-video.gif" />
+
+```javascript
+import WebVideoCreator, { VIDEO_ENCODER, TRANSITION, logger } from "web-video-creator";
+
+const wvc = new WebVideoCreator();
+
+// Configure WVC
+wvc.config({
+    // Choose an appropriate encoder based on your hardware. Here, we are using the h264_nvenc encoder for Nvidia graphics cards.
+    // You can refer to the options provided in VIDEO_ENCODER for encoder selection.
+    mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
+});
+
+// Create a multi-scene video
+const video = wvc.createMultiVideo({
+    // Video width
+    width: 1280,
+    // Video height
+    height: 720,
+    // Video frame rate
+    fps: 30,
+    // Video segment parameters
+    chunks: [
+        {
+            url: "http://localhost:8080/scene-1.html",
+            duration: 10000,
+            // Insert a circular crop transition between the first and second scenes
+            transition: TRANSITION.CIRCLE_CROP
+        },
+        {
+            url: "http://localhost:8080/scene-2.html",
+            duration: 10000
+        }
+    ],
+    // Output path for the video
+    outputPath: "./test.mp4",
+    // Display progress bar in the command line
+    showProgress: true
+});
+
+// Listen for the completion event
+video.once("completed", result => {
+    logger.success(`Render Completed!!!\nvideo duration: ${Math.floor(result.duration / 1000)}s\ntakes: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
+});
+
+// Start rendering
+video.start();
+```
+
+## Rendering Chunk Video and Combining into Multi Video
+
+<img style="width:550px" src="./assets/chunk-video.gif" />
+
+```javascript
+import WebVideoCreator, { VIDEO_ENCODER, TRANSITION, logger } from "web-video-creator";
+
+const wvc = new WebVideoCreator();
+
+// Configure WVC
+wvc.config({
+    // Choose an appropriate encoder based on your hardware. Here, we are using the h264_nvenc encoder for Nvidia graphics cards.
+    // You can refer to the options provided in VIDEO_ENCODER for encoder selection.
+    mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
+});
+
+// Create chunk video 1
+const chunk1 = wvc.createChunkVideo({
+    url: "http://localhost:8080/scene-1.html",
+    width: 1280,
+    height: 720,
+    fps: 30,
+    duration: 10000,
+    showProgress: true
+});
+
+// Create chunk video 2
+const chunk2 = wvc.createChunkVideo({
+    url: "http://localhost:8080/scene-2.html",
+    width: 1280,
+    height: 720,
+    fps: 30,
+    duration: 10000,
+    showProgress: true
+});
+
+// Wait for the chunks to finish rendering
+await Promise.all([chunk1.startAndWait(), chunk2.startAndWait()]);
+
+// Set the transition effect between chunk1 and chunk2 to fade in and out
+chunk1.setTransition({ id: TRANSITION.FADE, duration: 500 });
+
+// Create a multi-scene video
+const video = wvc.createMultiVideo({
+    width: 1280,
+    height: 720,
+    fps: 30,
+    // Video segments
+    chunks: [
+        chunk1,
+        chunk2
+    ],
+    // Output path for the video
+    outputPath: "./test.mp4",
+    // Display progress bar in the command line
+    showProgress: true
+});
+
+// Listen for the completion event
+video.once("completed", result => {
+    logger.success(`Render Completed!!!\nvideo duration: ${Math.floor(result.duration / 1000)}s\ntakes: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
+});
+
+// Start rendering
+video.start();
+```
 
 ## Inserting Audio
 
@@ -327,6 +374,47 @@ video.registerFonts([...]);
 ```
 
 Make sure the fonts can be loaded; otherwise, rendering may not start.
+
+## Inserting Transition Effects
+
+WVC supports the use of [Xfade](https://trac.ffmpeg.org/wiki/Xfade) filters supported by FFmpeg to create transition effects. You can refer to the [list of transitions](./docs/transition.md).
+
+Each chunk video parameter can be configured with a transition effect and its duration.
+
+```javascript
+import WebVideoCreator, { TRANSITION } from "web-video-creator";
+
+...
+
+const video = wvc.createMultiVideo({
+    ...
+    // Video segment parameters
+    chunks: [
+        {
+            url: "http://localhost:8080/scene-1.html",
+            duration: 10000,
+            // Insert a fade in/out transition between the first and second scenes
+            transition: {
+                id: TRANSITION.FADE,
+                duration: 500
+            },
+            // If you don't need to set the duration, you can directly set the transition ID
+            // transition: TRANSITION.FADE
+        },
+        {
+            url: "http://localhost:8080/scene-2.html",
+            duration: 10000
+        }
+    ],
+    ...
+});
+
+...
+```
+
+It's important to note that applying transitions will result in a shorter total video duration since the transition effect effectively overlaps a portion of two video segments. For example, if you insert a fade transition between two 5-second segments, the resulting video will have a duration of 9 seconds.
+
+Lottie animations are also suitable for use as transition effects. You can play a full-screen Lottie animation for half of the duration at the end of one video segment and then play another full-screen Lottie animation for the remaining half at the beginning of the next video segment to create more dynamic transition effects.
 
 ## Delayed Rendering Start
 

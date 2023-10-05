@@ -44,6 +44,7 @@ export default class ChunkSynthesizer extends Synthesizer {
      * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
      */
     constructor(options) {
+        assert(_.isObject(options), "ChunkSynthesizer options must be object");
         options.duration = 0;
         super(options);
         const { chunks } = options;
