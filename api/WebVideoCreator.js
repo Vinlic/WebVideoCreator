@@ -76,6 +76,7 @@ export default class WebVideoCreator {
      * @param {boolean} [options.autostartRender=true] - 是否自动启动渲染，如果为false请务必在页面中执行 captureCtx.start()
      * @param {boolean} [options.consoleLog=false] - 是否开启控制台日志输出
      * @param {boolean} [options.videoPreprocessLog=false] - 是否开启视频预处理日志输出
+     * @param {Function} [options.pagePrepareFn] - 页面预处理函数
      */
     createSingleVideo(options) {
         assert(this.#configured, "WebVideoCreator has not been configured yet, please execute config() first");
@@ -109,6 +110,7 @@ export default class WebVideoCreator {
      * @param {number} [options.volume] - 视频音量（0-100）
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
      * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
+     * @param {Function} [options.pagePrepareFn] - 页面预处理函数
      */
     createMultiVideo(options) {
         assert(this.#configured, "WebVideoCreator has not been configured yet, please execute config() first");
@@ -146,6 +148,7 @@ export default class WebVideoCreator {
      * @param {boolean} [options.autostartRender=true] - 是否自动启动渲染，如果为false请务必在页面中执行 captureCtx.start()
      * @param {boolean} [options.consoleLog=false] - 是否开启控制台日志输出
      * @param {boolean} [options.videoPreprocessLog=false] - 是否开启视频预处理日志输出
+     * @param {Function} [options.pagePrepareFn] - 页面预处理函数
      */
     createChunkVideo(options) {
         assert(this.#configured, "WebVideoCreator has not been configured yet, please execute config() first");

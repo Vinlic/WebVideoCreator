@@ -14,6 +14,8 @@ export default class MultiVideo extends ChunkSynthesizer {
 
     /** @type {Font[]} - 注册的字体 */
     fonts = [];
+    /** @type {Function} - 页面预处理函数 */
+    pagePrepareFn;
     /** @type {Function} - 页面获取函数 */
     #pageAcquireFn = null;
     /** @type {AsyncLock} - 异步锁 */
@@ -43,9 +45,13 @@ export default class MultiVideo extends ChunkSynthesizer {
      * @param {number} [options.volume] - 视频音量（0-100）
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
      * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
+     * @param {Function} [options.pagePrepareFn] - 页面预处理函数
      */
     constructor(options) {
         super(options);
+        const { pagePrepareFn } = options;
+        assert(_.isUndefined(pagePrepareFn) || _.isFunction(pagePrepareFn), "pagePrepareFn must be Function");
+        this.pagePrepareFn = pagePrepareFn;
     }
 
     /**
@@ -75,6 +81,7 @@ export default class MultiVideo extends ChunkSynthesizer {
         _.isFinite(this.fps) && (chunk.fps = _.defaultTo(chunk.fps, this.fps));
         if (!(chunk instanceof ChunkVideo))
             chunk = new ChunkVideo(chunk);
+        
         super.input(chunk, transition);
         chunk.onPageAcquire(async () => await this.#acquirePage());
     }
@@ -105,8 +112,12 @@ export default class MultiVideo extends ChunkSynthesizer {
      * 合成处理
      */
     async #synthesize() {
-        if(this.fonts.length > 0)
-            this.chunks.forEach(chunk => chunk.registerFonts(this.fonts));
+        this.chunks.forEach(chunk => {
+            if (_.isUndefined(chunk.pagePrepareFn) && this.pagePrepareFn)
+                chunk.pagePrepareFn = this.pagePrepareFn;
+            if (this.fonts.length > 0)
+                chunk.registerFonts(this.fonts);
+        });
         return await new Promise((resolve, reject) => {
             this.once("error", reject);
             this.once("completed", resolve);
