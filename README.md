@@ -630,6 +630,78 @@ const video = wvc.createSingleVideo({
 
 <br>
 
+# 视频编码器选择
+
+浏览器渲染输出帧图流输入FFmpeg时需要通过视频编码器将图像数据按指定帧率编码为视频数据并存储于指定格式容器中，视频编码是一项较为消耗资源的操作，选用硬编码器可以加速这个过程并降低CPU的负载。
+
+WVC支持的视频编码器请参考：[视频编码器说明](./docs/video-encoder.md)
+
+<br>
+
+# 进度监听
+
+您可以通过视频实例的 `progress` 事件监听渲染合成进度。
+
+```javascript
+const video = wvc.createSingleVideo({ ... });
+video.on("progress", (progress, synthesizedFrameCount, totalFrameCount) => {
+    // 输出 进度 / 已合成帧数 / 总帧数
+    console.log(progress, synthesizedFrameCount, totalFrameCount);
+});
+```
+
+这同样适用于 `MultiVideo` / `ChunkVideo` 以及低级别API的合成器。
+
+<br>
+
+# 异常处理
+
+## 抛出错误
+
+您可以在页面中主动抛出错误来中断渲染。
+
+```html
+<script>
+    ____throwError(-1, "Abort");
+</script>
+```
+
+## 监听页面崩溃
+
+如果您的页面存在大量密集计算或者占用过多的运行内存，页面将可能崩溃，从而导致渲染中断。
+
+如果使用高级别API，页面崩溃时通过视频实例的 `error` 事件通知。
+
+```javascript
+const video = wvc.createSingleVideo({ ... });
+// 错误时输出 Page crashed:...
+video.on("error", err => console.error(err));
+```
+
+使用低级别API时，页面崩溃时通过Page实例的 `crashed` 事件通知
+
+```javascript
+// 错误时输出崩溃错误
+page.on("crashed", err => console.error(err));
+```
+
+## 监听其它错误
+
+如果使用高级别API，页面崩溃时通过视频实例的 `error` 事件通知。
+
+```javascript
+const video = wvc.createSingleVideo({ ... });
+video.on("error", err => console.error(err));
+```
+
+使用低级别API时，页面崩溃时通过Page实例的 `error` 事件通知
+
+```javascript
+page.on("error", err => console.error(err));
+```
+
+<br>
+
 # 分布式渲染方案
 
 如果您有多台设备可以为这些设备部署WVC，它提供了 `MultiVideo` 和 `ChunkVideo`，您可以将动画页面分为很多个分段，如0-10秒、10-20秒...，将它们的参数分发到不同设备的WVC上，在这些设备上创建ChunkVideo实例并执行并行渲染为多个视频 `ts` 分段，将他们回传到核心节点上，并最终输入MultiVideo进行合并以及转场、音轨合成输出。**这个分发以及回传流程WVC还未实现，但它并不难，您可以根据自己的场景进行封装并欢迎为WVC贡献[PR](https://github.com/Vinlic/WebVideoCreator/pulls)！**

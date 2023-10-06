@@ -629,6 +629,78 @@ const video = wvc.createSingleVideo({
 
 <br>
 
+# Video Encoder Selection
+
+When rendering frames from the browser and feeding them into FFmpeg, it's necessary to encode the image data at the specified frame rate and store it in a specified format container using a video encoder. Video encoding is a resource-intensive operation, and choosing a hardware encoder can accelerate this process and reduce CPU load.
+
+Please refer to the [Video Encoder Guide](./docs/video-encoder.md) for a list of supported video encoders by WVC.
+
+<br>
+
+# Progress Monitoring
+
+You can use the `progress` event of the video instance to monitor the rendering and synthesis progress.
+
+```javascript
+const video = wvc.createSingleVideo({ ... });
+video.on("progress", (progress, synthesizedFrameCount, totalFrameCount) => {
+    // Output progress / synthesized frame count / total frame count
+    console.log(progress, synthesizedFrameCount, totalFrameCount);
+});
+```
+
+This also applies to `MultiVideo` / `ChunkVideo` and the synthesisers in the low-level API.
+
+<br>
+
+# Exception Handling
+
+## Throwing Errors
+
+You can actively throw errors in the page to interrupt rendering.
+
+```html
+<script>
+    ____throwError(-1, "Abort");
+</script>
+```
+
+## Listening for Page Crashes
+
+If your page involves heavy computations or consumes excessive memory, it may crash, causing rendering to be interrupted.
+
+If you're using the high-level API, you can be notified of page crashes through the `error` event of the video instance.
+
+```javascript
+const video = wvc.createSingleVideo({ ... });
+// Output "Page crashed:..." when an error occurs
+video.on("error", err => console.error(err));
+```
+
+When using the low-level API, you can listen for page crashes through the `crashed` event of the Page instance.
+
+```javascript
+// Output crash errors when an error occurs
+page.on("crashed", err => console.error(err));
+```
+
+## Listening for Other Errors
+
+If you're using the high-level API, you can listen for errors through the `error` event of the video instance.
+
+```javascript
+const video = wvc.createSingleVideo({ ... });
+video.on("error", err => console.error(err));
+```
+
+When using the low-level API, you can listen for errors through the `error` event of the Page instance.
+
+```javascript
+page.on("error", err => console.error(err));
+```
+
+<br>
+
 # Distributed Rendering
 
 If you have multiple devices available for rendering, you can deploy WVC on these devices. WVC provides `MultiVideo` and `ChunkVideo`, allowing you to divide the animation pages into many segments (e.g., 0-10 seconds, 10-20 seconds, etc.). Distribute their parameters to different WVC instances on different devices, create ChunkVideo instances on these devices, and execute parallel rendering to generate multiple video segments (`ts`). These segments are then sent back to the core node, where they are combined, and transitions, audio tracks, and output are handled. **The distribution and return process is not yet implemented in WVC, but it is not difficult, and you can wrap it according to your own scenario. Contributions to WVC are welcome through [PR](https://github.com/Vinlic/WebVideoCreator/pulls)!**
