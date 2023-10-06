@@ -227,6 +227,57 @@ video.once("completed", result => {
 video.start();
 ```
 
+## Global Configuration
+
+You can globally configure WVC to adjust some common parameters.
+
+```javascript
+import WebVideoCreator, { VIDEO_ENCODER, AUDIO_ENCODER } from "web-video-creator";
+
+const wvc = new WebVideoCreator();
+
+wvc.config({
+    // Enable this to output some debug logs from WVC
+    debug: true,
+    // Enable this to output browser runtime logs
+    browserDebug: true,
+    // Enable this to output each executed FFmpeg command
+    ffmpegDebug: true,
+    // Path to the FFmpeg executable file; setting this will disable the internal ffmpeg-static; it's recommended to use the internal FFmpeg for completeness
+    ffmpegExecutablePath: "...",
+    // Path to the ffprobe executable file; setting this will disable the internal ffprobe-static; it's recommended to use the internal ffprobe for completeness
+    ffprobeExecutablePath: "...",
+    // Browser GPU acceleration switch; recommended to enable for improved rendering performance; if you don't have a GPU or encounter rendering issues, you can disable it
+    browserUseGPU: true,
+    // Path to the browser executable file; setting this will disable the internal browser; it's recommended to use the internal browser for completeness
+    browserExecutablePath: "...",
+    // Compatible rendering mode; not recommended to enable; enabling this will disable HeadlessExperimental.beginFrame API calls and use regular Page.screenshot, which can lead to decreased rendering performance and frame rate desynchronization in some animations; you can try enabling it if you encounter the error "TargetCloseError: Protocol error (HeadlessExperimental.beginFrame): Target closed"
+    compatibleRenderingMode: false,
+    // Minimum number of browser instances in the resource pool
+    numBrowserMin: 1,
+    // Maximum number of browser instances in the resource pool
+    numBrowserMax: 5,
+    // Minimum number of page instances per browser instance
+    numPageMin: 1,
+    // Maximum number of page instances per browser instance
+    numPageMax: 5,
+    // User-agent string to use when accessing pages
+    userAgent: null,
+    // Frame capture quality (0-100); only effective for jpeg
+    frameQuality: 80,
+    // Frame image format (jpeg/png); it's recommended to use jpeg as png capture is more time-consuming
+    frameFormat: "jpeg",
+    // Timeout for capturing images with BeginFrame
+    beginFrameTimeout: 5000,
+    // Video encoder for MP4 format; by default, it uses the libx264 software encoder; it's recommended to choose the appropriate hardware encoder for acceleration based on your hardware
+    mp4Encoder: VIDEO_ENCODER.CPU.H264,
+    // Video encoder for WEBM format; by default, it uses the libvpx software encoder; it's recommended to choose the appropriate hardware encoder for acceleration based on your hardware
+    webmEncoder: VIDEO_ENCODER.CPU.VP8,
+    // Audio encoder; it's recommended to use the default AAC encoder
+    audioEncoder: AUDIO_ENCODER.AAC
+});
+```
+
 ## Inserting Audio
 
 To add audio to your rendered HTML, simply include an `<audio>` element with the desired audio file. You can also set attributes like `loop`, and WVC will automatically include the audio track for looping in the video.
@@ -238,6 +289,8 @@ To add audio to your rendered HTML, simply include an `<audio>` element with the
 You can also set various attributes to control the audio's behavior. These attributes do not always need to be paired, so you can customize them according to your needs.
 
 ```html
+<!-- Control the audio volume to half the original level -->
+<audio src="bgm.mp3" volume="0.5"></audio>
 <!-- Start playing the audio after 3 seconds and stop it at 10 seconds -->
 <audio src="bgm.mp3" startTime="3000" endTime="10000"></audio>
 <!-- Loop a segment of the audio from the 5th second to the 15th second -->
@@ -266,7 +319,9 @@ video.addAudio({
     // url: "http://.../bgm.mp3"
     path: "bgm.mp3",
     startTime: 500,
-    loop: true
+    loop: true,
+    // 80% volume
+    volume: 80
 });
 // Add multiple audio tracks
 video.addAudios([...]);
@@ -287,6 +342,8 @@ If you wish to insert a video with a transparent channel, see: [Transparent Chan
 Similar to audio, you can set various attributes to control the video's behavior, and these attributes do not always need to be paired.
 
 ```html
+<!-- Control the audio volume to 70% of the original -->
+<video src="test.mp4" volume="0.7"></video>
 <!-- Start playing the video after 3 seconds and stop it at 10 seconds -->
 <video src="test.mp4" startTime="3000" endTime="10000"></video>
 <!-- Loop a segment of the video from the 5th second to the 15th second -->
@@ -442,6 +499,110 @@ In your page code, call the start function when appropriate.
         .then(() => captureCtx.start())
         .catch(err => console.error(err));
 </script>
+```
+
+## Pre-render Page Operations
+
+```javascript
+const video = wvc.createSingleVideo({
+    url: "http://localhost:8080/test.html",
+    width: 1280,
+    height: 720,
+    duration: 10000,
+    pagePrepareFn: async page => {
+        // Get the puppeteer Page object
+        const _page = page.target;
+        // Click the button
+        await _page.tap("#play-button");
+    }
+});
+```
+
+## Page Console Output
+
+If you want to see the page's logs, you can enable `consoleLog` in the video options. If there are embedded videos, you can also enable `videoPreprocessLog` to output video preprocessing logs.
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // Output logs from the page's console
+    consoleLog: true,
+    // Output video preprocessing logs for embedded videos
+    videoPreprocessLog: true
+});
+```
+
+## Capture a Cover Image
+
+After rendering a video, you can capture a frame image and save it, which can be used as the video's cover image.
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // Enable cover image capture
+    coverCapture: true,
+    // Time in milliseconds to capture the image (default is 20% of the video's duration)
+    coverCaptureTime: 1000,
+    // Image format for capture (jpg/png/bmp), default is jpg
+    coverCaptureFormat: "jpg"
+});
+```
+
+## Insert a Cover Image
+
+WVC supports inserting an image into the first frame of the video, which will be displayed when the video is not playing.
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // Set the path to the additional cover image, supports jpg/png/bmp
+    attachCoverPath: "./cover.jpg"
+});
+```
+
+<br>
+
+# Control Output Video Quality
+
+WVC allows you to control video image quality using `videoQuality` or `videoBitrate`.
+
+`videoQuality` is used to calculate the bitrate based on the total pixel count of the image. The following is the method used by WVC to calculate the video bitrate internally:
+
+```javascript
+const pixels = width * height;
+const videoBitrate = (2560 / 921600 * pixels) * (videoQuality / 100);
+```
+
+You can provide `videoQuality` (0-100) in the video options:
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // Set video quality to 80%
+    videoQuality: 80
+});
+```
+
+If you find the bitrate inappropriate, you can set `videoBitrate` separately:
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // Set video bitrate to 8Mbps
+    videoBitrate: "8m"
+});
+```
+
+Additionally, you can adjust the frame image quality when using jpeg as the frame format by setting `frameQuality`. For details, see [Global Configuration](#global-configuration).
+
+You can also adjust audio quality by setting the audio bitrate `audioBitrate`:
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // Set audio bitrate to 320Kbps
+    audioBitrate: "320k"
+});
 ```
 
 <br>

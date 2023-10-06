@@ -229,6 +229,58 @@ video.once("completed", result => {
 video.start();
 ```
 
+## 全局配置
+
+您可以全局配置WVC调整一些通用参数。
+
+```javascript
+import WebVideoCreator, { VIDEO_ENCODER, AUDIO_ENCODER } from "web-video-creator";
+
+const wvc = new WebVideoCreator();
+
+wvc.config({
+    // 开启后将输出一些WVC的调试日志
+    debug: true,
+    // 开启后将输出浏览器的运行日志
+    browserDebug: true,
+    // 开启后将输出每一条执行的FFmpeg命令
+    ffmpegDebug: true,
+    // ffmpeg可执行文件路径，设置后将禁用内部的ffmpeg-static，建议您默认使用内部的FFmpeg以确保功能完整性
+    ffmpegExecutablePath: "...",
+    // ffprobe可执行文件路径，设置后将禁用内部的ffprobe-static，建议您默认使用内部的ffprobe以确保功能完整性
+    ffprobeExecutablePath: "...",
+    // 浏览器GPU加速开关，建议开启提高渲染性能，如果您没有GPU设备或遭遇了诡异的渲染问题则可以关闭它
+    browserUseGPU: true,
+    // 浏览器可执行文件路径，设置后将禁用内部的浏览器，建议您默认使用内部的浏览器以确保功能完整性
+    browserExecutablePath: "...",
+    // 兼容渲染模式，不建议启用，启用后将禁用HeadlessExperimental.beginFrame API调用改为普通的Page.screenshot
+    // 这会导致渲染性能下降，且部分动画可能帧率无法同步，当你遭遇 TargetCloseError: Protocol error (HeadlessExperimental.beginFrame): Target closed 错误的时候可以尝试开启它
+    compatibleRenderingMode: false,
+    // 资源池最小浏览器实例数量
+    numBrowserMin: 1,
+    // 资源池最大浏览器实例数量
+    numBrowserMax: 5,
+    // 每个浏览器实例最小页面实例数量
+    numPageMin: 1,
+    // 每个浏览器实例最大页面实例数量
+    numPageMax: 5,
+    // 访问页面时的用户UA
+    userAgent: null,
+    // 捕获帧图质量（0-100），仅jpeg有效
+    frameQuality: 80,
+    // 帧图格式（jpeg/png），建议使用jpeg，png捕获较为耗时
+    frameFormat: "jpeg",
+    // BeginFrame捕获图像超时时间
+    beginFrameTimeout: 5000,
+    // MP4格式的视频编码器，默认使用libx264软编码器，建议根据您的硬件选用合适的硬编码器加速合成
+    mp4Encoder: VIDEO_ENCODER.CPU.H264,
+    // WEBM格式的视频编码器，默认使用libvpx软编码器，建议根据您的硬件选用合适的硬编码器加速合成
+    webmEncoder: VIDEO_ENCODER.CPU.VP8,
+    // 音频编码器，建议采用默认的aac编码器
+    audioEncoder: AUDIO_ENCODER.AAC
+});
+```
+
 ## 插入音频
 
 只需在需要渲染的html中添加 `<audio>` 元素，您还可以设置循环，WVC会自动为视频合入循环音轨。
@@ -240,6 +292,8 @@ video.start();
 还可以设置一些其它属性控制音频的行为，这些属性并不总是需要成对出现，您可以根据自己的需求定制。
 
 ```html
+<!-- 控制音频音量为原来的一半 -->
+<audio src="bgm.mp3" volume="0.5"></audio>
 <!-- 控制音频在3秒后开始播放并在10秒处停止播放 -->
 <audio src="bgm.mp3" startTime="3000" endTime="10000"></audio>
 <!-- 截取音频第5秒到第15秒的片段并循环播放它 -->
@@ -268,7 +322,9 @@ video.addAudio({
     // url: "http://.../bgm.mp3"
     path: "bgm.mp3",
     startTime: 500,
-    loop: true
+    loop: true,
+    // 80%的音量
+    volume: 80
 });
 // 添加多个音频
 video.addAudios([...]);
@@ -289,6 +345,8 @@ video.addAudios([...]);
 和音频一样，它也支持设置一些属性控制视频的行为，这些属性并不总是需要成对出现，您可以根据自己的需求定制。
 
 ```html
+<!-- 控制音频音量为原来的70% -->
+<video src="test.mp4" volume="0.7"></video>
 <!-- 控制视频在3秒后开始播放并在10秒处停止播放 -->
 <video src="test.mp4" startTime="3000" endTime="10000"></video>
 <!-- 截取视频第5秒到第15秒的片段并循环播放它 -->
@@ -444,11 +502,111 @@ const video = wvc.createSingleVideo({
 </script>
 ```
 
+## 启动渲染前操作页面
+
+```javascript
+const video = wvc.createSingleVideo({
+    url: "http://localhost:8080/test.html",
+    width: 1280,
+    height: 720,
+    duration: 10000,
+    pagePrepareFn: async page => {
+        // 获取puppeteer Page对象
+        const _page = page.target;
+        // 点击按钮
+        await _page.tap("#play-button");
+    }
+});
+```
+
+## 页面控制台输出
+
+如果想看到页面的日志，可在视频选项中开启consoleLog，如果存在内嵌视频可开启videoPreprocessLog输出视频预处理日志。
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // 输出页面控制台打印的日志
+    consoleLog: true,
+    // 输出内嵌视频预处理日志
+    videoPreprocessLog: true
+});
+```
+
+## 截取封面图
+
+合成视频后可以截取某一帧图像并保存，可以作为视频封面图。
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // 是否截取图像
+    coverCapture: true,
+    // 图像截取时间点（毫秒），默认是视频时长的20%位置）
+    coverCaptureTime: 1000,
+    // 图像保存格式（jpg/png/bmp），默认jpg
+    coverCaptureFormat: "jpg"
+});
+```
+
+## 插入封面图
+
+WVC支持往视频的首帧插入图像，当视频未被播放时将展示首帧图像。
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // 设置附加的封面图地址，支持jpg/png/bmp
+    attachCoverPath: "./cover.jpg"
+});
+```
+
 <br>
 
-## 调试日志输出
+# 控制输出视频质量
 
+WVC支持通过 `videoQuality` 或 `videoBitrate` 控制视频图像质量。
 
+videoQuality是通过图像总像素量简单计算码率，以下WVC内计算视频码率方法。
+
+```javascript
+const pixels = width * height;
+const videoBitrate = (2560 / 921600 * pixels) * (videoQuality / 100);
+```
+
+可以在视频选项中提供videoQuality（0-100）
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // 设置视频质量为80%
+    videoQuality: 80
+});
+```
+
+如果您认为码率不合适，可以单独设置videoBitrate。
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // 设置视频码率为8Mbps
+    videoBitrate: "8m"
+});
+```
+
+另外还可以调整帧图质量，当使用jpeg作为帧图格式时可以调整frameQuality，详见 [全局配置](#全局配置)。
+
+音频质量则可以通过设置音频码率audioBitrate调整。
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // 设置音频码率为320Kbps
+    audioBitrate: "320k"
+});
+```
+
+<br>
 
 # 分布式渲染方案
 
