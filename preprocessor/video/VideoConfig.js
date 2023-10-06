@@ -25,6 +25,8 @@ export default class VideoConfig {
     fadeOutDuration;
     /** @type {boolean} - 是否自动播放 */
     autoplay;
+    /** @type {number} - 视频音量（0-100） */
+    volume;
     /** @type {boolean} - 是否循环播放 */
     loop;
     /** @type {boolean} - 是否静音 */
@@ -49,6 +51,7 @@ export default class VideoConfig {
      * @param {number} [options.fadeInDuration] - 音频淡入时长（毫秒）
      * @param {number} [options.fadeOutDuration] - 音频淡出时长（毫秒）
      * @param {boolean} [options.autoplay] - 是否自动播放
+     * @param {number} [options.volume] - 视频音量
      * @param {boolean} [options.loop] - 是否循环播放
      * @param {boolean} [options.muted] - 是否静音
      * @param {boolean} [options.retryFetchs] - 重试下载次数
@@ -56,7 +59,7 @@ export default class VideoConfig {
      */
     constructor(options) {
         assert(_.isObject(options), "VideoConfig options must be Object");
-        const { url, maskUrl, format, startTime, endTime, audioId, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
+        const { url, maskUrl, format, startTime, endTime, audioId, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, volume, loop, muted, retryFetchs, ignoreCache } = options;
         assert(util.isURL(url), "url is invalid");
         assert(_.isFinite(startTime), "startTime must be number");
         assert(_.isFinite(endTime), "endTime must be number");
@@ -68,8 +71,9 @@ export default class VideoConfig {
         assert(_.isUndefined(fadeInDuration) || _.isFinite(fadeInDuration), "fadeInDuration must be number");
         assert(_.isUndefined(fadeOutDuration) || _.isFinite(fadeOutDuration), "fadeOutDuration must be number");
         assert(_.isUndefined(autoplay) || _.isBoolean(autoplay), "autoplay must be number");
-        assert(_.isUndefined(loop) || _.isBoolean(loop), "loop must be number");
-        assert(_.isUndefined(muted) || _.isBoolean(muted), "muted must be number");
+        assert(_.isUndefined(volume) || _.isFinite(volume), "volume must be number");
+        assert(_.isUndefined(loop) || _.isBoolean(loop), "loop must be boolean");
+        assert(_.isUndefined(muted) || _.isBoolean(muted), "muted must be boolean");
         this.url = url;
         this.maskUrl = maskUrl;
         this.format = _.defaultTo(format, util.getURLExtname(this.url));
@@ -81,6 +85,7 @@ export default class VideoConfig {
         this.fadeInDuration = fadeInDuration;
         this.fadeOutDuration = fadeOutDuration;
         this.autoplay = autoplay;
+        this.volume = volume;
         this.loop = loop;
         this.muted = muted;
         this.retryFetchs = retryFetchs;

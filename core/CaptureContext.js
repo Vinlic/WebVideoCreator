@@ -497,6 +497,8 @@ export default class CaptureContext {
             fadeInDuration: e.getNumberAttribute("fade-in-duration") || e.getNumberAttribute("fadeInDuration"),
             // 音频淡出时长（毫秒）
             fadeOutDuration: e.getNumberAttribute("fade-out-duration") || e.getNumberAttribute("fadeOutDuration"),
+            // 音频音量
+            volume: (e.getNumberAttribute("volume") || e.volume || 1) * 100,
             // 音频是否循环播放
             loop: e.getBooleanAttribute("loop"),
             // 音频是否自动播放
@@ -551,6 +553,8 @@ export default class CaptureContext {
             seekEnd: e.getNumberAttribute("seek-end") || e.getNumberAttribute("seekEnd"),
             // 视频是否循环播放
             loop: e.getBooleanAttribute("loop"),
+            // 视频音频音量
+            volume: (e.getNumberAttribute("volume") || e.volume || 1) * 100,
             // 视频是否自动播放
             autoplay: e.getBooleanAttribute("autoplay"),
             // 视频是否静音

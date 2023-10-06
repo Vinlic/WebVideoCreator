@@ -35,12 +35,14 @@ export default class VideoProcessTask extends ProcessTask {
     seekStart;
     /** @type {number} - 裁剪结束时间点（毫秒） */
     seekEnd;
-    /** @type {number} - 音频淡入时长（毫秒） */
+    /** @type {number} - 视频音频淡入时长（毫秒） */
     fadeInDuration;
-    /** @type {number} - 音频淡出时长（毫秒） */
+    /** @type {number} - 视频音频淡出时长（毫秒） */
     fadeOutDuration;
     /** @type {boolean} - 是否自动播放 */
     autoplay;
+    /** @type {number} - 视频音量 */
+    volume;
     /** @type {boolean} - 是否循环播放 */
     loop;
     /** @type {boolean} - 是否静音 */
@@ -59,9 +61,10 @@ export default class VideoProcessTask extends ProcessTask {
      * @param {number} options.audioId - 音频ID
      * @param {number} [options.seekStart=0] - 裁剪开始时间点（毫秒）
      * @param {number} [options.seekEnd] - 裁剪结束时间点（毫秒）
-     * @param {number} [options.fadeInDuration] - 音频淡入时长（毫秒）
-     * @param {number} [options.fadeOutDuration] - 音频淡出时长（毫秒）
+     * @param {number} [options.fadeInDuration] - 视频音频淡入时长（毫秒）
+     * @param {number} [options.fadeOutDuration] - 视频音频淡出时长（毫秒）
      * @param {boolean} [options.autoplay] - 是否自动播放
+     * @param {number} [options.volume] - 视频音量
      * @param {boolean} [options.loop=false] - 是否循环播放
      * @param {boolean} [options.muted=false] - 是否静音
      * @param {string} [options.videoEncoder="libx264"] - 视频编码器
@@ -70,7 +73,7 @@ export default class VideoProcessTask extends ProcessTask {
      */
     constructor(options) {
         super(options);
-        const { filePath, maskFilePath, format, startTime, endTime, audioId, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, videoEncoder } = options;
+        const { filePath, maskFilePath, format, startTime, endTime, audioId, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, volume, loop, muted, videoEncoder } = options;
         assert(_.isString(filePath), "filePath must be string");
         assert(_.isString(format) && ["mp4", "webm"].includes(format), "format must be string");
         assert(_.isFinite(startTime), "startTime must be number");
@@ -82,6 +85,7 @@ export default class VideoProcessTask extends ProcessTask {
         assert(_.isUndefined(fadeInDuration) || _.isFinite(fadeInDuration), "fadeInDuration must be number");
         assert(_.isUndefined(fadeOutDuration) || _.isFinite(fadeOutDuration), "fadeOutDuration must be number");
         assert(_.isUndefined(autoplay) || _.isBoolean(autoplay), "autoplay must be number");
+        assert(_.isUndefined(volume) || _.isFinite(volume), "volume must be number");
         assert(_.isUndefined(loop) || _.isBoolean(loop), "loop must be number");
         assert(_.isUndefined(muted) || _.isBoolean(muted), "muted must be number");
         assert(_.isUndefined(videoEncoder) || _.isString(videoEncoder), "videoEncoder must be string");
@@ -96,6 +100,7 @@ export default class VideoProcessTask extends ProcessTask {
         this.fadeInDuration = fadeInDuration;
         this.fadeOutDuration = fadeOutDuration;
         this.autoplay = autoplay;
+        this.volume = _.defaultTo(volume, 100);
         this.loop = _.defaultTo(loop, false);
         this.muted = _.defaultTo(muted, false);
         this.videoEncoder = _.defaultTo(videoEncoder, VIDEO_ENCODER.CPU.H264);
@@ -139,6 +144,7 @@ export default class VideoProcessTask extends ProcessTask {
                 seekEnd: this.seekEnd,
                 fadeInDuration: this.fadeInDuration,
                 fadeOutDuration: this.fadeOutDuration,
+                volume: this.volume,
                 loop: this.loop
             }) : null,
             // video_preprocess响应回传到浏览器的数据

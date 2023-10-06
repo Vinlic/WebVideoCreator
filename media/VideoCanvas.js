@@ -25,14 +25,16 @@ export default class VideoCanvas {
     seekStart;
     /** @type {number} - 裁剪结束时间点（毫秒） */
     seekEnd;
-    /** @type {number} - 音频淡入时长（毫秒） */
+    /** @type {number} - 视频音频淡入时长（毫秒） */
     fadeInDuration;
-    /** @type {number} - 音频淡出时长（毫秒） */
+    /** @type {number} - 视频音频淡出时长（毫秒） */
     fadeOutDuration;
-    /** @type {boolean} - 是否自动播放 */
-    autoplay;
     /** @type {boolean} - 是否强制循环 */
     loop;
+    /** @type {number} - 视频音频音量 */
+    volume;
+    /** @type {boolean} - 是否自动播放 */
+    autoplay;
     /** @type {boolean} - 是否静音 */
     muted;
     /** @type {number} - 重试下载次数 */
@@ -96,9 +98,10 @@ export default class VideoCanvas {
      * @param {string} [options.format] - 视频格式（mp4/webm）
      * @param {number} [options.seekStart=0] - 裁剪开始时间点（毫秒）
      * @param {number} [options.seekEnd] - 裁剪结束时间点（毫秒）
-     * @param {number} [options.fadeInDuration] - 音频淡入时长（毫秒）
-     * @param {number} [options.fadeOutDuration] - 音频淡出时长（毫秒）
+     * @param {number} [options.fadeInDuration] - 视频音频淡入时长（毫秒）
+     * @param {number} [options.fadeOutDuration] - 视频音频淡出时长（毫秒）
      * @param {boolean} [options.autoplay] - 是否自动播放
+     * @param {number} [options.volume=100] - 视频音频音量（0-100）
      * @param {boolean} [options.loop=false] - 是否循环播放
      * @param {boolean} [options.muted=false] - 是否静音
      * @param {boolean} [options.retryFetchs=2] - 重试下载次数
@@ -107,7 +110,7 @@ export default class VideoCanvas {
     constructor(options) {
         const u = ____util;
         u.assert(u.isObject(options), "VideoCanvas options must be Object");
-        const { url, maskUrl, startTime, endTime, audioId, format, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, loop, muted, retryFetchs, ignoreCache } = options;
+        const { url, maskUrl, startTime, endTime, audioId, format, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, volume, loop, muted, retryFetchs, ignoreCache } = options;
         u.assert(u.isString(url), "url must be string");
         u.assert(u.isNumber(startTime), "startTime must be number");
         u.assert(u.isNumber(endTime), "endTime must be number");
@@ -119,6 +122,7 @@ export default class VideoCanvas {
         u.assert(u.isUndefined(fadeInDuration) || u.isNumber(fadeInDuration), "fadeInDuration must be number");
         u.assert(u.isUndefined(fadeOutDuration) || u.isNumber(fadeOutDuration), "fadeOutDuration must be number");
         u.assert(u.isUndefined(autoplay) || u.isBoolean(autoplay), "autoplay must be boolean");
+        u.assert(u.isUndefined(volume) || u.isNumber(volume), "volume must be number");
         u.assert(u.isUndefined(loop) || u.isBoolean(loop), "loop must be boolean");
         u.assert(u.isUndefined(muted) || u.isBoolean(muted), "muted must be boolean");
         u.assert(u.isUndefined(retryFetchs) || u.isNumber(retryFetchs), "retryFetchs must be number");
@@ -134,6 +138,7 @@ export default class VideoCanvas {
         this.fadeInDuration = fadeInDuration;
         this.fadeOutDuration = fadeOutDuration;
         this.autoplay = autoplay;
+        this.volume = u.defaultTo(volume, 100);
         this.loop = u.defaultTo(loop, false);
         this.muted = u.defaultTo(muted, false);
         this.retryFetchs = u.defaultTo(retryFetchs, 2);
@@ -544,6 +549,7 @@ export default class VideoCanvas {
             fadeInDuration: this.fadeInDuration,
             fadeOutDuration: this.fadeOutDuration,
             autoplay: this.autoplay,
+            volume: this.volume,
             loop: this.loop,
             muted: this.muted,
             retryFetchs: this.retryFetchs,
