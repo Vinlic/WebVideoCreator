@@ -560,9 +560,19 @@ const video = wvc.createSingleVideo({
 });
 ```
 
-<br>
+## Adjust Video Volume
 
-# Control Output Video Quality
+You can control the overall volume of the output video.
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // Set the video volume to 80% of the original
+    volume: 80
+});
+```
+
+## Control Output Video Quality
 
 WVC allows you to control video image quality using `videoQuality` or `videoBitrate`.
 
@@ -602,6 +612,18 @@ const video = wvc.createSingleVideo({
     ...,
     // Set audio bitrate to 320Kbps
     audioBitrate: "320k"
+});
+```
+
+## Change Pixel Format
+
+WVC currently supports output in `yuv420p`, `yuv444p`, and `rgb24` pixel formats. It defaults to using the more compatible `yuv420p`. If you notice significant color differences between the output video and the original page, you can switch to `rgb24` to improve the issue.
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // Set the pixel format to rgb24
+    pixelFormat: "rgb24"
 });
 ```
 

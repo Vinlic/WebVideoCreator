@@ -95,7 +95,7 @@ const video = wvc.createSingleVideo({
     duration: 10000,
     // 视频输出路径
     outputPath: "./test.mp4",
-    // 是否在cli显示进度条
+    // 是否在cli显示进度条，默认是不显示
     showProgress: true
 });
 
@@ -147,7 +147,7 @@ const video = wvc.createMultiVideo({
     ],
     // 视频输出路径
     outputPath: "./test.mp4",
-    // 是否在cli显示进度条
+    // 是否在cli显示进度条，默认是不显示
     showProgress: true
 });
 
@@ -561,9 +561,19 @@ const video = wvc.createSingleVideo({
 });
 ```
 
-<br>
+## 调整视频音量
 
-# 控制输出视频质量
+您可以控制输出视频的总音量。
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // 设置视频音量为原来的80%
+    volume: 80
+});
+```
+
+## 控制输出视频质量
 
 WVC支持通过 `videoQuality` 或 `videoBitrate` 控制视频图像质量。
 
@@ -603,6 +613,18 @@ const video = wvc.createSingleVideo({
     ...,
     // 设置音频码率为320Kbps
     audioBitrate: "320k"
+});
+```
+
+## 修改像素格式
+
+WVC目前支持输出 `yuv420p` / `yuv444p` / `rgb24` 像素格式的视频，默认采用兼容性更好的 yuv420p ，如果您发现输出的视频与页面的颜色有较大的差异，可以切换为 rgb24 改善这个问题。
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // 设置像素格式为rgb24
+    pixelFormat: "rgb24"
 });
 ```
 
