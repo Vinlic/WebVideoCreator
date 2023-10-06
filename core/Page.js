@@ -76,7 +76,7 @@ export default class Page extends EventEmitter {
     userAgent;
     /** @type {number} - BeginFrame超时时间（毫秒） */
     beginFrameTimeout;
-    /** @type {string} - 帧图格式 */
+    /** @type {string} - 帧图格式（jpeg/png） */
     frameFormat;
     /** @type {number} - 帧图质量（0-100） */
     frameQuality;
@@ -101,7 +101,7 @@ export default class Page extends EventEmitter {
      * @property {number} [options.height] - 页面视窗高度
      * @property {string} [options.userAgent] - 用户UA
      * @property {number} [options.beginFrameTimeout=5000] - BeginFrame超时时间（毫秒）
-     * @property {string} [options.frameFormat="jpeg"] - 帧图格式
+     * @property {string} [options.frameFormat="jpeg"] - 帧图格式（jpeg/png）
      * @property {number} [options.frameQuality=80] - 帧图质量（0-100）
      * @property {string[]} [options.args] - 浏览器启动参数
      */
@@ -116,15 +116,15 @@ export default class Page extends EventEmitter {
         assert(_.isUndefined(height) || _.isFinite(height), "Page height must be number");
         assert(_.isUndefined(userAgent) || _.isString(userAgent), "Page userAgent must be string");
         assert(_.isUndefined(beginFrameTimeout) || _.isFinite(beginFrameTimeout), "Page beginFrameTimeout must be number");
-        assert(_.isUndefined(frameFormat) || _.isString(frameFormat), "Page frameFormat must be string");
         assert(_.isUndefined(frameQuality) || _.isFinite(frameQuality), "Page frameQuality must be number");
+        assert(_.isUndefined(frameFormat) || _.isString(frameFormat), "Page frameFormat must be string");
         assert(_.isBoolean(_firstPage), "Page _firstPage must be boolean");
         this.width = width;
         this.height = height;
-        this.userAgent = _.defaultTo(userAgent, DEFAULT_USER_AGENT);
-        this.beginFrameTimeout = _.defaultTo(beginFrameTimeout, 5000);
-        this.frameFormat = _.defaultTo(frameFormat, "jpeg");
-        this.frameQuality = _.defaultTo(frameQuality, 80);
+        this.userAgent = _.defaultTo(userAgent, _.defaultTo(globalConfig.userAgent, DEFAULT_USER_AGENT));
+        this.beginFrameTimeout = _.defaultTo(beginFrameTimeout, _.defaultTo(globalConfig.beginFrameTimeout, 5000));
+        this.frameFormat = _.defaultTo(frameFormat, _.defaultTo(globalConfig.frameFormat, "jpeg"));
+        this.frameQuality = _.defaultTo(frameQuality, _.defaultTo(globalConfig.frameQuality, 80));
         this.#firstPage = _firstPage;
     }
 
@@ -484,10 +484,10 @@ export default class Page extends EventEmitter {
                 const frameData = await Promise.race([
                     this.#cdpSession.send("HeadlessExperimental.beginFrame", {
                         screenshot: {
-                            // 帧图格式（jpg, png)
+                            // 帧图格式（jpeg, png)
                             format: this.frameFormat,
                             // 帧图质量（0-100）
-                            quality: this.frameQuality
+                            quality: this.frameFormat == "jpeg" ? this.frameQuality : undefined
                         }
                     }),
                     // 帧渲染超时处理
@@ -504,8 +504,8 @@ export default class Page extends EventEmitter {
             }
             else {
                 const screenshotData = await this.target.screenshot({
-                    type: "jpeg",
-                    quality: 80,
+                    type: this.frameFormat,
+                    quality: this.frameFormat == "jpeg" ? this.frameQuality : undefined,
                     optimizeForSpeed: true
                 });
                 // 帧数据回调

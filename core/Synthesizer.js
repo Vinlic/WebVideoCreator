@@ -519,7 +519,7 @@ export default class Synthesizer extends EventEmitter {
      */
     async #captureCover() {
         const { outputPath, coverCaptureTime, coverCaptureFormat } = this;
-        assert(["jpg", "png", "bmp"].includes(coverCaptureFormat), "coverCaptureFormat must be jpg or png");
+        assert(["jpg", "png", "bmp"].includes(coverCaptureFormat), "coverCaptureFormat must be jpg or png or bmp");
         let captureTime = 0;
         if (_.isFinite(coverCaptureTime))
             captureTime = Math.min(coverCaptureTime, this.getOutputDuration());
