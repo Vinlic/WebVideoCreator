@@ -826,7 +826,7 @@
 
 # Transition
 
-转场参数，目前使用的是 [Xfade](https://trac.ffmpeg.org/wiki/Xfade) 转场滤镜。
+转场参数，请参考 [转场效果](./transition.md) 。
 
 <table width="100%">
     <thead >

@@ -772,6 +772,8 @@ Performance is typically influenced by the complexity of animations and media. T
 
 - Some time may be spent on network file transfers. It's advisable to deploy static file services on the same server or access the file server from a local network.
 
+- Reducing the output video resolution and frame rate is the most effective way to reduce time consumption.
+
 Here are the performance parameters for my personal computer as a reference:
 
 Operating System: Windows 10 (Better performance on Linux)
