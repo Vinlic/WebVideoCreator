@@ -515,9 +515,17 @@
 
 参考 [Audio](#audio) 音频参数。
 
-### MultiVideo.input(chunk, [[transtion](#transition)])
+### MultiVideo.input(chunk, [transtion])
 
 输入分块视频，可以选择加入转场效果
+
+#### chunk 参数
+
+参考 [ChunkVideo](#chunkvideo) 。
+
+#### transtion 参数
+
+参考 [transtion](#transition) 。
 
 ### MultiVideo.start()
 
@@ -727,6 +735,10 @@
 ### ChunkVideo.setTransition(options)
 
 设置转场效果
+
+#### transition 参数
+
+参考 [Transition](#transition) 转场参数。
 
 ### ChunkVideo.start()
 

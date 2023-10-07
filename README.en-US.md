@@ -66,9 +66,9 @@ npm i web-video-creator
 
 If you encounter issues with the download of `ffmpeg-static`, please set the environment variable: `FFMPEG_BINARIES_URL=https://cdn.npmmirror.com/binaries/ffmpeg-static`.
 
-## Creating a Local Server
+## Create a Local Server
 
-WVC needs to capture animations from web pages. To facilitate testing, you can create a temporary web server locally. Using `live-server` is one of the simplest ways to achieve this. If you already have a static web page, you can skip this step.
+WVC needs to capture animations from web pages, and you can create a temporary web server locally to serve static pages for testing purposes. One of the simplest ways to do this is by using `live-server`. If you already have static web pages, you can skip this step.
 
 ```shell
 # Install live-server globally from NPM
@@ -77,7 +77,7 @@ npm i -g live-server
 live-server
 ```
 
-Create a test page in the root directory of the web server. The following HTML content demonstrates an automatically rotating SVG animation:
+Create a test page in the root directory of the web server. The following HTML content demonstrates an automatically rotating triangle SVG animation:
 
 ```html
 <!DOCTYPE html>

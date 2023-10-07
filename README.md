@@ -77,7 +77,7 @@ npm i -g live-server
 live-server
 ```
 
-创建一个测试页面到Web服务根路径，以下html内容展示一个自动旋转的svg动画。
+创建一个测试页面到Web服务根路径，以下html内容展示一个自动旋转的三角形svg动画。
 
 ```html
 <!DOCTYPE html>
