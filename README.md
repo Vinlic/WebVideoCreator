@@ -60,10 +60,43 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
 ## 安装
 
 ```shell
+# 从NPM安装WebVideoCreator
 npm i web-video-creator
 ```
 
 如遇到ffmpeg-static下载失败，请先设置环境变量：`FFMPEG_BINARIES_URL=https://cdn.npmmirror.com/binaries/ffmpeg-static`
+
+## 创建本地服务器
+
+WVC需要从Web页面中捕获动画，您可以在本地创建一个临时的Web服务器来提供静态页面服务，方便接下来的测试，使用live-server是最简单的方式之一，如果您已经有静态页面可跳过这个步骤。
+
+```shell
+# 从NPM全局安装live-server
+npm i -g live-server
+# 启用Web服务
+live-server
+```
+
+创建一个测试页面到Web服务根路径，以下html内容展示一个自动旋转的svg动画。
+
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>测试页面</title>
+    </head>
+    <body>
+        <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" version="1.1"
+        xmlns:xlink="http://www.w3.org/1999/xlink">
+            <polygon points="60,30 90,90 30,90">
+                <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 60 70" to="360 60 70"
+                    dur="10s" repeatCount="indefinite" />
+            </polygon>
+        </svg>
+    </body>
+</html>
+```
 
 ## 渲染单幕视频
 

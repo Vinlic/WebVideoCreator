@@ -60,10 +60,43 @@ Please visit the **[Rendering Example Page](https://github.com/Vinlic/WebVideoCr
 ## Installation
 
 ```shell
+# Install WebVideoCreator from NPM
 npm i web-video-creator
 ```
 
 If you encounter issues with the download of `ffmpeg-static`, please set the environment variable: `FFMPEG_BINARIES_URL=https://cdn.npmmirror.com/binaries/ffmpeg-static`.
+
+## Creating a Local Server
+
+WVC needs to capture animations from web pages. To facilitate testing, you can create a temporary web server locally. Using `live-server` is one of the simplest ways to achieve this. If you already have a static web page, you can skip this step.
+
+```shell
+# Install live-server globally from NPM
+npm i -g live-server
+# Start the web server
+live-server
+```
+
+Create a test page in the root directory of the web server. The following HTML content demonstrates an automatically rotating SVG animation:
+
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Test Page</title>
+    </head>
+    <body>
+        <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" version="1.1"
+        xmlns:xlink="http://www.w3.org/1999/xlink">
+            <polygon points="60,30 90,90 30,90">
+                <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 60 70" to="360 60 70"
+                    dur="10s" repeatCount="indefinite" />
+            </polygon>
+        </svg>
+    </body>
+</html>
+```
 
 ## Rendering Single Video
 

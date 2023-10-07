@@ -25,7 +25,6 @@ export default class ChunkSynthesizer extends Synthesizer {
      * @param {string} options.outputPath - 导出视频路径
      * @param {number} options.width - 视频宽度
      * @param {number} options.height - 视频高度
-     * @param {number} options.duration - 视频时长
      * @param {VideoChunk[]} options.chunks - 视频分块列表
      * @param {number} [options.fps=30] - 视频合成帧率
      * @param {string} [options.format] - 导出视频格式（mp4/webm）

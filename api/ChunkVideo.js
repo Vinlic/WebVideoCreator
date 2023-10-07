@@ -40,7 +40,7 @@ export default class ChunkVideo extends VideoChunk {
      * @param {number} options.height - 视频高度
      * @param {number} options.duration - 视频时长
      * @param {number} [options.fps=30] - 视频帧率
-     * @param {Transition} [options.transition] - 进入下一视频分块的转场
+     * @param {string|Transition} [options.transition] - 进入下一视频分块的转场效果
      * @param {string} [options.format] - 导出视频格式（mp4/webm）
      * @param {string} [options.attachCoverPath] - 附加到视频首帧的封面路径
      * @param {string} [options.coverCapture=false] - 是否捕获封面并输出

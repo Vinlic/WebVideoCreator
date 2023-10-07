@@ -27,7 +27,7 @@ export default class VideoChunk extends Synthesizer {
      * @param {number} options.height - 视频高度
      * @param {number} options.fps - 视频合成帧率
      * @param {number} options.duration - 视频时长
-     * @param {Transition} [options.transition] - 进入下一视频分块的转场
+     * @param {string|Transition} [options.transition] - 进入下一视频分块的转场
      * @param {boolean} [options.autoremove=true] - 被合并后是否自动删除分块文件
      * @param {string} [options.videoEncoder] - 视频编码器
      * @param {number} [options.videoQuality] - 视频质量（0-100）

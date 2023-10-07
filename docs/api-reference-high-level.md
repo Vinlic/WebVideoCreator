@@ -76,6 +76,26 @@
             <td>浏览器实例最大页面实例数量</td>
         </tr>
         <tr>
+            <td>userAgent</td>
+            <td>string</td>
+            <td>访问页面时的用户UA</td>
+        </tr>
+        <tr>
+            <td>frameQuality</td>
+            <td>number</td>
+            <td>捕获帧图质量（0-100）仅jpeg有效</td>
+        </tr>
+        <tr>
+            <td>frameFormat</td>
+            <td>string</td>
+            <td>帧图格式（jpeg/png）建议使用jpeg，png捕获较为耗时</td>
+        </tr>
+        <tr>
+            <td>beginFrameTimeout</td>
+            <td>number</td>
+            <td>BeginFrame捕获图像超时时间（毫秒）</td>
+        </tr>
+        <tr>
             <td>mp4Encoder</td>
             <td>string</td>
             <td>全局MP4格式的视频编码器，默认使用libx264软编码器，建议根据您的硬件选用合适的硬编码器加速合成</td>
@@ -99,11 +119,19 @@
 
 创建单幕视频实例
 
+#### options 参数
+
+参考 [SingleVideo](#singlevideo) 构造函数的options参数。
+
 <br>
 
 ### WebVideoCreator.createMultiVideo(options): [MultiVideo](#multivideo)
 
 创建多幕视频实例
+
+#### options 参数
+
+参考 [MultiVideo](#multivideo) 构造函数的options参数。
 
 <br>
 
@@ -111,11 +139,153 @@
 
 创建分块视频实例
 
+#### options 参数
+
+参考 [ChunkVideo](#chunkVideo) 构造函数的options参数。
+
 <br>
 
 # SingleVideo
 
 单幕视频
+
+## 构造函数
+
+### new SingleVideo(options)
+
+#### options 参数
+
+<table width="100%">
+    <thead >
+        <tr>
+            <th>参数</th>
+            <th>类型</th>
+            <th>说明</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>url</td>
+            <td>string</td>
+            <td>待渲染的页面URL</td>
+        </tr>
+        <tr>
+            <td>outputPath</td>
+            <td>string</td>
+            <td>视频输出路径</td>
+        </tr>
+        <tr>
+            <td>width</td>
+            <td>number</td>
+            <td>视频宽度</td>
+        </tr>
+        <tr>
+            <td>height</td>
+            <td>number</td>
+            <td>视频高度</td>
+        </tr>
+        <tr>
+            <td>duration</td>
+            <td>number</td>
+            <td>视频时长</td>
+        </tr>
+        <tr>
+            <td>fps</td>
+            <td>number</td>
+            <td>视频帧率</td>
+        </tr>
+        <tr>
+            <td>format</td>
+            <td>string</td>
+            <td>导出视频格式（mp4/webm）</td>
+        </tr>
+        <tr>
+            <td>attachCoverPath</td>
+            <td>string</td>
+            <td>附加到视频首帧的封面文件路径</td>
+        </tr>
+        <tr>
+            <td>coverCapture</td>
+            <td>boolean</td>
+            <td>是否捕获封面并输出</td>
+        </tr>
+        <tr>
+            <td>coverCaptureTime</td>
+            <td>number</td>
+            <td>封面捕获时间点（毫秒）</td>
+        </tr>
+        <tr>
+            <td>coverCaptureFormat</td>
+            <td>string</td>
+            <td>封面捕获格式（jpg/png/bmp）</td>
+        </tr>
+        <tr>
+            <td>videoEncoder</td>
+            <td>string</td>
+            <td>视频编码器，详见 <a href="./video-encoder.md">视频编码器说明</a></td>
+        </tr>
+        <tr>
+            <td>videoQuality</td>
+            <td>number</td>
+            <td>视频质量（0-100）</td>
+        </tr>
+        <tr>
+            <td>videoBitrate</td>
+            <td>string</td>
+            <td>视频码率（设置码率将忽略videoQuality）</td>
+        </tr>
+        <tr>
+            <td>pixelFormat</td>
+            <td>string</td>
+            <td>像素格式（yuv420p/yuv444p/rgb24）</td>
+        </tr>
+        <tr>
+            <td>audioEncoder</td>
+            <td>string</td>
+            <td>音频编码器，建议默认aac</td>
+        </tr>
+        <tr>
+            <td>audioBitrate</td>
+            <td>string</td>
+            <td>音频码率</td>
+        </tr>
+        <tr>
+            <td>volume</td>
+            <td>number</td>
+            <td>视频音量（0-100）</td>
+        </tr>
+        <tr>
+            <td>pagePrepareFn</td>
+            <td>Function</td>
+            <td>页面预处理函数，可以在渲染之前对Page对象操作</td>
+        </tr>
+        <tr>
+            <td>showProgress</td>
+            <td>boolean</td>
+            <td>是否在命令行展示进度</td>
+        </tr>
+        <tr>
+            <td>autostartRender</td>
+            <td>boolean</td>
+            <td>是否自动启动渲染，如果为false请务必在页面中执行 captureCtx.start()</td>
+        </tr>
+        <tr>
+            <td>consoleLog</td>
+            <td>boolean</td>
+            <td>是否开启控制台日志输出</td>
+        </tr>
+        <tr>
+            <td>videoPreprocessLog</td>
+            <td>boolean</td>
+            <td>是否开启视频预处理日志输出</td>
+        </tr>
+        <tr>
+            <td>parallelWriteFrames</td>
+            <td>number</td>
+            <td>并行写入流的帧数</td>
+        </tr>
+    </tbody>
+</table>
 
 ## 事件
 
@@ -137,17 +307,33 @@
 
 注册字体
 
+#### options 参数
+
+参考 [Font](#Font) 字体参数。
+
 ### SingleVideo.registerFonts([options, ...])
 
 注册多个字体
+
+#### options 参数
+
+参考 [Font](#Font) 字体参数。
 
 ### SingleVideo.addAudio(options)
 
 添加音频
 
+#### options 参数
+
+参考 [Audio](#audio) 音频参数。
+
 ### SingleVideo.addAudios([options, ...])
 
 添加多个音频
+
+#### options 参数
+
+参考 [Audio](#audio) 音频参数。
 
 ### SingleVideo.start()
 
@@ -162,6 +348,124 @@
 # MultiVideo
 
 多幕视频
+
+## 构造函数
+
+### new MultiVideo(options)
+
+#### options 参数
+
+<table width="100%">
+    <thead >
+        <tr>
+            <th>参数</th>
+            <th>类型</th>
+            <th>说明</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>width</td>
+            <td>number</td>
+            <td>视频宽度</td>
+        </tr>
+        <tr>
+            <td>height</td>
+            <td>number</td>
+            <td>视频高度</td>
+        </tr>
+        <tr>
+            <td>outputPath</td>
+            <td>string</td>
+            <td>视频输出路径</td>
+        </tr>
+        <tr>
+            <td>chunks</td>
+            <td><a href="#chunkvideo">ChunkVideo</a>[]</td>
+            <td>未渲染或已渲染的ChunkVideo列表，可以是ChunkVideo实例也可以是普通对象</td>
+        </tr>
+        <tr>
+            <td>fps</td>
+            <td>number</td>
+            <td>视频帧率</td>
+        </tr>
+        <tr>
+            <td>format</td>
+            <td>string</td>
+            <td>导出视频格式（mp4/webm）</td>
+        </tr>
+        <tr>
+            <td>attachCoverPath</td>
+            <td>string</td>
+            <td>附加到视频首帧的封面文件路径</td>
+        </tr>
+        <tr>
+            <td>coverCapture</td>
+            <td>boolean</td>
+            <td>是否捕获封面并输出</td>
+        </tr>
+        <tr>
+            <td>coverCaptureTime</td>
+            <td>number</td>
+            <td>封面捕获时间点（毫秒）</td>
+        </tr>
+        <tr>
+            <td>coverCaptureFormat</td>
+            <td>string</td>
+            <td>封面捕获格式（jpg/png/bmp）</td>
+        </tr>
+        <tr>
+            <td>videoEncoder</td>
+            <td>string</td>
+            <td>视频编码器，详见 [视频编码器说明](./video-encoder.md)</td>
+        </tr>
+        <tr>
+            <td>videoQuality</td>
+            <td>number</td>
+            <td>视频质量（0-100）</td>
+        </tr>
+        <tr>
+            <td>videoBitrate</td>
+            <td>string</td>
+            <td>视频码率（设置码率将忽略videoQuality）</td>
+        </tr>
+        <tr>
+            <td>pixelFormat</td>
+            <td>string</td>
+            <td>像素格式（yuv420p/yuv444p/rgb24）</td>
+        </tr>
+        <tr>
+            <td>audioEncoder</td>
+            <td>string</td>
+            <td>音频编码器，建议默认aac</td>
+        </tr>
+        <tr>
+            <td>audioBitrate</td>
+            <td>string</td>
+            <td>音频码率</td>
+        </tr>
+        <tr>
+            <td>volume</td>
+            <td>number</td>
+            <td>视频音量（0-100）</td>
+        </tr>
+        <tr>
+            <td>pagePrepareFn</td>
+            <td>Function</td>
+            <td>页面预处理函数，可以在渲染之前对Page对象操作</td>
+        </tr>
+        <tr>
+            <td>showProgress</td>
+            <td>boolean</td>
+            <td>是否在命令行展示进度</td>
+        </tr>
+        <tr>
+            <td>parallelWriteFrames</td>
+            <td>number</td>
+            <td>并行写入流的帧数</td>
+        </tr>
+    </tbody>
+</table>
 
 ## 事件
 
@@ -183,17 +487,33 @@
 
 注册字体
 
+#### options 参数
+
+参考 [Font](#Font) 字体参数。
+
 ### MultiVideo.registerFonts([options, ...])
 
 注册多个字体
+
+#### options 参数
+
+参考 [Font](#Font) 字体参数。
 
 ### MultiVideo.addAudio(options)
 
 添加音频
 
+#### options 参数
+
+参考 [Audio](#audio) 音频参数。
+
 ### MultiVideo.addAudios([options, ...])
 
 添加多个音频
+
+#### options 参数
+
+参考 [Audio](#audio) 音频参数。
 
 ### MultiVideo.input(chunk, [[transtion](#transition)])
 
@@ -210,6 +530,151 @@
 <br>
 
 # ChunkVideo
+
+分块视频
+
+## 构造函数
+
+### new ChunkVideo(options)
+
+#### options 参数
+
+<table width="100%">
+    <thead >
+        <tr>
+            <th>参数</th>
+            <th>类型</th>
+            <th>说明</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>url</td>
+            <td>string</td>
+            <td>待渲染的页面URL</td>
+        </tr>
+        <tr>
+            <td>outputPath</td>
+            <td>string</td>
+            <td>视频输出路径</td>
+        </tr>
+        <tr>
+            <td>width</td>
+            <td>number</td>
+            <td>视频宽度</td>
+        </tr>
+        <tr>
+            <td>height</td>
+            <td>number</td>
+            <td>视频高度</td>
+        </tr>
+        <tr>
+            <td>duration</td>
+            <td>number</td>
+            <td>视频时长</td>
+        </tr>
+        <tr>
+            <td>fps</td>
+            <td>number</td>
+            <td>视频帧率</td>
+        </tr>
+        <tr>
+            <td>transition</td>
+            <td>string | <a href="#transition">Transition</a></td>
+            <td>进入下一视频分块的转场效果</td>
+        </tr>
+        <tr>
+            <td>format</td>
+            <td>string</td>
+            <td>导出视频格式（mp4/webm）</td>
+        </tr>
+        <tr>
+            <td>attachCoverPath</td>
+            <td>string</td>
+            <td>附加到视频首帧的封面文件路径</td>
+        </tr>
+        <tr>
+            <td>coverCapture</td>
+            <td>boolean</td>
+            <td>是否捕获封面并输出</td>
+        </tr>
+        <tr>
+            <td>coverCaptureTime</td>
+            <td>number</td>
+            <td>封面捕获时间点（毫秒）</td>
+        </tr>
+        <tr>
+            <td>coverCaptureFormat</td>
+            <td>string</td>
+            <td>封面捕获格式（jpg/png/bmp）</td>
+        </tr>
+        <tr>
+            <td>videoEncoder</td>
+            <td>string</td>
+            <td>视频编码器，详见 <a href="./video-encoder.md">视频编码器说明</a></td>
+        </tr>
+        <tr>
+            <td>videoQuality</td>
+            <td>number</td>
+            <td>视频质量（0-100）</td>
+        </tr>
+        <tr>
+            <td>videoBitrate</td>
+            <td>string</td>
+            <td>视频码率（设置码率将忽略videoQuality）</td>
+        </tr>
+        <tr>
+            <td>pixelFormat</td>
+            <td>string</td>
+            <td>像素格式（yuv420p/yuv444p/rgb24）</td>
+        </tr>
+        <tr>
+            <td>audioEncoder</td>
+            <td>string</td>
+            <td>音频编码器，建议默认aac</td>
+        </tr>
+        <tr>
+            <td>audioBitrate</td>
+            <td>string</td>
+            <td>音频码率</td>
+        </tr>
+        <tr>
+            <td>volume</td>
+            <td>number</td>
+            <td>视频音量（0-100）</td>
+        </tr>
+        <tr>
+            <td>pagePrepareFn</td>
+            <td>Function</td>
+            <td>页面预处理函数，可以在渲染之前对Page对象操作</td>
+        </tr>
+        <tr>
+            <td>showProgress</td>
+            <td>boolean</td>
+            <td>是否在命令行展示进度</td>
+        </tr>
+        <tr>
+            <td>autostartRender</td>
+            <td>boolean</td>
+            <td>是否自动启动渲染，如果为false请务必在页面中执行 captureCtx.start()</td>
+        </tr>
+        <tr>
+            <td>consoleLog</td>
+            <td>boolean</td>
+            <td>是否开启控制台日志输出</td>
+        </tr>
+        <tr>
+            <td>videoPreprocessLog</td>
+            <td>boolean</td>
+            <td>是否开启视频预处理日志输出</td>
+        </tr>
+        <tr>
+            <td>parallelWriteFrames</td>
+            <td>number</td>
+            <td>并行写入流的帧数</td>
+        </tr>
+    </tbody>
+</table>
 
 ## 事件
 
@@ -231,17 +696,37 @@
 
 注册字体
 
+#### options 参数
+
+参考 [Font](#Font) 字体参数。
+
 ### ChunkVideo.registerFonts([options, ...])
 
 注册多个字体
+
+#### options 参数
+
+参考 [Font](#Font) 字体参数。
 
 ### ChunkVideo.addAudio(options)
 
 添加音频
 
+#### options 参数
+
+参考 [Audio](#audio) 音频参数。
+
 ### ChunkVideo.addAudios([options, ...])
 
 添加多个音频
+
+#### options 参数
+
+参考 [Audio](#audio) 音频参数。
+
+### ChunkVideo.setTransition(options)
+
+设置转场效果
 
 ### ChunkVideo.start()
 
@@ -250,6 +735,82 @@
 ### ChunkVideo.startAndWait(): Promise
 
 启动分块视频渲染合成并等待完成
+
+# Audio
+
+音频参数
+
+<table width="100%">
+    <thead >
+        <tr>
+            <th>参数</th>
+            <th>类型</th>
+            <th>说明</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>url</td>
+            <td>string</td>
+            <td>音频URL，与path二选一</td>
+        </tr>
+        <tr>
+            <td>path</td>
+            <td>string</td>
+            <td>音频本地路径，与url二选一</td>
+        </tr>
+        <tr>
+            <td>startTime</td>
+            <td>number</td>
+            <td>起始时间点（毫秒）</td>
+        </tr>
+        <tr>
+            <td>endTime</td>
+            <td>number</td>
+            <td>结束时间点（毫秒）</td>
+        </tr>
+        <tr>
+            <td>loop</td>
+            <td>boolean</td>
+            <td>是否循环播放</td>
+        </tr>
+        <tr>
+            <td>volume</td>
+            <td>number</td>
+            <td>音量（0-100）</td>
+        </tr>
+        <tr>
+            <td>seekStart</td>
+            <td>number</td>
+            <td>裁剪起始时间点（毫秒）</td>
+        </tr>
+        <tr>
+            <td>seekEnd</td>
+            <td>number</td>
+            <td>裁剪结束实际点（毫秒）</td>
+        </tr>
+        <tr>
+            <td>fadeInDuration</td>
+            <td>number</td>
+            <td>淡入时长（毫秒）</td>
+        </tr>
+        <tr>
+            <td>fadeOutDuration</td>
+            <td>number</td>
+            <td>淡出时长（毫秒）</td>
+        </tr>
+        <tr>
+            <td>retryFetchs</td>
+            <td>number</td>
+            <td>重试拉取次数</td>
+        </tr>
+        <tr>
+            <td>ignoreCache</td>
+            <td>boolean</td>
+            <td>是否忽略本地缓存</td>
+        </tr>
+    </tbody>
+</table>
 
 # Transition
 
@@ -277,3 +838,58 @@
     </tbody>
 </table>
 
+# Font
+
+字体参数
+
+<table width="100%">
+    <thead >
+        <tr>
+            <th>参数</th>
+            <th>类型</th>
+            <th>说明</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>url</td>
+            <td>string</td>
+            <td>字体URL，与path二选一</td>
+        </tr>
+        <tr>
+            <td>path</td>
+            <td>string</td>
+            <td>字体本地路径，与url二选一</td>
+        </tr>
+        <tr>
+            <td>family</td>
+            <td>string</td>
+            <td>字体集名称</td>
+        </tr>
+        <tr>
+            <td>style</td>
+            <td>string</td>
+            <td>字体样式</td>
+        </tr>
+        <tr>
+            <td>weight</td>
+            <td>number | string</td>
+            <td>字体粗细</td>
+        </tr>
+        <tr>
+            <td>format</td>
+            <td>string</td>
+            <td>字体格式</td>
+        </tr>
+        <tr>
+            <td>retryFetchs</td>
+            <td>number</td>
+            <td>重试拉取次数</td>
+        </tr>
+        <tr>
+            <td>ignoreCache</td>
+            <td>boolean</td>
+            <td>是否忽略本地缓存</td>
+        </tr>
+    </tbody>
+</table>
