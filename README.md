@@ -110,7 +110,7 @@ const wvc = new WebVideoCreator();
 // 配置WVC
 wvc.config({
     // 根据您的硬件设备选择适合的编码器，这里采用的是Nvidia显卡的h264_nvenc编码器
-    // 编码器选择可参考VIDEO_ENCODER内提供的选项注释
+    // 编码器选择可参考 docs/video-encoder.md
     mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
 });
 
@@ -153,7 +153,7 @@ const wvc = new WebVideoCreator();
 // 配置WVC
 wvc.config({
     // 根据您的硬件设备选择适合的编码器，这里采用的是Nvidia显卡的h264_nvenc编码器
-    // 编码器选择可参考VIDEO_ENCODER内提供的选项注释
+    // 编码器选择可参考 docs/video-encoder.md
     mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
 });
 
@@ -205,7 +205,7 @@ const wvc = new WebVideoCreator();
 // 配置WVC
 wvc.config({
     // 根据您的硬件设备选择适合的编码器，这里采用的是Nvidia显卡的h264_nvenc编码器
-    // 编码器选择可参考VIDEO_ENCODER内提供的选项注释
+    // 编码器选择可参考 docs/video-encoder.md
     mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
 });
 
@@ -305,7 +305,7 @@ wvc.config({
     frameFormat: "jpeg",
     // BeginFrame捕获图像超时时间
     beginFrameTimeout: 5000,
-    // MP4格式的视频编码器，默认使用libx264软编码器，建议根据您的硬件选用合适的硬编码器加速合成
+    // MP4格式的视频编码器，默认使用libx264软编码器，建议根据您的硬件选用合适的硬编码器加速合成，编码器选择可参考 docs/video-encoder.md
     mp4Encoder: VIDEO_ENCODER.CPU.H264,
     // WEBM格式的视频编码器，默认使用libvpx软编码器，建议根据您的硬件选用合适的硬编码器加速合成
     webmEncoder: VIDEO_ENCODER.CPU.VP8,

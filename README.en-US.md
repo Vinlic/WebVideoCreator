@@ -110,7 +110,7 @@ const wvc = new WebVideoCreator();
 // Configure WVC
 wvc.config({
     // Choose an appropriate encoder based on your hardware. Here, we are using the h264_nvenc encoder for Nvidia graphics cards.
-    // You can refer to the options provided in VIDEO_ENCODER for encoder selection.
+    // Encoder selection can refer to docs/video-encoder.md
     mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
 });
 
@@ -153,7 +153,7 @@ const wvc = new WebVideoCreator();
 // Configure WVC
 wvc.config({
     // Choose an appropriate encoder based on your hardware. Here, we are using the h264_nvenc encoder for Nvidia graphics cards.
-    // You can refer to the options provided in VIDEO_ENCODER for encoder selection.
+    // Encoder selection can refer to docs/video-encoder.md
     mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
 });
 
@@ -205,7 +205,7 @@ const wvc = new WebVideoCreator();
 // Configure WVC
 wvc.config({
     // Choose an appropriate encoder based on your hardware. Here, we are using the h264_nvenc encoder for Nvidia graphics cards.
-    // You can refer to the options provided in VIDEO_ENCODER for encoder selection.
+    // Encoder selection can refer to docs/video-encoder.md
     mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
 });
 
@@ -302,7 +302,7 @@ wvc.config({
     frameFormat: "jpeg",
     // Timeout for capturing images with BeginFrame
     beginFrameTimeout: 5000,
-    // Video encoder for MP4 format; by default, it uses the libx264 software encoder; it's recommended to choose the appropriate hardware encoder for acceleration based on your hardware
+    // Video encoder for MP4 format; by default, it uses the libx264 software encoder; it's recommended to choose the appropriate hardware encoder for acceleration based on your hardware, Encoder selection can refer to docs/video-encoder.md.
     mp4Encoder: VIDEO_ENCODER.CPU.H264,
     // Video encoder for WEBM format; by default, it uses the libvpx software encoder; it's recommended to choose the appropriate hardware encoder for acceleration based on your hardware
     webmEncoder: VIDEO_ENCODER.CPU.VP8,
