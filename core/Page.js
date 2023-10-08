@@ -92,6 +92,8 @@ export default class Page extends EventEmitter {
     #cdpSession = null;
     /** @type {boolean} - 是否初始页面 */
     #firstPage = false;
+    /** @type {AsyncLock} - */
+    #asyncLock = new AsyncLock();
 
     /**
      * 构造函数
@@ -131,7 +133,7 @@ export default class Page extends EventEmitter {
      * 初始化页面
      */
     async init() {
-        await asyncLock.acquire("init", async () => {
+        await this.#asyncLock.acquire("init", async () => {
             // 如果是浏览器首个页面将复用已开启的第一个页面
             if (this.#firstPage)
                 this.target = (await this.parent.target.pages())[0];
@@ -291,7 +293,7 @@ export default class Page extends EventEmitter {
      * @param {boolean} [options.autostart=true] - 是否自动启动渲染
      */
     async startScreencast(options = {}) {
-        await asyncLock.acquire("startScreencast", async () => {
+        await this.#asyncLock.acquire("startScreencast", async () => {
             let { fps, duration, frameCount, autostart = true } = options;
             assert(this.isReady(), "Page state must be ready");
             assert(_.isUndefined(fps) || _.isFinite(fps), "fps must be number");
@@ -355,7 +357,7 @@ export default class Page extends EventEmitter {
      * 停止录制
      */
     async stopScreencast() {
-        await asyncLock.acquire("stopScreencast", async () => {
+        await this.#asyncLock.acquire("stopScreencast", async () => {
             await this.target.evaluate(async () => captureCtx.stopFlag = true);
             await this.#endCDPSession();
             this.#setState(Page.STATE.READY);
@@ -671,7 +673,7 @@ export default class Page extends EventEmitter {
      * 释放页面资源
      */
     async release() {
-        await asyncLock.acquire("release", async () => {
+        await this.#asyncLock.acquire("release", async () => {
             // 如果处于捕获状态则停止录制
             this.isCapturing() && await this.stopScreencast();
             // 如果CDP会话存在则结束会话
@@ -694,7 +696,7 @@ export default class Page extends EventEmitter {
      * 关闭页面
      */
     async close() {
-        await asyncLock.acquire("close", async () => {
+        await this.#asyncLock.acquire("close", async () => {
             if (this.isClosed())
                 return;
             // 设置页面状态为closed

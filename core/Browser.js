@@ -11,8 +11,6 @@ import installBrowser from "../lib/install-browser.js";
 import logger from "../lib/logger.js";
 import util from "../lib/util.js";
 
-// 异步锁
-const asyncLock = new AsyncLock();
 // 浏览器计数
 let browserIndex = 1;
 
@@ -69,9 +67,14 @@ export default class Browser {
     args = [];
     /** @type {PageOptions} - 浏览器日志是否输出到控制台 */
     pageOptions = {};
-    #launchCallbacks = [];
-    #firstPage = true;
+    /** @type {boolean} - 浏览器是否已关闭 */
     closed = false;
+    /** @type {Function[]} - 启动回调队列 */
+    #launchCallbacks = [];
+    /** @type {boolean} - 是否初始页面 */
+    #firstPage = true;
+    /** @type {AsyncLock} - 异步锁 */
+    #asyncLock = new AsyncLock();
 
     /**
      * 构造函数
@@ -114,43 +117,45 @@ export default class Browser {
      * 浏览器资源初始化
      */
     async init() {
-        let executablePath;
-        if(_.isString(this.executablePath))
-            executablePath = this.executablePath;
-        else
-            ({ executablePath } = await installBrowser());
-        // 启动浏览器
-        this.target = await puppeteer.launch({
-            // BeginFrameControl必需处于无头模式下可用，新无头"new"暂时不可用，请关注进展：https://bugs.chromium.org/p/chromium/issues/detail?id=1480747
-            headless: true,
-            // 浏览器入口文件路径
-            executablePath,
-            // 忽略HTTPS错误
-            ignoreHTTPSErrors: true,
-            // 浏览器启动超时时间（毫秒）
-            timeout: 30000,
-            // 是否输出调试信息到控制台
-            dumpio: _.defaultTo(globalConfig.browserDebug, false),
-            // 是否使用管道通信
-            pipe: false,
-            // 用户目录路径
-            userDataDir: "tmp/browser",
-            // 浏览器启动参数
-            args: this.#generateArgs()
+        await this.#asyncLock.acquire("init", async () => {
+            let executablePath;
+            if (_.isString(this.executablePath))
+                executablePath = this.executablePath;
+            else
+                ({ executablePath } = await installBrowser());
+            // 启动浏览器
+            this.target = await puppeteer.launch({
+                // BeginFrameControl必需处于无头模式下可用，新无头"new"暂时不可用，请关注进展：https://bugs.chromium.org/p/chromium/issues/detail?id=1480747
+                headless: true,
+                // 浏览器入口文件路径
+                executablePath,
+                // 忽略HTTPS错误
+                ignoreHTTPSErrors: true,
+                // 浏览器启动超时时间（毫秒）
+                timeout: 30000,
+                // 是否输出调试信息到控制台
+                dumpio: _.defaultTo(globalConfig.browserDebug, false),
+                // 是否使用管道通信
+                pipe: false,
+                // 用户目录路径
+                userDataDir: "tmp/browser",
+                // 浏览器启动参数
+                args: this.#generateArgs()
+            });
+            // 浏览器关闭时自动处理
+            this.target.once("disconnected", () => {
+                this.close()
+                    .catch(err => logger.error(`Browser ${this.id} close error:`, err));
+            });
+            // 创建页面池
+            this.#createPagePool();
+            // 预热页面池
+            await this.#warmupPagePool();
+            // 启动回调
+            this.#launchCallbacks.forEach(fn => fn());
+            // 设置浏览器状态为已就绪
+            this.#setState(Browser.STATE.READY);
         });
-        // 浏览器关闭时自动处理
-        this.target.once("disconnected", () => {
-            this.close()
-                .catch(err => logger.error(`Browser ${this.id} close error:`, err));
-        });
-        // 创建页面池
-        this.#createPagePool();
-        // 预热页面池
-        await this.#warmupPagePool();
-        // 启动回调
-        this.#launchCallbacks.forEach(fn => fn());
-        // 设置浏览器状态为已就绪
-        this.#setState(Browser.STATE.READY);
     }
 
     /**
@@ -225,7 +230,7 @@ export default class Browser {
      * 释放浏览器资源
      */
     async release() {
-        await asyncLock.acquire("release", async () => {
+        await this.#asyncLock.acquire("release", async () => {
             // 通知浏览器资源池释放资源
             await this.parent.releaseBrowser(this);
             // 设置浏览器状态为已就绪
@@ -237,7 +242,7 @@ export default class Browser {
      * 关闭浏览器
      */
     async close() {
-        await asyncLock.acquire("close", async () => {
+        await this.#asyncLock.acquire("close", async () => {
             if (this.isClosed())
                 return;
             // 设置浏览器状态为已关闭
