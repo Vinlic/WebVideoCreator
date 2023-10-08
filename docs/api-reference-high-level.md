@@ -48,6 +48,16 @@
             <td>浏览器GPU加速开关，建议开启提高渲染性能，如果您没有GPU设备或遭遇了诡异的渲染问题则可以关闭它</td>
         </tr>
         <tr>
+            <td>browserUseAngle</td>
+            <td>boolean</td>
+            <td>浏览器是否使用Angle作为渲染后端，默认开启增强渲染跨平台兼容性和性能</td>
+        </tr>
+        <tr>
+            <td>browserDisableDevShm</td>
+            <td>boolean</td>
+            <td>是否禁用浏览器使用共享内存，当/dev/shm较小时建议开启此选项</td>
+        </tr>
+        <tr>
             <td>browserExecutablePath</td>
             <td>string</td>
             <td>浏览器可执行文件路径，设置后将禁用内部的浏览器，建议您默认使用内部的浏览器以确保功能完整性</td>

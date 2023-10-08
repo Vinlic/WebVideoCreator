@@ -284,6 +284,10 @@ wvc.config({
     ffprobeExecutablePath: "...",
     // 浏览器GPU加速开关，建议开启提高渲染性能，如果您没有GPU设备或遭遇了诡异的渲染问题则可以关闭它
     browserUseGPU: true,
+    // 浏览器是否使用Angle作为渲染后端，建议开启增强渲染跨平台兼容性和性能
+    browserUseAngle: true,
+    // 是否禁用浏览器使用共享内存，当/dev/shm分区较小时建议开启此选项
+    browserDisableDevShm: false,
     // 浏览器可执行文件路径，设置后将禁用内部的浏览器，建议您默认使用内部的浏览器以确保功能完整性
     browserExecutablePath: "...",
     // 兼容渲染模式，不建议启用，启用后将禁用HeadlessExperimental.beginFrame API调用改为普通的Page.screenshot

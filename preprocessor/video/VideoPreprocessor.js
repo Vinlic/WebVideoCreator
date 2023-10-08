@@ -6,6 +6,7 @@ import VideoDownloadTask from "./VideoDownloadTask.js";
 import VideoProcessTask from "./VideoProcessTask.js";
 import VideoConfig from "./VideoConfig.js";
 import { VIDEO_ENCODER, VIDEO_ENCODER_MAP } from "../../lib/const.js";
+import globalConfig from "../../lib/global-config.js";
 
 /**
  * 视频预处理器
@@ -28,7 +29,7 @@ export default class VideoPreprocessor extends Preprocessor {
         const { videoEncoder } = options;
         assert(_.isUndefined(videoEncoder) || _.isString(videoEncoder), "videoEncoder must be string");
         assert(_.isUndefined(videoEncoder) || VIDEO_ENCODER_MAP.H264.includes(videoEncoder), `videoEncoder ${videoEncoder} is not H264 encoder`);
-        this.videoEncoder = _.defaultTo(videoEncoder, VIDEO_ENCODER.CPU.H264);
+        this.videoEncoder = _.defaultTo(videoEncoder, _.defaultTo(globalConfig.mp4Encoder, VIDEO_ENCODER.CPU.H264));
     }
 
     /**

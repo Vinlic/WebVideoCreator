@@ -6,6 +6,7 @@ import _ from "lodash";
 
 import Browser from "./Browser.js";
 import Page from "./Page.js";
+import globalConfig from "../lib/global-config.js";
 import logger from "../lib/logger.js";
 
 // 异步锁
@@ -31,7 +32,7 @@ export default class ResourcePool {
      * @typedef {Object} BrowserOptions
      * @property {number} numPageMax - 页面资源最大数量
      * @property {number} numPageMin - 页面资源最小数量
-     * @property {string} [executablePath] - 浏览器入口文件路径
+     * @property {string} [executablePath] - 浏览器可执行文件路径
      * @property {boolean} [useGPU=true] - 是否使用GPU加速渲染
      * @property {boolean} [useAngle=true] - 3D渲染后端是否使用Angle，建议开启
      * @property {boolean} [disableDevShm=false] - 是否禁用共享内存，当/dev/shm较小时建议开启此选项
@@ -66,20 +67,20 @@ export default class ResourcePool {
      * 构造函数
      * 
      * @param {Object} options - 资源池选项
-     * @param {number} options.numBrowserMax - 浏览器资源最大数量
-     * @param {number} options.numBrowserMin - 浏览器资源最小数量
+     * @param {number} [options.numBrowserMax=5] - 浏览器资源最大数量
+     * @param {number} [options.numBrowserMin=1] - 浏览器资源最小数量
      * @param {BrowserOptions} [options.browserOptions={}] - 浏览器选项
      * @param {VideoPreprocessorOptions} [options.videoPreprocessorOptions={}] - 视频预处理器选项
      */
-    constructor(options) {
+    constructor(options = {}) {
         assert(_.isObject(options), "ResourcePool options must provided");
         const { numBrowserMax, numBrowserMin, browserOptions, videoPreprocessorOptions } = options;
-        assert(_.isFinite(numBrowserMax), "ResourcePool options.numBrowserMax must be number");
-        assert(_.isFinite(numBrowserMin), "ResourcePool options.numBrowserMin must be number");
+        assert(_.isUndefined(numBrowserMax) || _.isFinite(numBrowserMax), "ResourcePool options.numBrowserMax must be number");
+        assert(_.isUndefined(numBrowserMin) || _.isFinite(numBrowserMin), "ResourcePool options.numBrowserMin must be number");
         assert(_.isUndefined(browserOptions) || _.isObject(browserOptions), "ResourcePool options.browserOptions must be object");
         assert(_.isUndefined(videoPreprocessorOptions) || _.isObject(videoPreprocessorOptions), "ResourcePool options.browserOptions must be object");
-        this.numBrowserMax = numBrowserMax;
-        this.numBrowserMin = numBrowserMin;
+        this.numBrowserMax = _.defaultTo(numBrowserMax, _.defaultTo(globalConfig.numBrowserMax, 5));
+        this.numBrowserMin = _.defaultTo(numBrowserMin, _.defaultTo(globalConfig.numBrowserMin, 1));
         this.browserOptions = _.defaultTo(browserOptions, {});
         this.videoPreprocessorOptions = _.defaultTo(videoPreprocessorOptions, {});
         this.#videoPreprocessor = new VideoPreprocessor(this.videoPreprocessorOptions);

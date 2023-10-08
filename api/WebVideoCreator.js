@@ -28,24 +28,20 @@ export default class WebVideoCreator {
             if (!_.isUndefined(config[key]))
                 globalConfig[key] = config[key];
         }
-        const { ffmpegExecutablePath, ffprobeExecutablePath, browserUseGPU, numBrowserMax, numBrowserMin, numPageMax, numPageMin, mp4Encoder } = globalConfig;
+        const { ffmpegExecutablePath, ffprobeExecutablePath, browserUseGPU, mp4Encoder } = globalConfig;
+        // 未启用浏览器GPU发出性能警告
         if (!browserUseGPU)
             logger.warn("browserUseGPU is turn off, recommended to turn it on to improve rendering performance");
+        // 未使用硬编码器发出性能警告
         if (Object.values(VIDEO_ENCODER.CPU).includes(mp4Encoder))
             logger.warn(`Recommended to use video hard coder to accelerate video synthesis, currently used is [${globalConfig.mp4Encoder}]`);
+        // 设置FFmpeg可执行文件路径
         ffmpegExecutablePath && ffmpeg.setFfmpegPath(ffmpegExecutablePath);
+        // 设置FFprobe可执行文件路径
         ffprobeExecutablePath && ffmpeg.setFfprobePath(ffprobeExecutablePath);
-        this.pool = new ResourcePool({
-            numBrowserMin,
-            numBrowserMax,
-            browserOptions: {
-                numPageMin,
-                numPageMax
-            },
-            videoPreprocessorOptions: {
-                videoEncoder: mp4Encoder
-            }
-        });
+        // 实例化浏览器资源池
+        this.pool = new ResourcePool();
+        // 设置已配置
         this.#configured = true;
     }
 
