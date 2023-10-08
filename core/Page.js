@@ -103,7 +103,6 @@ export default class Page extends EventEmitter {
      * @property {number} [options.beginFrameTimeout=5000] - BeginFrame超时时间（毫秒）
      * @property {string} [options.frameFormat="jpeg"] - 帧图格式（jpeg/png）
      * @property {number} [options.frameQuality=80] - 帧图质量（0-100）
-     * @property {string[]} [options.args] - 浏览器启动参数
      */
     constructor(parent, options) {
         super();

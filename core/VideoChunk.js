@@ -22,19 +22,18 @@ export default class VideoChunk extends Synthesizer {
     /**
      * 构造函数
      * 
-     * @param {Object} options - 序列帧合成器选项
+     * @param {Object} options - 分块合成器选项
      * @param {number} options.width - 视频宽度
      * @param {number} options.height - 视频高度
      * @param {number} options.fps - 视频合成帧率
      * @param {number} options.duration - 视频时长
+     * @param {string} [options.outputPath] - 导出视频分块路径
      * @param {string|Transition} [options.transition] - 进入下一视频分块的转场
-     * @param {boolean} [options.autoremove=true] - 被合并后是否自动删除分块文件
+     * @param {boolean} [options.autoremove=true] - 分块被合并后是否自动删除分块文件
      * @param {string} [options.videoEncoder] - 视频编码器
      * @param {number} [options.videoQuality] - 视频质量（0-100）
      * @param {string} [options.videoBitrate] - 视频码率（设置码率将忽略videoQuality）
      * @param {string} [options.pixelFormat] - 像素格式（yuv420p/yuv444p/rgb24）
-     * @param {string} [options.audioEncoder] - 音频编码器
-     * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
      * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
      */

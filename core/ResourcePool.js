@@ -25,7 +25,6 @@ export default class ResourcePool {
      * @property {number} [beginFrameTimeout=5000] - BeginFrame超时时间（毫秒）
      * @property {string} [frameFormat="jpeg"] - 帧图格式
      * @property {number} [frameQuality=80] - 帧图质量（0-100）
-     * @property {string[]} [args] - 浏览器启动参数
      */
 
     /**

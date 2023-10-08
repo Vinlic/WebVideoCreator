@@ -321,7 +321,7 @@
 
 #### options 参数
 
-参考 [Font](#Font) 字体参数。
+参考 [Font](#font) 字体参数。
 
 ### SingleVideo.registerFonts([options, ...])
 
@@ -329,7 +329,7 @@
 
 #### options 参数
 
-参考 [Font](#Font) 字体参数。
+参考 [Font](#font) 字体参数。
 
 ### SingleVideo.addAudio(options)
 
@@ -501,7 +501,7 @@
 
 #### options 参数
 
-参考 [Font](#Font) 字体参数。
+参考 [Font](#font) 字体参数。
 
 ### MultiVideo.registerFonts([options, ...])
 
@@ -509,7 +509,7 @@
 
 #### options 参数
 
-参考 [Font](#Font) 字体参数。
+参考 [Font](#font) 字体参数。
 
 ### MultiVideo.addAudio(options)
 
@@ -718,7 +718,7 @@
 
 #### options 参数
 
-参考 [Font](#Font) 字体参数。
+参考 [Font](#font) 字体参数。
 
 ### ChunkVideo.registerFonts([options, ...])
 
@@ -726,7 +726,7 @@
 
 #### options 参数
 
-参考 [Font](#Font) 字体参数。
+参考 [Font](#font) 字体参数。
 
 ### ChunkVideo.addAudio(options)
 
@@ -748,7 +748,7 @@
 
 设置转场效果
 
-#### transition 参数
+#### options 参数
 
 参考 [Transition](#transition) 转场参数。
 

@@ -128,7 +128,7 @@ export default class Synthesizer extends EventEmitter {
      * @param {string} [options.pixelFormat="yuv420p"] - 像素格式（yuv420p/yuv444p/rgb24）
      * @param {string} [options.audioEncoder="aac"] - 音频编码器
      * @param {string} [options.audioBitrate] - 音频码率
-     * @param {number} [options.volume] - 视频音量（0-100）
+     * @param {number} [options.volume=100] - 视频音量（0-100）
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
      * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
      */

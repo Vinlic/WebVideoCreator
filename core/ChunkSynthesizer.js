@@ -21,7 +21,7 @@ export default class ChunkSynthesizer extends Synthesizer {
     /**
      * 构造函数
      * 
-     * @param {Object} options - 序列帧合成器选项
+     * @param {Object} options - 视频分块合成器选项
      * @param {string} options.outputPath - 导出视频路径
      * @param {number} options.width - 视频宽度
      * @param {number} options.height - 视频高度
@@ -82,6 +82,11 @@ export default class ChunkSynthesizer extends Synthesizer {
         this.duration += chunk.getOutputDuration();
         this._targetFrameCount += chunk.targetFrameCount;
     }
+
+    /**
+     * 屏蔽结束输入
+     */
+    endInput() {}
 
     /**
      * 启动合成
