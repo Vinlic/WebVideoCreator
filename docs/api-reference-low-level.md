@@ -345,6 +345,10 @@
 
 获取页面中全局的 `captureCtx.config` 配置内容。
 
+### Page.reset(): Promise
+
+重置页面封装，重置后可开始新的捕获。
+
 ### Page.release(): Promise
 
 释放页面封装自身，将被回收到页面池进行下一次分配。

@@ -55,6 +55,8 @@ export default class Page extends EventEmitter {
         CAPTURING: Symbol("CAPTURING"),
         /** 已暂停 */
         PAUSED: Symbol("PAUSED"),
+        /** 已停止 */
+        STOPPED: Symbol("STOPPED"),
         /** 不可用 */
         UNAVAILABLED: Symbol("UNAVAILABLED"),
         /** 已关闭 */
@@ -86,6 +88,8 @@ export default class Page extends EventEmitter {
     acceptResources = [];
     /** @type {Object[]} - 已拒绝资源列表 */
     rejectResources = [];
+    /** @type {Object[]} - CSS动画列表 */
+    cssAnimations = [];
     /** @type {Set} - 资源排重Set */
     #resourceSet = new Set();
     /** @type {CDPSession} - CDP会话 */
@@ -172,11 +176,16 @@ export default class Page extends EventEmitter {
      * @returns {Object} - 控制器映射
      */
     async goto(url) {
+        assert(this.isReady(), "Page state must be ready");
         assert(util.isURL(url), "goto url is invalid");
         // 清除资源
         this.#clearResources();
         // 检查URL
-        this.#checkURL(url);
+        // this.#checkURL(url);
+        // 开始CDP会话
+        await this.#startCDPSession();
+        // 监听CSS动画
+        await this.#listenCSSAnimations();
         // 页面导航到URL
         await this.target.goto(url);
         await Promise.all([
@@ -312,12 +321,10 @@ export default class Page extends EventEmitter {
                 await this.setViewport({ width, height, ..._options });
             // 将鼠标移动到屏幕中央
             await this.target.mouse.move(width / 2, height / 2);
-            // 开始CDP会话
-            await this.#startCDPSession();
             // 设置CSS动画播放速度
             await this.#cdpSession.send("Animation.setPlaybackRate", {
                 // 根据帧率设置播放速率
-                playbackRate: Math.floor(60 / fps)
+                playbackRate: 0
             });
             // 如果设置帧率或者总帧数将覆盖页面中设置的帧率和总帧数
             await this.target.evaluate(async config => {
@@ -360,7 +367,7 @@ export default class Page extends EventEmitter {
         await this.#asyncLock.acquire("stopScreencast", async () => {
             await this.target.evaluate(async () => captureCtx.stopFlag = true);
             await this.#endCDPSession();
-            this.#setState(Page.STATE.READY);
+            this.#setState(Page.STATE.STOPPED);
         });
     }
 
@@ -409,7 +416,6 @@ export default class Page extends EventEmitter {
      */
     #emitScreencastCompleted() {
         this.emit("screencastCompleted");
-        this.#setState(Page.STATE.READY);
     }
 
     /**
@@ -475,10 +481,36 @@ export default class Page extends EventEmitter {
     }
 
     /**
+     * seek所有CSS动画
+     */
+    async #seekCSSAnimations(currentTime) {
+        if (this.cssAnimations.length === 0)
+            return;
+        const cssAnimationSeekPromises = [];
+        this.cssAnimations = this.cssAnimations.filter(animation => {
+            animation.startTime = _.defaultTo(animation.startTime, currentTime);
+            const animationCurrentTime = currentTime - animation.startTime;
+            if (animationCurrentTime < 0)
+                return true;
+            cssAnimationSeekPromises.push(this.#cdpSession.send("Animation.seekAnimations", {
+                animations: [animation.id],
+                currentTime: animationCurrentTime
+            }));
+            if (animationCurrentTime >= (animation.duration * (animation.iterations || Infinity)) + animation.delay)
+                return false;
+            return true;
+        });
+        await Promise.all(cssAnimationSeekPromises);
+    }
+
+    /**
      * 捕获帧
      */
-    async #captureFrame() {
+    async #captureFrame(currentTime) {
         try {
+            // CSS动画同步
+            await this.#seekCSSAnimations(currentTime);
+            // 非兼容渲染模式使用BeginFrame API进行捕获否则使用截图API
             if (!globalConfig.compatibleRenderingMode) {
                 let timer;
                 // 帧数据捕获
@@ -558,6 +590,26 @@ export default class Page extends EventEmitter {
     async #startCDPSession() {
         this.#cdpSession && await this.#endCDPSession();
         this.#cdpSession = await this.target.createCDPSession();  //创建会话
+    }
+
+    /**
+     * 监听CSS动画
+     */
+    async #listenCSSAnimations() {
+        // 启用动画通知域
+        await this.#cdpSession.send("Animation.enable");
+        // 监听动画开始事件将动画属性添加到调度列表
+        this.#cdpSession.on("Animation.animationStarted", animation => this.cssAnimations.push({
+            id: animation.animation.id,
+            startTime: null,
+            delay: animation.animation.source.delay,
+            duration: animation.animation.source.duration,
+            iterations: animation.animation.source.iterations
+        }));
+        // 监听动画取消时间将动画属性从调度列表移除
+        this.#cdpSession.on("Animation.animationCanceled", animation => {
+            this.cssAnimations = this.cssAnimations.filter(_animation => _animation.id != animation.id);
+        });
     }
 
     /**
@@ -670,10 +722,10 @@ export default class Page extends EventEmitter {
     }
 
     /**
-     * 释放页面资源
+     * 重置页面
      */
-    async release() {
-        await this.#asyncLock.acquire("release", async () => {
+    async reset() {
+        await this.#asyncLock.acquire("reset", async () => {
             // 如果处于捕获状态则停止录制
             this.isCapturing() && await this.stopScreencast();
             // 如果CDP会话存在则结束会话
@@ -685,8 +737,18 @@ export default class Page extends EventEmitter {
             this.#resourceSet = new Set();
             // 跳转空白页释放页面内存
             await this.target.goto("about:blank");
-            // 通知浏览器页面池释放页面资源
-            await this.parent.releasePage(this);
+            // 设置页面状态为ready
+            this.#setState(Page.STATE.READY);
+        });
+    }
+
+    /**
+     * 释放页面资源
+     */
+    async release() {
+        await this.#asyncLock.acquire("release", async () => {
+            // 重置页面
+            await this.reset();
             // 设置页面状态为ready
             this.#setState(Page.STATE.READY);
         });
@@ -729,6 +791,7 @@ export default class Page extends EventEmitter {
         this.fonts = [];
         this.acceptResources = [];
         this.rejectResources = [];
+        this.cssAnimations = [];
     }
 
     /**

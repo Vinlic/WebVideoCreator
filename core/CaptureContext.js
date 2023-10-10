@@ -135,7 +135,7 @@ export default class CaptureContext {
                 this._callTimeoutCallbacks();
 
                 // 捕获帧图 - 此函数请见Page.js的#envInit的exposeFunction
-                if (!await ____captureFrame()) {
+                if (!await ____captureFrame(this.currentTime)) {
                     this.stopFlag = true;
                     return;
                 }
