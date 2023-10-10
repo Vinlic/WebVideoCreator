@@ -286,6 +286,8 @@ wvc.config({
     browserUseGPU: true,
     // Path to the browser executable file; setting this will disable the internal browser; it's recommended to use the internal browser for completeness
     browserExecutablePath: "...",
+    // Allow unsafe contexts, false by default. Once enabled, users can navigate to unsafe URLs, but due to unsafe context restrictions, dynamic images and embedded videos cannot be used on the page
+    allowUnsafeContext: false,
     // Compatible rendering mode; not recommended to enable; enabling this will disable HeadlessExperimental.beginFrame API calls and use regular Page.screenshot, which can lead to decreased rendering performance and frame rate desynchronization in some animations; you can try enabling it if you encounter the error "TargetCloseError: Protocol error (HeadlessExperimental.beginFrame): Target closed"
     compatibleRenderingMode: false,
     // Minimum number of browser instances in the resource pool

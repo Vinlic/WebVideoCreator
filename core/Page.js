@@ -181,7 +181,7 @@ export default class Page extends EventEmitter {
         // 清除资源
         this.#clearResources();
         // 检查URL
-        // this.#checkURL(url);
+        !globalConfig.allowUnsafeContext && this.#checkURL(url);
         // 开始CDP会话
         await this.#startCDPSession();
         // 监听CSS动画

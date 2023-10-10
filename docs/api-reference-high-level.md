@@ -63,6 +63,11 @@
             <td>浏览器可执行文件路径，设置后将禁用内部的浏览器，建议您默认使用内部的浏览器以确保功能完整性</td>
         </tr>
         <tr>
+            <td>allowUnsafeContext</td>
+            <td>boolean</td>
+            <td>默认禁用，开启后能够导航到不安全的URL，但由于不安全上下文限制，将无法在页面中使用动态图像和内嵌视频</td>
+        </tr>
+        <tr>
             <td>compatibleRenderingMode</td>
             <td>boolean</td>
             <td>兼容渲染模式，不建议启用，启用后将禁用HeadlessExperimental.beginFrame API调用改为普通的Page.screenshot，这会导致渲染性能下降，且部分动画可能帧率无法同步，当你遭遇下面错误的时候可以尝试开启它：TargetCloseError: Protocol error (HeadlessExperimental.beginFrame): Target closed</td>
