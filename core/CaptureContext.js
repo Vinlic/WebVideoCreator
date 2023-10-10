@@ -104,7 +104,9 @@ export default class CaptureContext {
         // 递归捕获帧
         (function nextFrame() {
             (async () => {
-
+                // 如果已停止则跳出
+                if(this.stopFlag)
+                    return;
                 // 媒体调度
                 const mediaRenderPromises = this.dispatchMedias.map(media => (async () => {
                     // 媒体可销毁时执行销毁
@@ -147,6 +149,10 @@ export default class CaptureContext {
                     // 完成录制回调 - 此函数请见Page.js的#envInit的exposeFunction
                     return ____screencastCompleted();
                 }
+                // 如果未到达目标帧数但已被停止也触发录制完成
+                else if(this.stopFlag)
+                    return ____screencastCompleted();
+
                 // 开始捕获下一帧
                 nextFrame.bind(this)();
             })()
