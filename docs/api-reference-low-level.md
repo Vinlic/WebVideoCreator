@@ -1,5 +1,11 @@
 # 低级别 API
 
+```javascript
+import { core } from "web-video-creator"
+// 低级API在core暴露
+const { ... } = core;
+```
+
 # ResourcePool
 
 资源池
