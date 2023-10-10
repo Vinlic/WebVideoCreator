@@ -20,6 +20,8 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
 
 这一切的前提由Chrome提供的[确定性渲染模式](https://goo.gle/chrome-headless-rendering)和无头实验API支持：[HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame)
 
+答疑交流QQ群：752693580
+
 <br>
 
 # 特性

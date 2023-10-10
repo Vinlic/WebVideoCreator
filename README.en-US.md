@@ -20,6 +20,8 @@ For the code executing the rendering, it remains oblivious to the change. Everyt
 
 All of this is made possible by Chrome's provided [deterministic rendering mode](https://goo.gle/chrome-headless-rendering) and support for the headless experimental API: [HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame).
 
+Q&A and discussion group on QQ: 752693580
+
 <br>
 
 # Features
