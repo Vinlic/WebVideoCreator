@@ -636,7 +636,7 @@ If you find the bitrate inappropriate, you can set `videoBitrate` separately:
 const video = wvc.createSingleVideo({
     ...,
     // Set video bitrate to 8Mbps
-    videoBitrate: "8m"
+    videoBitrate: "8192k"
 });
 ```
 

@@ -641,7 +641,7 @@ const video = wvc.createSingleVideo({
 const video = wvc.createSingleVideo({
     ...,
     // 设置视频码率为8Mbps
-    videoBitrate: "8m"
+    videoBitrate: "8192k"
 });
 ```
 
