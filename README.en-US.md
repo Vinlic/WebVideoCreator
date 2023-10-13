@@ -8,17 +8,7 @@
 
 WebVideoCreator (abbreviated as WVC) is a framework for rendering web animations into videos. It's implemented based on Node.js + Puppeteer + Chrome + FFmpeg. It performs deterministic rendering and captures any HTML5-playable animations (CSS3 animations/SVG animations/Lottie animations/GIF animations/APNG animations/WEBP animations) and any timeline-based animations driven by [RAF](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame). You can also mischievously use `setInterval` or `setTimeout` to control animations. WVC supports embedding MP4 and transparent WebM videos, as well as features such as transition compositing, audio synthesis, and font loading. Let's get started with the [Quick Start](#quick-start).
 
-WVC creates a virtual time environment for your cool animated pages, which can be imagined as something akin to "The Truman Show." Its main responsibility is to transform an **uncertain rendering environment** into a **deterministic rendering environment**.
-
-### Uncertain Rendering Environment
-
-In everyday usage, web browsers do not render animations in "real-time synchronization." When system load is high, there may be frame drops, resulting in animations that appear less smooth. To improve performance, browsers typically offload some decoding/rendering tasks to other threads, causing asynchrony in the timeline of animations (the `video` element is a classic example). These aspects are unreliable for video rendering, where every frame of animation should be deterministic.
-
-### Deterministic Rendering Environment
-
-For the code executing the rendering, it remains oblivious to the change. Everything happens as usual, but the flow of time becomes controllable. `currentTime` returned by RAF, the timing of callbacks for `setTimeout`/`setInterval`, `Date`, `performance.now`, and so on, are all determined based on the current progress of rendering. In addition to taking control of the clock, for dynamic images and embedded videos, typically not under the developer's control, experimental [WebCodecs API](https://github.com/w3c/webcodecs) has been used for takeover.
-
-All of this is made possible by Chrome's provided [deterministic rendering mode](https://goo.gle/chrome-headless-rendering) and support for the headless experimental API: [HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame).
+WVC creates a virtual time environment for your cool animated pages, which can be imagined as something akin to "The Truman Show." Its main responsibility is to transform an [uncertain rendering environment](./docs/renderer-env.md#不确定性的渲染环境) into a [deterministic rendering environment](./docs/renderer-env.md#确定性的渲染环境).
 
 Q&A and discussion group on QQ: 752693580
 
@@ -37,16 +27,6 @@ Q&A and discussion group on QQ: 752693580
 
 <br>
 
-# Supported Animation Libraries
-
-In theory, all web animation/graphics libraries should work smoothly in the WVC environment. Below, I've listed only the libraries that I have verified to be compatible:
-
-[Anime.js](https://animejs.com/) / [GSAP](https://greensock.com/) / [D3.js](https://d3js.org/) / [Three.js](https://threejs.org/) / [Echart](https://echarts.apache.org/) / [Lottie-Web](http://airbnb.io/lottie/#/web) / [PixiJS](https://pixijs.download/release/docs/index.html) / [Animate.css](https://animate.style/) / [Mo.js](https://mojs.github.io/) / [Tween.js](https://tweenjs.github.io/tween.js/)
-
-Please note that if you manually use [RAF](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame) to drive animations, ensure that you receive the `timestamp` parameter from the callback to set the animation's progress to that timestamp. Otherwise, frame rate asynchrony may occur.
-
-<br>
-
 # Video Demos
 
 While we may be missing an animation designer, we've still managed to capture and render some excellent animation demos from open platforms using WVC.
@@ -54,6 +34,16 @@ While we may be missing an animation designer, we've still managed to capture an
 Please visit the **[Rendering Example Page](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)** for more details.
 
 <img src="assets/demo.gif"/>
+
+<br>
+
+# Supported Animation Libraries
+
+In theory, all web animation/graphics libraries should work smoothly in the WVC environment. Below, I've listed only the libraries that I have verified to be compatible:
+
+[Anime.js](https://animejs.com/) / [GSAP](https://greensock.com/) / [D3.js](https://d3js.org/) / [Three.js](https://threejs.org/) / [Echart](https://echarts.apache.org/) / [Lottie-Web](http://airbnb.io/lottie/#/web) / [PixiJS](https://pixijs.download/release/docs/index.html) / [Animate.css](https://animate.style/) / [Mo.js](https://mojs.github.io/) / [Tween.js](https://tweenjs.github.io/tween.js/)
+
+Please note that if you manually use [RAF](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame) to drive animations, ensure that you receive the `timestamp` parameter from the callback to set the animation's progress to that timestamp. Otherwise, frame rate asynchrony may occur.
 
 <br>
 

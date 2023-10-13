@@ -8,17 +8,7 @@
 
 WebVideoCreator（简称WVC）是一个将Web动画渲染为视频的框架，基于 Node.js + Puppeteer + Chrome + FFmpeg 实现，它执行确定性的渲染，准确的以目标帧率捕获任何可在HTML5播放动画（CSS3动画/SVG动画/Lottie动画/GIF动画/APNG动画/WEBP动画）以及任何基于时间轴使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动的动画（[anime.js](https://animejs.com/)是一个不错的选择 :D），当然您也可以调皮的使用setInterval或者setTimeout来控制动画，支持嵌入mp4和透明webm视频，还支持转场合成、音频合成与字体加载等功能。让我们[快速开始](#快速开始)。
 
-WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以想象成是一个《楚门的世界》），它的主要职责是将一个 **不确定性渲染的环境** 转化到 **确定性渲染的环境**。
-
-### 不确定性的渲染环境
-
-在日常使用中，浏览器在执行动画渲染时并不是“实时同步”的，当系统负载较高时可能出现掉帧导致动画看上去不够平滑，并且为了提高性能浏览器通常会将部分解码/渲染任务交由其它线程处理，这导致动画间时间轴并不同步（video元素是一个典例:P）。这些对于视频渲染是不可靠的，视频的每一帧动画效果应该是确定性的。
-
-### 确定性的渲染环境
-
-对于执行渲染的代码来说它是无感的，一切照常发生，只是时间流速变得可控，RAF返回的currentTime、setTimeout/setInterval回调的调用时机、Date、performance.now等，都是根据当前已渲染的进度决定的。除了接管时钟，对于动态图像和内嵌视频这类通常不由开发者控制的媒体，采用了一些实验性的 [WebCodecs API](https://github.com/w3c/webcodecs) 进行了接管。
-
-这一切的前提由Chrome提供的[确定性渲染模式](https://goo.gle/chrome-headless-rendering)和无头实验API支持：[HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame)
+WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以想象成是一个《楚门的世界》），它的主要职责是将一个 [不确定性渲染的环境](./docs/renderer-env.md#不确定性的渲染环境) 转化到 [确定性渲染的环境](./docs/renderer-env.md#确定性的渲染环境)。
 
 答疑交流QQ群：752693580
 
@@ -37,16 +27,6 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
 
 <br>
 
-# 支持的动画库
-
-理论上所有的Web动画/图形库都能够在WVC环境正常运行，以下仅列出我已验证可用的库：
-
-[Anime.js](https://animejs.com/) / [GSAP](https://greensock.com/) / [D3.js](https://d3js.org/) / [Three.js](https://threejs.org/) / [Echart](https://echarts.apache.org/) / [Lottie-Web](http://airbnb.io/lottie/#/web) / [PixiJS](https://pixijs.download/release/docs/index.html) / [Animate.css](https://animate.style/) / [Mo.js](https://mojs.github.io/) / [Tween.js](https://tweenjs.github.io/tween.js/)
-
-需要注意的是，如果您手动使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动动画，请确保从回调中接收timestamp参数设置动画的进度到该时间点，否则可能出现帧率不同步。
-
-<br>
-
 # 视频DEMO
 
 我们还缺少动画设计师，不过还是从开放的平台中使用WVC捕获渲染了一些优秀的动画Demo。
@@ -54,6 +34,16 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
 在这里查看所有DEMO：**[渲染示例页面](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)**
 
 <img src="assets/demo.gif"/>
+
+<br>
+
+# 支持的动画库
+
+理论上所有的Web动画/图形库都能够在WVC环境正常运行，以下仅列出我已验证可用的库：
+
+[Anime.js](https://animejs.com/) / [GSAP](https://greensock.com/) / [D3.js](https://d3js.org/) / [Three.js](https://threejs.org/) / [Echart](https://echarts.apache.org/) / [Lottie-Web](http://airbnb.io/lottie/#/web) / [PixiJS](https://pixijs.download/release/docs/index.html) / [Animate.css](https://animate.style/) / [Mo.js](https://mojs.github.io/) / [Tween.js](https://tweenjs.github.io/tween.js/)
+
+需要注意的是，如果您手动使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动动画，请确保从回调中接收timestamp参数设置动画的进度到该时间点，否则可能出现帧率不同步。
 
 <br>
 
