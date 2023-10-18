@@ -10,6 +10,8 @@ WebVideoCreator（简称WVC）是一个将Web动画渲染为视频的框架，�
 
 WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以想象成是一个《楚门的世界》），它的主要职责是将一个 [不确定性渲染的环境](./docs/renderer-env.md#不确定性的渲染环境) 转化到 [确定性渲染的环境](./docs/renderer-env.md#确定性的渲染环境)。
 
+这一切的前提由Chrome提供的[确定性渲染模式](https://goo.gle/chrome-headless-rendering)和无头实验API支持：[HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame)
+
 答疑交流QQ群：752693580
 
 <br>

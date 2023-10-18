@@ -10,6 +10,8 @@ WebVideoCreator (abbreviated as WVC) is a framework for rendering web animations
 
 WVC creates a virtual time environment for your cool animated pages, which can be imagined as something akin to "The Truman Show." Its main responsibility is to transform an [uncertain rendering environment](./docs/renderer-env.md#不确定性的渲染环境) into a [deterministic rendering environment](./docs/renderer-env.md#确定性的渲染环境).
 
+All of this is made possible by Chrome's provided [deterministic rendering mode](https://goo.gle/chrome-headless-rendering) and support for the headless experimental API: [HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame).
+
 Q&A and discussion group on QQ: 752693580
 
 <br>
