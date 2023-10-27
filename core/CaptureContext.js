@@ -488,7 +488,7 @@ export default class CaptureContext {
             // 内部音频唯一ID
             id: audioId,
             // 音频来源
-            url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
+            url: this._currentUrlJoin(e.getAttribute("_src") || e.getAttribute("src")) || undefined,
             // 音频格式
             format: e.getAttribute("format") || undefined,
             // 音频开始时间点（毫秒）
@@ -536,9 +536,9 @@ export default class CaptureContext {
             // 内部音频唯一ID
             audioId: this.audioId++,
             // 视频来源
-            url: this._currentUrlJoin(e.getAttribute("src")) || undefined,
+            url: this._currentUrlJoin(e.getAttribute("_src") || e.getAttribute("src")) || undefined,
             // 蒙版视频来源
-            maskUrl: this._currentUrlJoin(e.getAttribute("maskSrc")) || undefined,
+            maskUrl: this._currentUrlJoin(e.getAttribute("_maskSrc") || e.getAttribute("maskSrc")) || undefined,
             // 视频格式
             format: e.getAttribute("format") || undefined,
             // 视频宽度
