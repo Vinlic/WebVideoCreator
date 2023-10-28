@@ -683,9 +683,10 @@ export default class CaptureContext {
      * @param {HTMLElement} target - 新元素
      */
     _copyElementStyle(source, target) {
-        for (var i = 0; i < source.style.length; i++) {
-            var property = source.style[i];
-            var value = source.style.getPropertyValue(property);
+        const sourceStyle = window.getComputedStyle(source);
+        for (var i = 0; i < sourceStyle.length; i++) {
+            var property = sourceStyle[i];
+            var value = sourceStyle.getPropertyValue(property);
             target.style.setProperty(property, value);
         }
     }
