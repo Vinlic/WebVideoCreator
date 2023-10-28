@@ -532,7 +532,7 @@ export default class Page extends EventEmitter {
                     this.#setState(Page.STATE.UNAVAILABLED);
                     throw new Error("beginFrame wait timeout");
                 }
-                if (!frameData) return true;
+                if (!frameData || !frameData.screenshotData) return true;
                 this.emit("frame", Buffer.from(frameData.screenshotData, "base64"));
             }
             else {
