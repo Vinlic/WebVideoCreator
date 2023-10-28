@@ -224,7 +224,7 @@ export default class VideoCanvas {
                 this.destory();
                 return false;
             }
-            this.seek(0);
+            await this.seek(0);
             return true;
         }
         catch (err) {
