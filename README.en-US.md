@@ -360,7 +360,7 @@ This operation also applies to MultiVideo and ChunkVideo.
 
 ## Inserting Video
 
-Currently, WVC supports `mp4` and `webm` video formats. To insert a video into your rendered HTML, include a `<video>` element with the desired video file. You can set attributes like `loop` and `muted`.
+Currently, WVC supports `mp4` and `webm` video formats. To insert a video into your rendered HTML, include a `<video>` element with the desired video file. You can set attributes like `loop` and `muted`. If your src does not contain the `. mp4` suffix name, it may not be recognized. Please add the `capture` attribute to identify the element that needs to be captured.
 
 ```html
 <video src="background.mp4" loop muted></video

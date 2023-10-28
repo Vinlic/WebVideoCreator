@@ -367,7 +367,7 @@ video.addAudios([...]);
 
 ## 插入视频
 
-目前支持 `mp4` 和 `webm` 格式的视频，只需在需要渲染的html中添加 `<video>` 元素，您可以设置循环和静音。
+目前支持 `mp4` 和 `webm` 格式的视频，只需在需要渲染的html中添加 `<video>` 元素，您可以设置循环和静音，如果您的src不包含 `.mp4` 后缀名可能无法被识别，请添加 `capture` 属性标识为需要捕获的元素。
 
 ```html
 <video src="background.mp4" loop muted></video>
