@@ -394,7 +394,9 @@ setTimeout(() => video.remove(), 8000);
 
 ### Transparent Channel Videos
 
-Transparent videos are great for compositing digital avatars (e.g., VTubers) into video scenes. In WVC, transparent videos should be in the `webm` format. Internally, they will be re-encoded into two mp4 container videos: one for the color base video and one for the mask video. These videos will be used for blending and drawing using the `globalCompositeOperation` in the browser canvas.
+Transparent videos are great for compositing digital avatars (e.g., VTubers) into video scenes. Please refer to **[Rendering Example Page](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)** Last Demo
+
+In WVC, transparent videos should be in the `webm` format. Internally, they will be re-encoded into two mp4 container videos: one for the color base video and one for the mask video. These videos will be used for blending and drawing using the `globalCompositeOperation` in the browser canvas.
 
 For users, it's seamless. You just need to include a `<video>` element in your HTML with the `src` set to the webm video file.
 

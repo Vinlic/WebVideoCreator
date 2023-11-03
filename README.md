@@ -401,7 +401,7 @@ setTimeout(() => video.remove(), 8000);
 
 ### 透明通道视频
 
-透明视频非常适合用于将vtuber数字人合成到视频画面中，结合精美的动画可以获得非常好的观看体验。
+透明视频非常适合用于将vtuber数字人合成到视频画面中，结合精美的动画可以获得非常好的观看体验，合成效果请参考 **[渲染示例页面](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)** 最后一个Demo。
 
 透明通道视频格式需为 `webm` ，在内部它会被重新编码为两个mp4容器的视频，分别是原色底视频和蒙版视频后在浏览器canvas中使用进行 `globalCompositeOperation` 进行图像混合并绘制。
 
