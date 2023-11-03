@@ -301,6 +301,7 @@ export default class VideoCanvas {
     reset() {
         // 清除未关闭的视频帧避免内存泄露
         this._clearUnclosedFrames();
+        this._clearUnclosedMaskFrames();
         this.frameIndex = null;
         this.currentTime = 0;
         this.decodedFrameIndex = 0;
@@ -320,6 +321,7 @@ export default class VideoCanvas {
         this.maskDecoder && this.maskDecoder.close();
         this.maskDecoder = null;
         this._clearUnclosedFrames();
+        this._clearUnclosedMaskFrames();
         this.buffer = null;
         this.maskBuffer = null;
         this.frameIndex = null;
@@ -367,6 +369,12 @@ export default class VideoCanvas {
         this.frames
             .forEach(frame => frame && frame.close());
         this.frames = [];
+    }
+
+    /**
+     * 清除未关闭的蒙版帧
+     */
+    _clearUnclosedMaskFrames() {
         this.maskFrames
             .forEach(maskFrame => maskFrame && maskFrame.close());
         this.maskFrames = [];
@@ -424,7 +432,7 @@ export default class VideoCanvas {
         let timer;
         await Promise.race([
             new Promise(resolve => {
-                this._clearUnclosedFrames();
+                this._clearUnclosedMaskFrames();
                 this.waitMaskFrameIndex = frameIndex;
                 this.waitMaskFrameCallback = resolve;
             }),
