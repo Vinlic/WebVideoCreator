@@ -451,6 +451,17 @@ export default class CaptureContext {
     }
 
     /**
+     * 添加音频
+     */
+    addAudio(options = {}) {
+        const audioId = this.audioId++;
+        ____addAudio({
+            audioId,
+            ...options
+        });
+    }
+
+    /**
      * 转化为SVG动画对象
      * 
      * @param {SVGSVGElement} e - SVG元素

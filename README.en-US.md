@@ -508,7 +508,7 @@ Lottie animations are also suitable for use as transition effects. You can play 
 
 By default, WVC starts rendering immediately after the page navigation is complete. If you
 
- want to perform some tasks before rendering, you can disable automatic rendering start in the options. In this case, remember to call `captureCtx.start()` in your page code, or rendering will be blocked indefinitely.
+ want to perform some tasks before rendering, you can disable automatic rendering start in the options. In this case, remember to call [captureCtx.start()](./docs/capture-ctx.md#capturecontextstart) in your page code, or rendering will be blocked indefinitely.
 
 ```javascript
 const video = wvc.createSingleVideo({

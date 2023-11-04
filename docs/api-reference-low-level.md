@@ -12,7 +12,7 @@ const { ... } = core;
 
 ## 构造函数
 
-### new ResourcePool(options)
+### new ResourcePool(options: Object)
 
 #### options 参数
 
@@ -74,7 +74,7 @@ const { ... } = core;
 
 ## 构造函数
 
-### new Browser(options)
+### new Browser(options: Object)
 
 #### options 参数
 
@@ -180,7 +180,7 @@ const { ... } = core;
 
 ## 构造函数
 
-### new Page(options)
+### new Page(options: Object)
 
 #### options 参数
 
@@ -232,7 +232,7 @@ const { ... } = core;
 
 初始化页面
 
-### Page.setViewport(options): Promise
+### Page.setViewport(options: Object): Promise
 
 设置视窗参数
 
@@ -265,7 +265,7 @@ const { ... } = core;
     </tbody>
 </table>
 
-### goto(url): Promise
+### goto(url: string): Promise
 
 导航到待渲染页面。
 
@@ -273,7 +273,7 @@ const { ... } = core;
 
 本地 URL 或远端 HTTPS URL，受制于浏览器的[安全上下文限制](https://w3c.github.io/webappsec-secure-contexts/)，只能访问 localhost / 127.0.0.1 或者使用 HTTPS 协议且证书有效的域
 
-### Page.registerFont(options)
+### Page.registerFont(options: Object)
 
 注册字体
 
@@ -281,7 +281,7 @@ const { ... } = core;
 
 参考 [Font](#font) 字体参数。
 
-### Page.registerFonts([options, ...])
+### Page.registerFonts([options: Object, ...])
 
 注册多个字体
 
@@ -289,7 +289,7 @@ const { ... } = core;
 
 参考 [Font](#font) 字体参数。
 
-### Page.waitForFontsLoaded(timeout): Promise
+### Page.waitForFontsLoaded(timeout: number): Promise
 
 等待字体加载完成。
 
@@ -297,7 +297,7 @@ const { ... } = core;
 
 超时时间（毫秒），默认 30000 毫秒
 
-### Page.startScreencast(options): Promise
+### Page.startScreencast(options: Object): Promise
 
 开始帧图流捕获
 
@@ -387,7 +387,7 @@ const { ... } = core;
 
 ## 构造函数
 
-### new Synthesizer(options)
+### new Synthesizer(options: Object)
 
 #### options 参数
 
@@ -506,7 +506,7 @@ const { ... } = core;
 
 终止合成，非特殊情况一般不要中断渲染。
 
-### Synthesizer.input(buffer)
+### Synthesizer.input(buffer: Buffer)
 
 输入帧数据。
 
@@ -518,7 +518,7 @@ const { ... } = core;
 
 结束帧图流的输入，通知 FFmpeg 所有帧已经输入完成等待合成完成。
 
-### Synthesizer.addAudio(options)
+### Synthesizer.addAudio(options: Object)
 
 添加音频。
 
@@ -526,7 +526,7 @@ const { ... } = core;
 
 参考 [Audio](#audio) 音频参数。
 
-### Synthesizer.addAudios([options, ...])
+### Synthesizer.addAudios([options: Object, ...])
 
 添加多个音频
 
@@ -562,7 +562,7 @@ const { ... } = core;
 
 ## 构造函数
 
-### new VideoChunk(options)
+### new VideoChunk(options: Object)
 
 #### options 参数
 
@@ -651,7 +651,7 @@ const { ... } = core;
 
 终止合成，非特殊情况一般不要中断渲染。
 
-### VideoChunk.input(buffer)
+### VideoChunk.input(buffer: Buffer)
 
 输入帧数据。
 
@@ -663,7 +663,7 @@ const { ... } = core;
 
 结束帧图流的输入，通知 FFmpeg 所有帧已经输入完成等待合成完成。
 
-### VideoChunk.addAudio(options)
+### VideoChunk.addAudio(options: Object)
 
 添加音频。
 
@@ -671,11 +671,11 @@ const { ... } = core;
 
 参考 [Audio](#audio) 音频参数。
 
-### VideoChunk.addAudios([options, ...])
+### VideoChunk.addAudios([options: Object, ...])
 
 添加多个音频
 
-### VideoChunk.setTransition(options)
+### VideoChunk.setTransition(options: Object)
 
 设置转场效果
 
@@ -707,7 +707,7 @@ const { ... } = core;
 
 ## 构造函数
 
-### new ChunkSynthesizer(options)
+### new ChunkSynthesizer(options: Object)
 
 #### options 参数
 
@@ -826,7 +826,7 @@ const { ... } = core;
 
 终止合成，非特殊情况一般不要中断渲染。
 
-### ChunkSynthesizer.input(chunk, transition)
+### ChunkSynthesizer.input(chunk: [VideoChunk](#videochunk), transition: [Transition](#transition))
 
 输入视频分块。
 
@@ -838,7 +838,7 @@ const { ... } = core;
 
 请参考 [Transition](#transition) 。
 
-### ChunkSynthesizer.addAudio(options)
+### ChunkSynthesizer.addAudio(options: Object)
 
 添加音频。
 
@@ -846,7 +846,7 @@ const { ... } = core;
 
 参考 [Audio](#audio) 音频参数。
 
-### ChunkSynthesizer.addAudios([options, ...])
+### ChunkSynthesizer.addAudios([options: Object, ...])
 
 添加多个音频
 

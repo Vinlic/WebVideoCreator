@@ -513,7 +513,7 @@ Lottie动画也很适合作为转场效果，您可以在一段视频的尾部�
 
 ## 延迟启动渲染
 
-WVC默认页面导航完成后立即启动渲染，如果希望在渲染之前进行一些工作，可以在选项中禁用自动启动渲染，禁用后请记得在您的页面中调用 `captureCtx.start()`，否则将永远阻塞。
+WVC默认页面导航完成后立即启动渲染，如果希望在渲染之前进行一些工作，可以在选项中禁用自动启动渲染，禁用后请记得在您的页面中调用 [captureCtx.start()](./docs/capture-ctx.md#capturecontextstart)，否则将永远阻塞。
 
 ```javascript
 const video = wvc.createSingleVideo({
