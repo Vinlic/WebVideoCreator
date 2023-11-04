@@ -236,7 +236,6 @@ export default class Page extends EventEmitter {
         styles && await this.#injectStyle(styles);
         await this.target.evaluate(async _timeout => {
             const fonts = [...document.fonts];
-            console.log(fonts.length);
             // 无字体则跳过加载
             if (fonts.length == 0)
                 return;

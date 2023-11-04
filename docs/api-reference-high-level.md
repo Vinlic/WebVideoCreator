@@ -2,7 +2,7 @@
 
 # WebVideoCreator
 
-### WebVideoCreator.config([options])
+### WebVideoCreator.config([options: Object])
 
 配置 WVC 的全局开关和属性，在任何操作之前都必须运行它。
 
@@ -132,7 +132,7 @@
 
 <br>
 
-### WebVideoCreator.createSingleVideo(options): [SingleVideo](#singlevideo)
+### WebVideoCreator.createSingleVideo(options: Object): [SingleVideo](#singlevideo)
 
 创建单幕视频实例
 
@@ -142,7 +142,7 @@
 
 <br>
 
-### WebVideoCreator.createMultiVideo(options): [MultiVideo](#multivideo)
+### WebVideoCreator.createMultiVideo(options: Object): [MultiVideo](#multivideo)
 
 创建多幕视频实例
 
@@ -152,7 +152,7 @@
 
 <br>
 
-### WebVideoCreator.createChunkVideo(options): [ChunkVideo](#chunkvideo)
+### WebVideoCreator.createChunkVideo(options: Object): [ChunkVideo](#chunkvideo)
 
 创建分块视频实例
 
@@ -168,7 +168,7 @@
 
 ## 构造函数
 
-### new SingleVideo(options)
+### new SingleVideo(options: Object)
 
 #### options 参数
 
@@ -284,7 +284,7 @@
         <tr>
             <td>autostartRender</td>
             <td>boolean</td>
-            <td>是否自动启动渲染，如果为false请务必在页面中执行 captureCtx.start()</td>
+            <td>是否自动启动渲染，如果为false请务必在页面中执行 <a href="./capture-ctx.md#capturecontextstart">captureCtx.start()</a></td>
         </tr>
         <tr>
             <td>consoleLog</td>
@@ -320,7 +320,7 @@
 
 ## 成员
 
-### SingleVideo.registerFont(options)
+### SingleVideo.registerFont(options: Object)
 
 注册字体
 
@@ -328,7 +328,7 @@
 
 参考 [Font](#font) 字体参数。
 
-### SingleVideo.registerFonts([options, ...])
+### SingleVideo.registerFonts([options: Object, ...])
 
 注册多个字体
 
@@ -336,7 +336,7 @@
 
 参考 [Font](#font) 字体参数。
 
-### SingleVideo.addAudio(options)
+### SingleVideo.addAudio(options: Object)
 
 添加音频
 
@@ -344,7 +344,7 @@
 
 参考 [Audio](#audio) 音频参数。
 
-### SingleVideo.addAudios([options, ...])
+### SingleVideo.addAudios([options: Object, ...])
 
 添加多个音频
 
@@ -368,7 +368,7 @@
 
 ## 构造函数
 
-### new MultiVideo(options)
+### new MultiVideo(options: Object)
 
 #### options 参数
 
@@ -488,7 +488,7 @@
 
 ### progress
 
-合成进度事件，回调参数：(progress, processedFrameCount, totalFrameCount)
+合成进度事件，回调参数：(progress: number, processedFrameCount: number, totalFrameCount: number)
 
 ### completed
 
@@ -500,7 +500,7 @@
 
 ## 成员
 
-### MultiVideo.registerFont(options)
+### MultiVideo.registerFont(options: Object)
 
 注册字体
 
@@ -508,7 +508,7 @@
 
 参考 [Font](#font) 字体参数。
 
-### MultiVideo.registerFonts([options, ...])
+### MultiVideo.registerFonts([options: Object, ...])
 
 注册多个字体
 
@@ -516,7 +516,7 @@
 
 参考 [Font](#font) 字体参数。
 
-### MultiVideo.addAudio(options)
+### MultiVideo.addAudio(options: Object)
 
 添加音频
 
@@ -524,7 +524,7 @@
 
 参考 [Audio](#audio) 音频参数。
 
-### MultiVideo.addAudios([options, ...])
+### MultiVideo.addAudios([options: Object, ...])
 
 添加多个音频
 
@@ -532,7 +532,7 @@
 
 参考 [Audio](#audio) 音频参数。
 
-### MultiVideo.input(chunk, [transtion])
+### MultiVideo.input(chunk: [ChunkVideo](#chunkvideo), [[transtion](#transition)])
 
 输入分块视频，可以选择加入转场效果
 
@@ -560,7 +560,7 @@
 
 ## 构造函数
 
-### new ChunkVideo(options)
+### new ChunkVideo(options: Object)
 
 #### options 参数
 
@@ -705,7 +705,7 @@
 
 ### progress
 
-合成进度事件，回调参数：(progress, processedFrameCount, totalFrameCount)
+合成进度事件，回调参数：(progress: number, processedFrameCount: number, totalFrameCount: number)
 
 ### completed
 
@@ -717,7 +717,7 @@
 
 ## 成员
 
-### ChunkVideo.registerFont(options)
+### ChunkVideo.registerFont(options: Object)
 
 注册字体
 
@@ -725,7 +725,7 @@
 
 参考 [Font](#font) 字体参数。
 
-### ChunkVideo.registerFonts([options, ...])
+### ChunkVideo.registerFonts([options: Object, ...])
 
 注册多个字体
 
@@ -733,7 +733,7 @@
 
 参考 [Font](#font) 字体参数。
 
-### ChunkVideo.addAudio(options)
+### ChunkVideo.addAudio(options: Object)
 
 添加音频
 
@@ -741,7 +741,7 @@
 
 参考 [Audio](#audio) 音频参数。
 
-### ChunkVideo.addAudios([options, ...])
+### ChunkVideo.addAudios([options: Object, ...])
 
 添加多个音频
 
@@ -749,7 +749,7 @@
 
 参考 [Audio](#audio) 音频参数。
 
-### ChunkVideo.setTransition(options)
+### ChunkVideo.setTransition(options: Object)
 
 设置转场效果
 

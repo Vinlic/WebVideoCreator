@@ -452,11 +452,20 @@ export default class CaptureContext {
 
     /**
      * 添加音频
-     * 
-     * @param {Object} options - 音频参数
      */
-    addAudio(options) {
-        ____addAudio(options);
+    addAudio(options = {}) {
+        const audioId = this.audioId++;
+        ____addAudio({
+            audioId,
+            ...options
+        });
+    }
+
+    /**
+     * 添加多个音频
+     */
+    addAudios(audios = []) {
+        audios.forEach(audio => this.addAudio(audio));
     }
 
     /**

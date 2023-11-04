@@ -339,7 +339,22 @@ setTimeout(() => document.body.appendChild(audio), 3000);
 setTimeout(() => audio.remove(), 8000);
 ```
 
-In many cases, you may prefer not to modify the HTML content. In such cases, you can use `addAudio` to add audio to the video.
+Or call [captureCtx.addAudio](./docs/capture-ctx.md#capturecontextaddaudiooptions-object) on the page to add audio to the video.
+
+```javascript
+// Add a single audio track
+captureCtx.addAudio({
+    url: "bgm.mp3",
+    startTime: 500,
+    loop: true,
+    // 80% volume
+    volume: 80
+});
+// Add multiple audio tracks
+captureCtx.addAudios([...]);
+```
+
+You can also directly use [addAudio](./docs/api-reference-high-level.md#singlevideoaddaudiooptions-object) in WVC to add local or remote audio to the video.
 
 ```javascript
 const video = wvc.createSingleVideo({ ... });
@@ -394,7 +409,9 @@ setTimeout(() => video.remove(), 8000);
 
 ### Transparent Channel Videos
 
-Transparent videos are great for compositing digital avatars (e.g., VTubers) into video scenes. In WVC, transparent videos should be in the `webm` format. Internally, they will be re-encoded into two mp4 container videos: one for the color base video and one for the mask video. These videos will be used for blending and drawing using the `globalCompositeOperation` in the browser canvas.
+Transparent videos are great for compositing digital avatars (e.g., VTubers) into video scenes. Please refer to **[Rendering Example Page](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)** Last Demo
+
+In WVC, transparent videos should be in the `webm` format. Internally, they will be re-encoded into two mp4 container videos: one for the color base video and one for the mask video. These videos will be used for blending and drawing using the `globalCompositeOperation` in the browser canvas.
 
 For users, it's seamless. You just need to include a `<video>` element in your HTML with the `src` set to the webm video file.
 
@@ -506,7 +523,7 @@ Lottie animations are also suitable for use as transition effects. You can play 
 
 By default, WVC starts rendering immediately after the page navigation is complete. If you
 
- want to perform some tasks before rendering, you can disable automatic rendering start in the options. In this case, remember to call `captureCtx.start()` in your page code, or rendering will be blocked indefinitely.
+ want to perform some tasks before rendering, you can disable automatic rendering start in the options. In this case, remember to call [captureCtx.start()](./docs/capture-ctx.md#capturecontextstart) in your page code, or rendering will be blocked indefinitely.
 
 ```javascript
 const video = wvc.createSingleVideo({

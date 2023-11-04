@@ -346,7 +346,22 @@ setTimeout(() => document.body.appendChild(audio), 3000);
 setTimeout(() => audio.remove(), 8000);
 ```
 
-许多时候您可能并不希望侵入修改html内容，可以使用 `addAudio` 将音频添加到视频中。
+或者在页面中调用 [captureCtx.addAudio](./docs/capture-ctx.md#capturecontextaddaudiooptions-object) 添加音频到视频中。
+
+```javascript
+// 添加单个音频
+captureCtx.addAudio({
+    url: "bgm.mp3",
+    startTime: 500,
+    loop: true,
+    // 80%的音量
+    volume: 80
+});
+// 添加多个音频
+captureCtx.addAudios([...]);
+```
+
+也可以在WVC中直接使用 [addAudio](./docs/api-reference-high-level.md#singlevideoaddaudiooptions-object) 将本地或远程的音频添加到视频中。
 
 ```javascript
 const video = wvc.createSingleVideo({ ... });
@@ -373,7 +388,7 @@ video.addAudios([...]);
 <video src="background.mp4" loop muted></video>
 ```
 
-如果希望插入透明通道的视频请见：[透明通道视频](#透明通道视频)，如果您对视频帧率同步或透明视频绘制感兴趣可以参考：[技术实现](#技术实现)。
+如果希望插入透明通道的视频请见：[透明通道视频](#透明通道视频)，对视频帧率同步或透明视频绘制感兴趣可以参考：[技术实现](#技术实现)。
 
 和音频一样，它也支持设置一些属性控制视频的行为，这些属性并不总是需要成对出现，您可以根据自己的需求定制。
 
@@ -401,7 +416,7 @@ setTimeout(() => video.remove(), 8000);
 
 ### 透明通道视频
 
-透明视频非常适合用于将vtuber数字人合成到视频画面中，结合精美的动画可以获得非常好的观看体验。
+透明视频非常适合用于将vtuber数字人合成到视频画面中，结合精美的动画可以获得非常好的观看体验，合成效果请参考 **[渲染示例页面](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)** 最后一个Demo。
 
 透明通道视频格式需为 `webm` ，在内部它会被重新编码为两个mp4容器的视频，分别是原色底视频和蒙版视频后在浏览器canvas中使用进行 `globalCompositeOperation` 进行图像混合并绘制。
 
@@ -513,7 +528,7 @@ Lottie动画也很适合作为转场效果，您可以在一段视频的尾部�
 
 ## 延迟启动渲染
 
-WVC默认页面导航完成后立即启动渲染，如果希望在渲染之前进行一些工作，可以在选项中禁用自动启动渲染，禁用后请记得在您的页面中调用 `captureCtx.start()`，否则将永远阻塞。
+WVC默认页面导航完成后立即启动渲染，如果希望在渲染之前进行一些工作，可以在选项中禁用自动启动渲染，禁用后请记得在您的页面中调用 [captureCtx.start()](./docs/capture-ctx.md#capturecontextstart)，否则将永远阻塞。
 
 ```javascript
 const video = wvc.createSingleVideo({
@@ -554,7 +569,7 @@ const video = wvc.createSingleVideo({
 
 ## 页面控制台输出
 
-如果想看到页面的日志，可在视频选项中开启consoleLog，如果存在内嵌视频可开启videoPreprocessLog输出视频预处理日志。
+如果想看到页面的日志，可在视频选项中开启consoleLog。开启videoPreprocessLog将输出内嵌视频预处理日志。
 
 ```javascript
 const video = wvc.createSingleVideo({
