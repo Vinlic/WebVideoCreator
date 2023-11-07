@@ -112,6 +112,8 @@ wvc.config({
 const video = wvc.createSingleVideo({
     // URL of the page to be rendered
     url: "http://localhost:8080/test.html",
+    // or can directly set the page content:
+    // content: "<h1>Hello WebVideoCreator</h1>",
     // Video width
     width: 1280,
     // Video height
@@ -163,6 +165,8 @@ const video = wvc.createMultiVideo({
     chunks: [
         {
             url: "http://localhost:8080/scene-1.html",
+            // or can directly set the page content:
+            // content: "<h1>Hello WebVideoCreator</h1>",
             duration: 10000,
             // Insert a circular crop transition between the first and second scenes
             transition: TRANSITION.CIRCLE_CROP
@@ -206,6 +210,8 @@ wvc.config({
 // Create chunk video 1
 const chunk1 = wvc.createChunkVideo({
     url: "http://localhost:8080/scene-1.html",
+    // or can directly set the page content:
+    // content: "<h1>Hello WebVideoCreator</h1>",
     width: 1280,
     height: 720,
     fps: 30,

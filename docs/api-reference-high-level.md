@@ -576,7 +576,12 @@
         <tr>
             <td>url</td>
             <td>string</td>
-            <td>待渲染的页面URL</td>
+            <td>待渲染的页面URL，与content二选一</td>
+        </tr>
+        <tr>
+            <td>content</td>
+            <td>string</td>
+            <td>待渲染的页面内容，与url二选一</td>
         </tr>
         <tr>
             <td>outputPath</td>

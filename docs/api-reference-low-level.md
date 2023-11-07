@@ -273,6 +273,10 @@ const { ... } = core;
 
 本地 URL 或远端 HTTPS URL，受制于浏览器的[安全上下文限制](https://w3c.github.io/webappsec-secure-contexts/)，只能访问 localhost / 127.0.0.1 或者使用 HTTPS 协议且证书有效的域
 
+### goto(content: string): Promise
+
+设置待渲染页面内容。
+
 ### Page.registerFont(options: Object)
 
 注册字体

@@ -199,6 +199,32 @@ export default class Page extends EventEmitter {
     }
 
     /**
+     * 设置页面内容
+     * 
+     * @param {string} content 页面内容
+     */
+    async setContent(content) {
+        assert(this.isReady(), "Page state must be ready");
+        assert(_.isString(content), "page content must be string");
+        await this.target.goto("about:blank");
+        // 清除资源
+        this.#clearResources();
+        // 开始CDP会话
+        await this.#startCDPSession();
+        // 监听CSS动画
+        await this.#listenCSSAnimations();
+        await this.target.setContent(content);
+        await Promise.all([
+            // 注入公共样式
+            this.#injectStyle(COMMON_STYLE_CONTENT),
+            // 注入MP4Box库
+            this.#injectLibrary(MP4BOX_LIBRARY_SCRIPT_CONTENT + ";window.____MP4Box = window.MP4Box;window.MP4Box = undefined"),
+            // 注入Lottie动画库
+            this.#injectLibrary(LOTTIE_LIBRARY_SCRIPT_CONTENT + ";window.____lottie = window.lottie;window.lottie = undefined")
+        ]);
+    }
+
+    /**
      * 注册字体
      * 
      * @param {Font} font - 字体对象
@@ -467,21 +493,31 @@ export default class Page extends EventEmitter {
     async #seekCSSAnimations(currentTime) {
         if (this.cssAnimations.length === 0)
             return;
-        const cssAnimationSeekPromises = [];
+        const dispatchPromises = [];
         this.cssAnimations = this.cssAnimations.filter(animation => {
             animation.startTime = _.defaultTo(animation.startTime, currentTime);
-            const animationCurrentTime = currentTime - animation.startTime;
+            const animationCurrentTime = Math.floor(currentTime - animation.startTime);
             if (animationCurrentTime < 0)
                 return true;
-            cssAnimationSeekPromises.push(this.#cdpSession.send("Animation.seekAnimations", {
+            dispatchPromises.push(this.#cdpSession.send("Animation.seekAnimations", {
                 animations: [animation.id],
                 currentTime: animationCurrentTime
             }));
-            if (animationCurrentTime >= (animation.duration * (animation.iterations || Infinity)) + animation.delay)
+            if (animationCurrentTime >= (animation.duration * (animation.iterations || Infinity)) + animation.delay) {
+                dispatchPromises.push((async () => {
+                    const node = await this.#cdpSession.send("DOM.resolveNode", {
+                        backendNodeId: animation.backendNodeId
+                    });
+                    node && node.object && await this.#cdpSession.send("Runtime.callFunctionOn", {
+                        objectId: node.object.objectId,
+                        functionDeclaration: 'function () { this.dispatchEvent(new TransitionEvent("transitionend")) }'
+                    });
+                })());
                 return false;
+            }
             return true;
         });
-        await Promise.all(cssAnimationSeekPromises);
+        await Promise.all(dispatchPromises);
     }
 
     /**
@@ -580,16 +616,15 @@ export default class Page extends EventEmitter {
         // 启用动画通知域
         await this.#cdpSession.send("Animation.enable");
         // 监听动画开始事件将动画属性添加到调度列表
-        this.#cdpSession.on("Animation.animationStarted", animation => this.cssAnimations.push({
-            id: animation.animation.id,
-            startTime: null,
-            delay: animation.animation.source.delay,
-            duration: animation.animation.source.duration,
-            iterations: animation.animation.source.iterations
-        }));
-        // 监听动画取消时间将动画属性从调度列表移除
-        this.#cdpSession.on("Animation.animationCanceled", animation => {
-            this.cssAnimations = this.cssAnimations.filter(_animation => _animation.id != animation.id);
+        this.#cdpSession.on("Animation.animationStarted", animation => {
+            this.cssAnimations.push({
+                id: animation.animation.id,
+                startTime: null,
+                backendNodeId: animation.animation.source.backendNodeId,
+                delay: animation.animation.source.delay,
+                duration: animation.animation.source.duration,
+                iterations: animation.animation.source.iterations
+            });
         });
     }
 

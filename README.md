@@ -112,6 +112,8 @@ wvc.config({
 const video = wvc.createSingleVideo({
     // 需要渲染的页面地址
     url: "http://localhost:8080/test.html",
+    // 或者可以直接设置页面内容
+    // content: "<h1>Hello WebVideoCreator</h1>",
     // 视频宽度
     width: 1280,
     // 视频高度
@@ -163,6 +165,8 @@ const video = wvc.createMultiVideo({
     chunks: [
         {
             url: "http://localhost:8080/scene-1.html",
+            // 或者可以直接设置页面内容
+            // content: "<h1>Hello WebVideoCreator</h1>",
             duration: 10000,
             // 在第一和第二幕之间插入转场
             transition: TRANSITION.CIRCLE_CROP
@@ -206,6 +210,8 @@ wvc.config({
 // 创建分块视频1
 const chunk1 = wvc.createChunkVideo({
     url: "http://localhost:8080/scene-1.html",
+    // 或者可以直接设置页面内容
+    // content: "<h1>Hello WebVideoCreator</h1>",
     width: 1280,
     height: 720,
     fps: 30,

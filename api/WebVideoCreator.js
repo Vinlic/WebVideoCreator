@@ -49,7 +49,8 @@ export default class WebVideoCreator {
      * 创建单幕视频
      * 
      * @param {Object} options - 单幕视频选项
-     * @param {string} options.url - 页面URL
+     * @param {string} [options.url] - 页面URL
+     * @param {string} [options.content] - 页面内容
      * @param {string} options.outputPath - 输出路径
      * @param {number} options.width - 视频宽度
      * @param {number} options.height - 视频高度
@@ -120,7 +121,8 @@ export default class WebVideoCreator {
      * 创建分块视频
      * 
      * @param {Object} options - 分块视频选项
-     * @param {string} options.url - 页面URL
+     * @param {string} [options.url] - 页面URL
+     * @param {string} [options.content] - 页面内容
      * @param {string} options.outputPath - 输出路径
      * @param {number} options.width - 视频宽度
      * @param {number} options.height - 视频高度
