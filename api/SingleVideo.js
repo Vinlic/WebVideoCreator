@@ -9,6 +9,10 @@ import logger from "../lib/logger.js";
 import util from "../lib/util.js";
 
 /**
+ * @typedef {import('puppeteer-core').WaitForOptions} WaitForOptions
+ */
+
+/**
  * 单幕视频
  */
 export default class SingleVideo extends Synthesizer {
@@ -59,6 +63,7 @@ export default class SingleVideo extends Synthesizer {
      * @param {number} [options.volume] - 视频音量（0-100）
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
      * @param {Function} [options.pagePrepareFn] - 页面预处理函数
+     * @param {WaitForOptions} [options.pageWaitForOptions] - 页面等待选项
      * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
      * @param {boolean} [options.autostartRender=true] - 是否自动启动渲染，如果为false请务必在页面中执行 captureCtx.start()
      * @param {boolean} [options.consoleLog=false] - 是否开启控制台日志输出
@@ -66,13 +71,14 @@ export default class SingleVideo extends Synthesizer {
      */
     constructor(options = {}) {
         super(options);
-        const { url, content, duration, autostartRender, consoleLog, videoPreprocessLog, pagePrepareFn } = options;
+        const { url, content, duration, autostartRender, consoleLog, videoPreprocessLog, pageWaitForOptions, pagePrepareFn } = options;
         assert(_.isUndefined(url) || util.isURL(url), `url ${url} is not valid URL`);
         assert(_.isUndefined(content) || _.isString(content), "page content must be string");
         assert(!_.isUndefined(url) || !_.isUndefined(content), "page url or content must be provide");
         assert(_.isFinite(duration), "duration must be number");
         assert(_.isUndefined(autostartRender) || _.isBoolean(autostartRender), "autostartRender must be boolean");
         assert(_.isUndefined(consoleLog) || _.isBoolean(consoleLog), "consoleLog must be boolean");
+        assert(_.isUndefined(pageWaitForOptions) || _.isObject(pageWaitForOptions), "pageWaitForOptions must be Object");
         assert(_.isUndefined(pagePrepareFn) || _.isFunction(pagePrepareFn), "pagePrepareFn must be Function");
         this.url = url;
         this.content = content;
@@ -80,6 +86,7 @@ export default class SingleVideo extends Synthesizer {
         this.autostartRender = _.defaultTo(autostartRender, true);
         this.consoleLog = _.defaultTo(consoleLog, false);
         this.videoPreprocessLog = _.defaultTo(videoPreprocessLog, false);
+        this.pageWaitForOptions = pageWaitForOptions;
         this.pagePrepareFn = pagePrepareFn;
     }
 
@@ -126,7 +133,7 @@ export default class SingleVideo extends Synthesizer {
     async #synthesize() {
         const page = await this.#acquirePage();
         try {
-            const { url, content, width, height, fps, duration } = this;
+            const { url, content, width, height, fps, duration, pageWaitForOptions } = this;
             // 监听页面实例发生的某些内部错误
             page.on("error", err => this._emitError("Page error:\n" + err.stack));
             // 监听页面是否崩溃，当内存不足或过载时可能会崩溃
@@ -148,10 +155,10 @@ export default class SingleVideo extends Synthesizer {
             });
             // 跳转到您希望渲染的页面，您可以考虑创建一个本地的Web服务器提供页面以提升加载速度和安全性
             if(url)
-                await page.goto(url);
+                await page.goto(url, pageWaitForOptions);
             // 或者设置页面内容
             else
-                await page.setContent(content);
+                await page.setContent(content, pageWaitForOptions);
             // 存在预处理函数时先执行预处理
             this.pagePrepareFn && await this.pagePrepareFn(page);
             // 注册字体

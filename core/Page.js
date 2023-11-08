@@ -23,6 +23,7 @@ import util from "../lib/util.js";
 
 /**
  * @typedef {import('puppeteer-core').Viewport} Viewport
+ * @typedef {import('puppeteer-core').WaitForOptions} WaitForOptions
  */
 
 // 默认用户UA
@@ -173,9 +174,9 @@ export default class Page extends EventEmitter {
      * 导航URL
      * 
      * @param {string} url - 导航目标URL
-     * @returns {Object} - 控制器映射
+     * @param {WaitForOptions} [waitForOptions] - 等待选项
      */
-    async goto(url) {
+    async goto(url, waitForOptions) {
         assert(this.isReady(), "Page state must be ready");
         assert(util.isURL(url), "goto url is invalid");
         // 清除资源
@@ -187,7 +188,7 @@ export default class Page extends EventEmitter {
         // 监听CSS动画
         await this.#listenCSSAnimations();
         // 页面导航到URL
-        await this.target.goto(url);
+        await this.target.goto(url, waitForOptions);
         await Promise.all([
             // 注入公共样式
             this.#injectStyle(COMMON_STYLE_CONTENT),
@@ -202,8 +203,9 @@ export default class Page extends EventEmitter {
      * 设置页面内容
      * 
      * @param {string} content 页面内容
+     * @param {WaitForOptions} [waitForOptions] - 等待选项
      */
-    async setContent(content) {
+    async setContent(content, waitForOptions) {
         assert(this.isReady(), "Page state must be ready");
         assert(_.isString(content), "page content must be string");
         await this.target.goto("about:blank");
@@ -213,7 +215,7 @@ export default class Page extends EventEmitter {
         await this.#startCDPSession();
         // 监听CSS动画
         await this.#listenCSSAnimations();
-        await this.target.setContent(content);
+        await this.target.setContent(content, waitForOptions);
         await Promise.all([
             // 注入公共样式
             this.#injectStyle(COMMON_STYLE_CONTENT),
