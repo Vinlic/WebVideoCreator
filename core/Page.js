@@ -328,11 +328,6 @@ export default class Page extends EventEmitter {
                 await this.setViewport({ width, height, ..._options });
             // 将鼠标移动到屏幕中央
             await this.target.mouse.move(width / 2, height / 2);
-            // 设置CSS动画播放速度
-            await this.#cdpSession.send("Animation.setPlaybackRate", {
-                // 根据帧率设置播放速率
-                playbackRate: 0
-            });
             // 如果设置帧率或者总帧数将覆盖页面中设置的帧率和总帧数
             await this.target.evaluate(async config => {
                 // 注入配置选项
@@ -413,7 +408,7 @@ export default class Page extends EventEmitter {
         // 设置页面为不可用
         this.#setState(Page.STATE.UNAVAILABLED);
         if (this.eventNames().indexOf("crashed") != -1)
-            this.emit("crashed", error);
+            this.emit("crashed", err);
         else
             logger.error("Page crashed:", err);
     }
@@ -493,31 +488,32 @@ export default class Page extends EventEmitter {
     async #seekCSSAnimations(currentTime) {
         if (this.cssAnimations.length === 0)
             return;
-        const dispatchPromises = [];
+        const pauseAnimationIds = [];
+        const seekPromises = [];
         this.cssAnimations = this.cssAnimations.filter(animation => {
+            if(animation.startTime == null)
+                pauseAnimationIds.push(animation.id);
             animation.startTime = _.defaultTo(animation.startTime, currentTime);
             const animationCurrentTime = Math.floor(currentTime - animation.startTime);
             if (animationCurrentTime < 0)
                 return true;
-            dispatchPromises.push(this.#cdpSession.send("Animation.seekAnimations", {
+            seekPromises.push(this.#cdpSession.send("Animation.seekAnimations", {
                 animations: [animation.id],
                 currentTime: animationCurrentTime
             }));
-            if (animationCurrentTime >= (animation.duration * (animation.iterations || Infinity)) + animation.delay) {
-                dispatchPromises.push((async () => {
-                    const node = await this.#cdpSession.send("DOM.resolveNode", {
-                        backendNodeId: animation.backendNodeId
-                    });
-                    node && node.object && await this.#cdpSession.send("Runtime.callFunctionOn", {
-                        objectId: node.object.objectId,
-                        functionDeclaration: 'function () { this.dispatchEvent(new TransitionEvent("transitionend")) }'
-                    });
-                })());
+            if (animationCurrentTime >= (animation.duration * (animation.iterations || Infinity)) + animation.delay)
                 return false;
-            }
             return true;
         });
-        await Promise.all(dispatchPromises);
+        // 暂停动画
+        if(pauseAnimationIds.length > 0) {
+            this.#cdpSession.send("Animation.setPaused", {
+                animations: pauseAnimationIds,
+                paused: true
+            });
+        }
+        // 调度动画
+        await Promise.all(seekPromises);
     }
 
     /**
@@ -620,6 +616,7 @@ export default class Page extends EventEmitter {
             this.cssAnimations.push({
                 id: animation.animation.id,
                 startTime: null,
+                paused: false,
                 backendNodeId: animation.animation.source.backendNodeId,
                 delay: animation.animation.source.delay,
                 duration: animation.animation.source.duration,
