@@ -694,6 +694,16 @@ export default class CaptureContext {
     }
 
     /**
+     * 抛出错误中断捕获
+     * 
+     * @param {number} code 错误码
+     * @param {number} message 错误消息
+     */
+    throwError(code, message) {
+        ____throwError(code, message);
+    }
+
+    /**
      * 复制元素样式
      * 
      * @private

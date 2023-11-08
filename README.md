@@ -716,7 +716,7 @@ video.on("progress", (progress, synthesizedFrameCount, totalFrameCount) => {
 
 ```html
 <script>
-    ____throwError(-1, "Abort");
+    captureCtx.throwError(-1, "Abort");
 </script>
 ```
 
