@@ -535,7 +535,7 @@ Lottie动画也很适合作为转场效果，您可以在一段视频的尾部�
 
 ## 导出具有透明通道的视频
 
-WVC支持您设置背景的不透明度 `backgroundOpacity` 选项实现透明或半透明背景视频的输出，它的值范围是**0-1**。
+WVC支持您设置背景的不透明度 `backgroundOpacity` 选项实现透明或半透明背景视频的输出，它的值范围是**0-1**，请确保输出视频文件后缀名或format选项为 **webm**。
 
 ```javascript
 const video = wvc.createSingleVideo({

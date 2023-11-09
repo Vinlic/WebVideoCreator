@@ -528,7 +528,7 @@ Lottie animations are also suitable for use as transition effects. You can play 
 
 ## Export videos with transparent channels
 
-WVC supports you to set the background opacity `backgroundOpacity` option to achieve transparent or semi transparent background video output, with a value range of **0-1**.
+WVC supports you to set the background opacity `backgroundOpacity` option to achieve transparent or semi transparent background video output, with a value range of **0-1**, Please ensure that the output video path suffix name or format option is **webm**.
 
 ```javascript
 const video = wvc.createSingleVideo({
