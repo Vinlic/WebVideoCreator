@@ -36,8 +36,6 @@ const MP4BOX_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/mp4
 const FONTFACE_OBSERVER_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/fontfaceobserver.js"), "utf-8");
 // Lottie动画库脚本内容
 const LOTTIE_LIBRARY_SCRIPT_CONTENT = fs.readFileSync(util.rootPathJoin("lib/lottie.js"), "utf-8");
-// 异步锁
-const asyncLock = new AsyncLock();
 // 页面计数
 let pageIndex = 1;
 
@@ -83,6 +81,8 @@ export default class Page extends EventEmitter {
     frameFormat;
     /** @type {number} - 帧图质量（0-100） */
     frameQuality;
+    /** @type {number} - 背景不透明度（0-1） */
+    backgroundOpacity = 1;
     /** @type {Font[]} - 已注册字体集 */
     fonts = [];
     /** @type {Object[]} - 已接受资源列表 */
@@ -180,7 +180,7 @@ export default class Page extends EventEmitter {
         assert(this.isReady(), "Page state must be ready");
         assert(util.isURL(url), "goto url is invalid");
         // 清除资源
-        this.#clearResources();
+        this.#resetStates();
         // 检查URL
         !globalConfig.allowUnsafeContext && this.#checkURL(url);
         // 开始CDP会话
@@ -210,7 +210,7 @@ export default class Page extends EventEmitter {
         assert(_.isString(content), "page content must be string");
         await this.target.goto("about:blank");
         // 清除资源
-        this.#clearResources();
+        this.#resetStates();
         // 开始CDP会话
         await this.#startCDPSession();
         // 监听CSS动画
@@ -224,6 +224,17 @@ export default class Page extends EventEmitter {
             // 注入Lottie动画库
             this.#injectLibrary(LOTTIE_LIBRARY_SCRIPT_CONTENT + ";window.____lottie = window.lottie;window.lottie = undefined")
         ]);
+    }
+
+    /**
+     * 设置背景不透明度（0-1）
+     * 
+     * @param {number} [opacity=1] - 背景不透明度
+     */
+    setBackgroundOpacity(opacity = 1) {
+        assert(this.isReady(), "Page state must be ready");
+        assert(_.isFinite(opacity), "opacity must be number");
+        this.backgroundOpacity = opacity;
     }
 
     /**
@@ -328,6 +339,8 @@ export default class Page extends EventEmitter {
             const { width, height, ..._options } = this.target.viewport() || {};
             if (width != this.width || height != this.height)
                 await this.setViewport({ width, height, ..._options });
+            // 应用背景不透明度
+            await this.#applyBackgroundOpacity();
             // 将鼠标移动到屏幕中央
             await this.target.mouse.move(width / 2, height / 2);
             // 如果设置帧率或者总帧数将覆盖页面中设置的帧率和总帧数
@@ -526,6 +539,7 @@ export default class Page extends EventEmitter {
             // CSS动画同步
             await this.#seekCSSAnimations(currentTime);
             // 非兼容渲染模式使用BeginFrame API进行捕获否则使用截图API
+            const frameFormat = this.backgroundOpacity < 1 ? "png" : this.frameFormat;
             if (!globalConfig.compatibleRenderingMode) {
                 let timer;
                 // 帧数据捕获
@@ -533,9 +547,9 @@ export default class Page extends EventEmitter {
                     this.#cdpSession.send("HeadlessExperimental.beginFrame", {
                         screenshot: {
                             // 帧图格式（jpeg, png)
-                            format: this.frameFormat,
+                            format: frameFormat,
                             // 帧图质量（0-100）
-                            quality: this.frameFormat == "jpeg" ? this.frameQuality : undefined
+                            quality: frameFormat == "jpeg" ? this.frameQuality : undefined
                         }
                     }),
                     // 帧渲染超时处理
@@ -552,8 +566,8 @@ export default class Page extends EventEmitter {
             }
             else {
                 const screenshotData = await this.target.screenshot({
-                    type: this.frameFormat,
-                    quality: this.frameFormat == "jpeg" ? this.frameQuality : undefined,
+                    type: frameFormat,
+                    quality: frameFormat == "jpeg" ? this.frameQuality : undefined,
                     optimizeForSpeed: true
                 });
                 // 帧数据回调
@@ -605,6 +619,15 @@ export default class Page extends EventEmitter {
     async #startCDPSession() {
         this.#cdpSession && await this.#endCDPSession();
         this.#cdpSession = await this.target.createCDPSession();  //创建会话
+    }
+
+    /**
+     * 应用背景透明度
+     */
+    async #applyBackgroundOpacity() {
+        await this.#cdpSession.send("Emulation.setDefaultBackgroundColorOverride", {
+            color: { r: 0, g: 0, b: 0, a: this.backgroundOpacity }
+        });
     }
 
     /**
@@ -748,7 +771,7 @@ export default class Page extends EventEmitter {
             // 移除监听器
             this.#removeListeners();
             // 清除资源
-            this.#clearResources();
+            this.#resetStates();
             this.#resourceSet = new Set();
             // 跳转空白页释放页面内存
             await this.target.goto("about:blank");
@@ -800,9 +823,10 @@ export default class Page extends EventEmitter {
     }
 
     /**
-     * 清除资源
+     * 重置状态
      */
-    #clearResources() {
+    #resetStates() {
+        this.backgroundOpacity = 1;
         this.fonts = [];
         this.acceptResources = [];
         this.rejectResources = [];

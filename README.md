@@ -6,7 +6,7 @@
 
 # 简介
 
-WebVideoCreator（简称WVC）是一个将Web动画渲染为视频的框架，基于 Node.js + Puppeteer + Chrome + FFmpeg 实现，它执行确定性的渲染，准确的以目标帧率捕获任何可在HTML5播放动画（CSS3动画/SVG动画/Lottie动画/GIF动画/APNG动画/WEBP动画）以及任何基于时间轴使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动的动画（[anime.js](https://animejs.com/)是一个不错的选择 :D），当然您也可以调皮的使用setInterval或者setTimeout来控制动画，支持嵌入mp4和透明webm视频，还支持转场合成、音频合成与字体加载等功能。让我们[快速开始](#快速开始)。
+WebVideoCreator（简称WVC）是一个将Web动画渲染为视频的框架，基于 Node.js + Puppeteer + Chrome + FFmpeg 实现，它执行确定性的渲染，准确的以目标帧率捕获任何可在HTML5播放动画（CSS3动画/SVG动画/Lottie动画/GIF动画/APNG动画/WEBP动画）以及任何基于时间轴使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动的动画（[anime.js](https://animejs.com/)是一个不错的选择 :D），当然您也可以调皮的使用setInterval或者setTimeout来控制动画，支持导出和嵌入mp4或透明通道的webm视频，还支持转场合成、音频合成与字体加载等功能。让我们[快速开始](#快速开始)。
 
 WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以想象成是一个《楚门的世界》），它的主要职责是将一个 [不确定性渲染的环境](./docs/renderer-env.md#不确定性的渲染环境) 转化到 [确定性渲染的环境](./docs/renderer-env.md#确定性的渲染环境)。
 
@@ -23,6 +23,7 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
  - 支持单幕和多幕视频渲染合成，多幕视频可应用[转场效果](#插入转场效果)。
  - 支持分块视频合成，可以将分块分发到多个设备上渲染回传再合成为多幕视频，大幅降低长视频渲染耗时。
  - 支持并行多个视频渲染合成任务，充分利用系统资源。
+ - 支持嵌入或导出支持透明通道的webm格式视频。
  - API支持进行[分布式渲染](#分布式渲染方案)封装，只需对WVC进行一些封装即可将大量视频分块分发到多个设备渲染并最终取回合并输出
  - 支持使用GPU加速渲染和合成，可以显著的降低视频渲染耗时。
  - 支持在Windows和Linux平台部署运行。
@@ -531,6 +532,18 @@ const video = wvc.createMultiVideo({
 需要注意的是，应用转场会导致视频总时长缩短，转场效果实际上是两段视频的部分重叠，两段5秒的视频插入转场，会合成时长为9秒的视频。
 
 Lottie动画也很适合作为转场效果，您可以在一段视频的尾部播放一半时长的全屏Lottie动画，然后在下一段视频开头播放另一半时长的全屏Lottie动画实现更动感的转场效果。
+
+## 导出具有透明通道的视频
+
+WVC支持您设置背景的不透明度 `backgroundOpacity` 选项实现透明或半透明背景视频的输出，它的值范围是**0-1**。
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // 设置完全透明的背景
+    backgroundOpacity: 0
+});
+```
 
 ## 延迟启动渲染
 

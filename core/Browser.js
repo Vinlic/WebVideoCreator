@@ -323,8 +323,6 @@ export default class Browser {
             "--noerrdialogs",
             // 启用平滑滚动
             "--enable-smooth-scrolling",
-            // 启用确定性模式
-            "--deterministic-mode",
             // 禁用线程动画避免动画不同步
             "--disable-threaded-animation",
             // 禁用线程滚动避免动画不同步
@@ -333,10 +331,14 @@ export default class Browser {
             "--enable-surface-synchronization",
             // 强制所有内容完整渲染
             "--disable-new-content-rendering-timeout",
-            // 开启beginFrame控制
-            "--enable-begin-frame-control",
-            // 在呈现所有内容之前防止绘制下一帧
-            "--run-all-compositor-stages-before-draw",
+            ...(!globalConfig.compatibleRenderingMode ? [
+                // 启用确定性模式
+                "--deterministic-mode",
+                // 开启beginFrame控制
+                "--enable-begin-frame-control",
+                // 在呈现所有内容之前防止绘制下一帧
+                "--run-all-compositor-stages-before-draw",
+            ] : []),
             // 是否使用Angle作为渲染后端
             ...(this.useAngle ? ["--use-angle"] : []),
             // 是否使用GPU加速渲染

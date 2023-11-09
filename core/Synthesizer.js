@@ -83,6 +83,8 @@ export default class Synthesizer extends EventEmitter {
     volume;
     /** @type {numer} - 并行写入帧数 */
     parallelWriteFrames;
+    /** @type {boolean} - 背景不透明度（0-1）仅webm格式支持 */
+    backgroundOpacity;
     /** @type {boolean} - 是否在命令行展示进度 */
     showProgress;
     /** @type {Audio[]} - 音频列表 */
@@ -130,6 +132,7 @@ export default class Synthesizer extends EventEmitter {
      * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.volume=100] - 视频音量（0-100）
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
+     * @param {boolean} [options.backgroundOpacity=1] - 背景不透明度（0-1），仅webm格式支持
      * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
      */
     constructor(options) {
@@ -137,8 +140,8 @@ export default class Synthesizer extends EventEmitter {
         assert(_.isObject(options), "Synthesizer options must be object");
         const { width, height, fps, duration, format, outputPath,
             attachCoverPath, coverCapture, coverCaptureTime, coverCaptureFormat,
-            videoEncoder, videoQuality, videoBitrate, pixelFormat,
-            audioEncoder, audioBitrate, volume, parallelWriteFrames, showProgress } = options;
+            videoEncoder, videoQuality, videoBitrate, pixelFormat, audioEncoder,
+            audioBitrate, volume, parallelWriteFrames, backgroundOpacity, showProgress } = options;
         assert(_.isFinite(width) && width % 2 === 0, "width must be even number");
         assert(_.isFinite(height) && height % 2 === 0, "height must be even number");
         assert(_.isFinite(duration), "synthesis duration must be number");
@@ -157,6 +160,7 @@ export default class Synthesizer extends EventEmitter {
         assert(_.isUndefined(audioBitrate) || _.isString(audioBitrate), "audioBitrate must be string");
         assert(_.isUndefined(volume) || _.isFinite(volume), "volume must be number");
         assert(_.isUndefined(parallelWriteFrames) || _.isFinite(parallelWriteFrames), "parallelWriteFrames must be number");
+        assert(_.isUndefined(backgroundOpacity) || _.isFinite(backgroundOpacity), "backgroundOpacity must be number");
         assert(_.isUndefined(showProgress) || _.isBoolean(showProgress), "showProgress must be boolean")
         if (!format && outputPath && !this._isVideoChunk()) {
             const _format = path.extname(outputPath).substring(1);
@@ -183,16 +187,17 @@ export default class Synthesizer extends EventEmitter {
         this.videoEncoder = _.defaultTo(videoEncoder, _.defaultTo(this.format == "webm" ? globalConfig.webmEncoder : globalConfig.mp4Encoder, FORMAT_VIDEO_ENCODER_MAP[this.format][0] || "libx264"));
         this.videoQuality = _.defaultTo(videoQuality, 100);
         this.videoBitrate = videoBitrate;
-        this.pixelFormat = _.defaultTo(pixelFormat, "yuv420p");
         this.audioEncoder = _.defaultTo(audioEncoder, _.defaultTo(globalConfig.audioEncoder, FORMAT_AUDIO_ENCODER_MAP[this.format][0] || "aac"));
         this.audioBitrate = audioBitrate;
         this.volume = _.defaultTo(volume, 100);
         this.parallelWriteFrames = _.defaultTo(parallelWriteFrames, 10);
+        this.backgroundOpacity = _.defaultTo(backgroundOpacity, 1);
+        this.pixelFormat = _.defaultTo(pixelFormat, this.hasAlphaChannel ? "yuva420p" : "yuv420p");
         this.showProgress = _.defaultTo(showProgress, false);
         this.#frameBuffers = new Array(this.parallelWriteFrames);
         this._swapFilePath = path.join(this.tmpDirPath, `${uniqid("video_")}.${this.format}`);
         this._targetFrameCount = util.durationToFrameCount(this.duration, this.fps);
-        if(this.showProgress) {
+        if (this.showProgress) {
             this._cliProgress = new cliProgress.SingleBar({
                 hideCursor: true,
                 format: `[${"{bar}".green}] {percentage}% | {value}/{total} | {eta_formatted} | {filename}`,
@@ -314,7 +319,7 @@ export default class Synthesizer extends EventEmitter {
         this.progress = Math.floor(value * 1000) / 1000;
         if (this.showProgress) {
             if (!this._cliProgress.started) {
-                if(this._cliProgress instanceof cliProgress.MultiBar)
+                if (this._cliProgress instanceof cliProgress.MultiBar)
                     this._cliProgress = this._cliProgress.create(this._targetFrameCount, 0);
                 else
                     this._cliProgress.start(this._targetFrameCount, 0);
@@ -432,14 +437,19 @@ export default class Synthesizer extends EventEmitter {
         }
         vencoder.addInput(this.#pipeStream);
         if (attachCoverPath) {
+            // 附加封面
             vencoder.addInput(attachCoverPath);
             vencoder.complexFilter(`[1:v]scale=${width}:${height}[cover];[0:v][cover]overlay=repeatlast=0,scale=w=${width}:h=${height},format=${pixelFormat}`);
         }
         else {
             vencoder
+                // 设置视频宽高
                 .setSize(`${width}x${height}`)
+                // 设置像素格式
                 .outputOption("-pix_fmt", pixelFormat)
         }
+        // 保持透明通道
+        this.hasAlphaChannel && vencoder.outputOption("-auto-alt-ref 0");
         vencoder
             // 使用图像管道
             .inputFormat("image2pipe")
@@ -711,6 +721,13 @@ export default class Synthesizer extends EventEmitter {
      */
     get audioSynthesis() {
         return this.audios.length > 0;
+    }
+
+    /**
+     * 获取是否具有透明通道
+     */
+    get hasAlphaChannel() {
+        return this.format == "webm" && this.backgroundOpacity < 1;
     }
 
     /**

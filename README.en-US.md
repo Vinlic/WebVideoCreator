@@ -6,7 +6,7 @@
 
 # Introduction
 
-WebVideoCreator (abbreviated as WVC) is a framework for rendering web animations into videos. It's implemented based on Node.js + Puppeteer + Chrome + FFmpeg. It performs deterministic rendering and captures any HTML5-playable animations (CSS3 animations/SVG animations/Lottie animations/GIF animations/APNG animations/WEBP animations) and any timeline-based animations driven by [RAF](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame). You can also mischievously use `setInterval` or `setTimeout` to control animations. WVC supports embedding MP4 and transparent WebM videos, as well as features such as transition compositing, audio synthesis, and font loading. Let's get started with the [Quick Start](#quick-start).
+WebVideoCreator (abbreviated as WVC) is a framework for rendering web animations into videos. It's implemented based on Node.js + Puppeteer + Chrome + FFmpeg. It performs deterministic rendering and captures any HTML5-playable animations (CSS3 animations/SVG animations/Lottie animations/GIF animations/APNG animations/WEBP animations) and any timeline-based animations driven by [RAF](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame). You can also mischievously use `setInterval` or `setTimeout` to control animations. WVC supports embedding or exporting MP4 and transparent WebM videos, as well as features such as transition compositing, audio synthesis, and font loading. Let's get started with the [Quick Start](#quick-start).
 
 WVC creates a virtual time environment for your cool animated pages, which can be imagined as something akin to "The Truman Show." Its main responsibility is to transform an [uncertain rendering environment](./docs/renderer-env.md#不确定性的渲染环境) into a [deterministic rendering environment](./docs/renderer-env.md#确定性的渲染环境).
 
@@ -23,6 +23,7 @@ Q&A and discussion group on QQ: 752693580
 - Supports rendering and compositing of single scenes and multi-scene videos, with the ability to apply transition effects to multi-scene videos.
 - Supports chunked video compositing, allowing chunks to be distributed to multiple devices for rendering, then combined into multi-scene videos, significantly reducing rendering time for long videos.
 - Supports parallel rendering and compositing of multiple video tasks.
+- Support embedding or exporting webm format videos that support transparent channels.
 - API support for [distributed rendering](#distributed-rendering-solution), enabling the distribution of a large number of videos to multiple devices for rendering and final merging output with minimal wrapping of WVC.
 - Supports GPU acceleration for rendering and compositing, reducing video rendering time significantly.
 - Can be deployed and run on both Windows and Linux platforms.
@@ -524,6 +525,18 @@ const video = wvc.createMultiVideo({
 It's important to note that applying transitions will result in a shorter total video duration since the transition effect effectively overlaps a portion of two video segments. For example, if you insert a fade transition between two 5-second segments, the resulting video will have a duration of 9 seconds.
 
 Lottie animations are also suitable for use as transition effects. You can play a full-screen Lottie animation for half of the duration at the end of one video segment and then play another full-screen Lottie animation for the remaining half at the beginning of the next video segment to create more dynamic transition effects.
+
+## Export videos with transparent channels
+
+WVC supports you to set the background opacity `backgroundOpacity` option to achieve transparent or semi transparent background video output, with a value range of **0-1**.
+
+```javascript
+const video = wvc.createSingleVideo({
+    ...,
+    // Set a completely transparent background
+    backgroundOpacity: 0
+});
+```
 
 ## Delayed Rendering Start
 
