@@ -1,6 +1,6 @@
 {
   "name": "web-video-creator",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "description": "A framework for creating videos based on Node.js + Puppeteer + FFmpeg.",
   "type": "module",
   "main": "index.js",
@@ -34,7 +34,8 @@
     "synthesis",
     "animation",
     "canvas",
-    "html5"
+    "html5",
+    "vtuber"
   ],
   "bugs": "https://github.com/Vinlic/WebVideoCreator/issues",
   "dependencies": {
