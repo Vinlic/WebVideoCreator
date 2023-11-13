@@ -198,6 +198,12 @@ export default class DynamicImage {
         if (!result.image) return;
         const frame = result.image;
         const { displayWidth, displayHeight } = frame;
+        // 画布宽度为0时使用解码宽度初始化
+        if(this.canvas.width === 0)
+            this.canvas.width = config.codedWidth;
+        // 画布高度为0时使用解码高度初始化
+        if(this.canvas.height === 0)
+            this.canvas.height = config.codedHeight;
         // 清除上一帧画面
         this.canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         // 绘制当前帧
@@ -281,6 +287,8 @@ export default class DynamicImage {
         // 重置图像
         this.reset();
         this.repetitionIndex = 0;
+        if(this.canvas)
+            this.canvas.style.display = "none";
         this.canvas = null;
         this.canvasCtx = null;
         // 设置已销毁

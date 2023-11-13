@@ -569,9 +569,9 @@ export default class CaptureContext {
             // 视频格式
             format: e.getAttribute("format") || undefined,
             // 视频宽度
-            width: parseInt(e.style.width) || e.getNumberAttribute("width") || e.width,
+            width: e.getNumberAttribute("width") || e.width,
             // 视频高度
-            height: parseInt(e.style.height) || e.getNumberAttribute("height") || e.height,
+            height: e.getNumberAttribute("height") || e.height,
             // 视频开始时间点（毫秒）
             startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
             // 视频结束时间点（毫秒）
@@ -630,9 +630,9 @@ export default class CaptureContext {
             // 图像格式
             format: e.getAttribute("format") || undefined,
             // 图像宽度
-            width: parseInt(e.style.width) || e.getNumberAttribute("width") || e.width,
+            width: e.getNumberAttribute("width") || e.width,
             // 图像高度
-            height: parseInt(e.style.height) || e.getNumberAttribute("height") || e.height,
+            height: e.getNumberAttribute("height") || e.height,
             // 图像播放开始时间点（毫秒）
             startTime: e.getNumberAttribute("start-time") || e.getNumberAttribute("startTime") || this.currentTime,
             // 图像播放结束时间点（毫秒）

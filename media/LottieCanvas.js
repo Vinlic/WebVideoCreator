@@ -184,6 +184,8 @@ export default class LottieCanvas {
         this.animation = null;
         // 重置动画
         this.reset();
+        if(this.canvas)
+            this.canvas.style.display = "none";
         this.canvas = null;
         this.canvasCtx = null;
         // 设置已销毁

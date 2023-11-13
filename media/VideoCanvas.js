@@ -326,6 +326,8 @@ export default class VideoCanvas {
         this.maskBuffer = null;
         this.frameIndex = null;
         this.currentTime = 0;
+        if(this.canvas)
+            this.canvas.style.display = "none";
         this.canvas = null;
         this.canvasCtx = null;
         this.offscreenCanvas = null;

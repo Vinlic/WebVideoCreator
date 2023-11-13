@@ -484,10 +484,11 @@ export default class Synthesizer extends EventEmitter {
         const aencoder = ffmpeg();
         // 指定音频码率
         audioBitrate && aencoder.audioBitrate(audioBitrate);
+        const outputDuration = this.getOutputDuration();
         aencoder
             .addInput(_swapFilePath)
             .videoCodec("copy")
-            .setDuration(this.getOutputDuration() / 1000)
+            .setDuration(outputDuration / 1000)
             .audioCodec(audioEncoder)
             .outputOption("-movflags +faststart")
             .toFormat(format)
@@ -495,7 +496,7 @@ export default class Synthesizer extends EventEmitter {
         // 生成音频时间轴的复合过滤器参数
         let outputs = "";
         const complexFilter = audios.reduce((result, audio, index) => {
-            const { path, url, loop, startTime, endTime, duration, volume, seekStart, seekEnd, fadeInDuration, fadeOutDuration } = audio;
+            const { path, url, loop, startTime, endTime = outputDuration, duration, volume, seekStart, seekEnd, fadeInDuration, fadeOutDuration } = audio;
             if (seekEnd && seekEnd - seekStart > duration)
                 return result;
             // 添加音频输入
