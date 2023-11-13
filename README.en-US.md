@@ -4,6 +4,13 @@
   <img width="650px" src="./assets/web-video-creator.png" />
 </p>
 
+[![NPM](https://nodei.co/npm/puppeteer-screen-recorder.png)](https://npmjs.org/package/puppeteer-screen-recorder)
+
+![GitHub](https://img.shields.io/github/license/Vinlic/WebVideoCreator)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/Vinlic/WebVideoCreator)
+![npm](https://img.shields.io/npm/dt/puppeteer-screen-recorder)
+![GitHub Repo stars](https://img.shields.io/github/stars/Vinlic/WebVideoCreator)
+
 # Introduction
 
 WebVideoCreator (abbreviated as WVC) is a framework for rendering web animations into videos. It's implemented based on Node.js + Puppeteer + Chrome + FFmpeg. It performs deterministic rendering and captures any HTML5-playable animations (CSS3 animations/SVG animations/Lottie animations/GIF animations/APNG animations/WEBP animations) and any timeline-based animations driven by [RAF](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame). You can also mischievously use `setInterval` or `setTimeout` to control animations. WVC supports embedding or exporting MP4 and transparent WebM videos, as well as features such as transition compositing, audio synthesis, and font loading. Let's get started with the [Quick Start](#quick-start).

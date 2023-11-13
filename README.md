@@ -4,6 +4,13 @@
   <img width="650px" src="./assets/web-video-creator.png" />
 </p>
 
+[![NPM](https://nodei.co/npm/puppeteer-screen-recorder.png)](https://npmjs.org/package/puppeteer-screen-recorder)
+
+![GitHub](https://img.shields.io/github/license/Vinlic/WebVideoCreator)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/Vinlic/WebVideoCreator)
+![npm](https://img.shields.io/npm/dt/puppeteer-screen-recorder)
+![GitHub Repo stars](https://img.shields.io/github/stars/Vinlic/WebVideoCreator)
+
 # 简介
 
 WebVideoCreator（简称WVC）是一个将Web动画渲染为视频的框架，基于 Node.js + Puppeteer + Chrome + FFmpeg 实现，它执行确定性的渲染，准确的以目标帧率捕获任何可在HTML5播放动画（CSS3动画/SVG动画/Lottie动画/GIF动画/APNG动画/WEBP动画）以及任何基于时间轴使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动的动画（[anime.js](https://animejs.com/)是一个不错的选择 :D），当然您也可以调皮的使用setInterval或者setTimeout来控制动画，支持导出和嵌入mp4或透明通道的webm视频，还支持转场合成、音频合成与字体加载等功能。让我们[快速开始](#快速开始)。
