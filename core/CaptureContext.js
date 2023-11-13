@@ -65,14 +65,20 @@ export default class CaptureContext {
     }
 
     /**
+     * 初始化上下文
+     */
+    init() {
+        // 自动触发超时和间隔回调
+        this._callTimeoutCallbacks();
+        this._callIntervalCallbacks();
+    }
+
+    /**
      * 准备完毕
      * 
      * @return {boolean} - 是否已启动
      */
     ready() {
-        // 准备完毕时自动触发超时和间隔回调
-        this._callTimeoutCallbacks();
-        this._callIntervalCallbacks();
         // 设置准备完毕标志为true
         this.readyFlag = true;
         // 如果存在准备前的启动则调用

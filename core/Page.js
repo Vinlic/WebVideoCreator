@@ -197,6 +197,8 @@ export default class Page extends EventEmitter {
             // 注入Lottie动画库
             this.#injectLibrary(LOTTIE_LIBRARY_SCRIPT_CONTENT + ";window.____lottie = window.lottie;window.lottie = undefined")
         ]);
+        // 初始化捕获上下文
+        await this.target.evaluate(() => captureCtx.init());
     }
 
     /**
@@ -224,6 +226,8 @@ export default class Page extends EventEmitter {
             // 注入Lottie动画库
             this.#injectLibrary(LOTTIE_LIBRARY_SCRIPT_CONTENT + ";window.____lottie = window.lottie;window.lottie = undefined")
         ]);
+        // 初始化捕获上下文
+        await this.target.evaluate(() => captureCtx.init());
     }
 
     /**
