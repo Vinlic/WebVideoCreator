@@ -8,7 +8,7 @@
 
 ![GitHub](https://img.shields.io/github/license/Vinlic/WebVideoCreator)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/Vinlic/WebVideoCreator)
-![npm](https://img.shields.io/npm/dt/puppeteer-screen-recorder)
+![npm](https://img.shields.io/npm/dt/web-video-creator)
 ![GitHub Repo stars](https://img.shields.io/github/stars/Vinlic/WebVideoCreator)
 
 # 简介
