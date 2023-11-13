@@ -384,7 +384,8 @@ export default class Synthesizer extends EventEmitter {
         if (!(audio instanceof Audio))
             audio = new Audio(audio);
         // 开始加载音频
-        audio.load();
+        audio.load()
+            .catch(err => this._emitError(err));
         this.audios.push(audio);
         return audio;
     }
