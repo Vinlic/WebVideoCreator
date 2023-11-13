@@ -217,6 +217,7 @@ export default class Synthesizer extends EventEmitter {
         (async () => {
             await fs.ensureDir(path.dirname(this.outputPath));
             await fs.ensureDir(this.tmpDirPath);
+            // 等待启动前已添加的音频加载完成
             await this.#waitForAudiosLoaded();
             await new Promise((resolve, reject) => {
                 this._createVideoEncoder()
@@ -233,6 +234,7 @@ export default class Synthesizer extends EventEmitter {
             });
             if (!this._isVideoChunk()) {
                 if (this.audioSynthesis) {
+                    // 等待渲染期间新添加的音频加载完成
                     await this.#waitForAudiosLoaded();
                     await new Promise((resolve, reject) => {
                         this._createAudioEncoder()
