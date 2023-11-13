@@ -4,7 +4,7 @@
   <img width="650px" src="./assets/web-video-creator.png" />
 </p>
 
-[![NPM](https://nodei.co/npm/puppeteer-screen-recorder.png)](https://npmjs.org/package/puppeteer-screen-recorder)
+[![NPM](https://nodei.co/npm/web-video-creator.png)](https://npmjs.org/package/web-video-creator)
 
 ![GitHub](https://img.shields.io/github/license/Vinlic/WebVideoCreator)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/Vinlic/WebVideoCreator)
