@@ -421,6 +421,12 @@ setTimeout(() => document.body.appendChild(video), 3000);
 setTimeout(() => video.remove(), 8000);
 ```
 
+If you are using some front-end frameworks to implement animation content, WVC may not be able to listen to your changes to the `<video>` element (such as hiding or displaying). Please replace the element with the `<canvas video-capture>` element and prompt WVC to notice that it is a video canvas through `video-capture` attribute.
+
+```html
+<canvas src="test.mp4" video-capture></canvas>
+```
+
 ### Transparent Channel Videos
 
 Transparent videos are great for compositing digital avatars (e.g., VTubers) into video scenes. Please refer to **[Rendering Example Page](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)** Last Demo
@@ -451,6 +457,12 @@ The following animated images can be rendered as well, and you can style them as
 <img src="test.webp"/>
 ```
 
+If you are using some front-end frameworks to implement animation content, WVC may not be able to listen to your changes to the `<img>` element (such as hiding or displaying). Please replace the element with the `<canvas dyimage-capture>` element and prompt WVC to notice that it is a dyanmic image canvas through `dyimage-capture` attribute.
+
+```html
+<canvas src="test.gif" dyimage-capture></canvas>
+```
+
 ## Inserting Lottie Animations
 
 WVC comes with the built-in [lottie-web](http://airbnb.io/lottie/#/web) animation library. If you have your own Lottie animations in your web page, they should work seamlessly with WVC.
@@ -459,6 +471,12 @@ Simply insert a `<lottie>` element and set the `src` attribute.
 
 ```html
 <lottie src="example.json"></lottie>
+```
+
+If you are using some front-end frameworks to implement animation content, WVC may not be able to listen to your changes to the `<lottie>` element (such as hiding or displaying). Please replace the element with the `<canvas lottie-capture>` element and prompt WVC to notice that it is a lottie canvas through `lottie-capture` attribute.
+
+```html
+<canvas src="example.json" lottie-capture></canvas>
 ```
 
 ## Applying Fonts

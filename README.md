@@ -428,6 +428,12 @@ setTimeout(() => document.body.appendChild(video), 3000);
 setTimeout(() => video.remove(), 8000);
 ```
 
+如果您正在使用一些前端框架实现动画内容，WVC可能无法监听到您对 `<video>` 元素的改动（比如隐藏或显示），请将元素更换为 `<canvas video-capture>` 元素，通过 `video-capture` 属性提示WVC注意到它是一个视频画布。
+
+```html
+<canvas src="test.mp4" video-capture></canvas>
+```
+
 ### 透明通道视频
 
 透明视频非常适合用于将vtuber数字人合成到视频画面中，结合精美的动画可以获得非常好的观看体验，合成效果请参考 **[渲染示例页面](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)** 最后一个Demo。
@@ -458,6 +464,12 @@ webm编解码通常比较耗时，如果您可以直接获得原始mp4视频和�
 <img src="test.webp"/>
 ```
 
+如果您正在使用一些前端框架实现动画内容，WVC可能无法监听到您对 `<img>` 元素的改动（比如隐藏或显示），请将元素更换为 `<canvas dyimage-capture>` 元素，通过 `dyimage-capture` 属性提示WVC注意到它是一个动态图像画布。
+
+```html
+<canvas src="test.gif" dyimage-capture></canvas>
+```
+
 ## 插入Lottie动画
 
 WVC已经内置 [lottie-web](http://airbnb.io/lottie/#/web) 动画库，如果您的页面有自己实现的lottie动效则可以忽略本内容，因为它们也能够正常工作。
@@ -466,6 +478,12 @@ WVC已经内置 [lottie-web](http://airbnb.io/lottie/#/web) 动画库，如果�
 
 ```html
 <lottie src="example.json"></lottie>
+```
+
+如果您正在使用一些前端框架实现动画内容，WVC可能无法监听到您对 `<lottie>` 元素的改动（比如隐藏或显示），请将元素更换为 `<canvas lottie-capture>` 元素，通过 `lottie-capture` 属性提示WVC注意到它是一个Lottie画布。
+
+```html
+<canvas src="example.json" lottie-capture></canvas>
 ```
 
 ## 应用字体

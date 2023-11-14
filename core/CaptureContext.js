@@ -8,9 +8,9 @@ export default class CaptureContext {
     /** 媒体选择器 */
     SVG_SELECTOR = "svg";
     AUDIO_SELECTOR = 'audio[src$=".mp3"],audio[src$=".ogg"],audio[src$=".acc"],audio[src*=".mp3?"],audio[src*=".ogg?"],audio[src*=".aac?"],audio[capture]';
-    VIDEO_SELECTOR = 'video[src$=".mp4"],video[src$=".webm"],video[src$=".mkv"],video[src*=".mp4?"],video[src*=".webm?"],video[src*=".mkv?"],video[capture]';
-    DYNAMIC_IMAGE_SELECTOR = 'img[src$=".gif"],img[src$=".webp"],img[src$=".apng"],img[src*=".gif?"],img[src*=".webp?"],img[src*=".apng?"],img[capture]';
-    LOTTIE_SELECTOR = "lottie";
+    VIDEO_SELECTOR = 'video[src$=".mp4"],video[src$=".webm"],video[src$=".mkv"],video[src*=".mp4?"],video[src*=".webm?"],video[src*=".mkv?"],video[capture],canvas[video-capture]';
+    DYNAMIC_IMAGE_SELECTOR = 'img[src$=".gif"],img[src$=".webp"],img[src$=".apng"],img[src*=".gif?"],img[src*=".webp?"],img[src*=".apng?"],img[capture],canvas[dyimage-capture]';
+    LOTTIE_SELECTOR = "lottie,canvas[lottie-capture]";
 
     /** @type {number} - 启动时间点（毫秒） */
     startTime = Date.now();
@@ -597,18 +597,26 @@ export default class CaptureContext {
             // 是否忽略本地缓存
             ignoreCache: e.getBooleanAttribute("ignore-cache") || e.getBooleanAttribute("ignoreCache"),
         };
-        // 创建画布元素
-        const canvas = this._createCanvas(options);
+        let canvas;
+        if(!(e instanceof HTMLCanvasElement)) {
+            // 创建画布元素
+            canvas = this._createCanvas(options);
+            // 复制目标元素样式
+            this._copyElementStyle(e, canvas);
+            // 代理目标元素所有属性和行为
+            this._buildElementProxy(e, canvas);
+            // 将目标元素替换为画布
+            e.replaceWith(canvas);
+        }
+        else {
+            canvas = e;
+            canvas.width = 0;
+            canvas.height = 0;
+        }
         // 实例化视频画布实例
         const videoCanvas = new ____VideoCanvas(options);
         // 绑定画布元素
         videoCanvas.bind(canvas);
-        // 复制目标元素样式
-        this._copyElementStyle(e, canvas);
-        // 代理目标元素所有属性和行为
-        this._buildElementProxy(e, canvas);
-        // 将目标元素替换为画布
-        e.replaceWith(canvas);
         // 将对象加入媒体调度列表
         this.dispatchMedias.push(videoCanvas);
         return videoCanvas;
@@ -642,18 +650,26 @@ export default class CaptureContext {
             // 拉取失败时重试拉取次数
             retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs")
         };
-        // 创建画布元素
-        const canvas = this._createCanvas(options);
+        let canvas;
+        if(!(e instanceof HTMLCanvasElement)) {
+            // 创建画布元素
+            canvas = this._createCanvas(options);
+            // 复制目标元素样式
+            this._copyElementStyle(e, canvas);
+            // 代理目标元素所有属性和行为
+            this._buildElementProxy(e, canvas);
+            // 将目标元素替换为画布
+            e.replaceWith(canvas);
+        }
+        else {
+            canvas = e;
+            canvas.width = 0;
+            canvas.height = 0;
+        }
         // 实例化动态图像实例
         const dynamicImage = new ____DynamicImage(options);
         // 绑定画布元素
         dynamicImage.bind(canvas);
-        // 复制目标元素样式
-        this._copyElementStyle(e, canvas);
-        // 代理目标元素所有属性和行为
-        this._buildElementProxy(e, canvas);
-        // 将目标元素替换为画布
-        e.replaceWith(canvas);
         // 将对象加入媒体调度列表
         this.dispatchMedias.push(dynamicImage);
         return dynamicImage;
@@ -685,18 +701,26 @@ export default class CaptureContext {
             // 拉取失败时重试拉取次数
             retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs")
         };
-        // 创建画布元素
-        const canvas = this._createCanvas(options);
+        let canvas;
+        if(!(e instanceof HTMLCanvasElement)) {
+            // 创建画布元素
+            canvas = this._createCanvas(options);
+            // 复制目标元素样式
+            this._copyElementStyle(e, canvas);
+            // 代理目标元素所有属性和行为
+            this._buildElementProxy(e, canvas)
+            // 将目标元素替换为画布
+            e.replaceWith(canvas);
+        }
+        else {
+            canvas = e;
+            canvas.width = 0;
+            canvas.height = 0;
+        }
         // 实例化Lottie动画实例
         const lottieCanvas = new ____LottieCanvas(options);
         // 绑定画布元素
         lottieCanvas.bind(canvas);
-        // 复制目标元素样式
-        this._copyElementStyle(e, canvas);
-        // 代理目标元素所有属性和行为
-        this._buildElementProxy(e, canvas)
-        // 将目标元素替换为画布
-        e.replaceWith(canvas);
         // 将对象加入媒体调度列表
         this.dispatchMedias.push(lottieCanvas);
         return lottieCanvas;
