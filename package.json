@@ -25,9 +25,16 @@
     "index.js"
   ],
   "keywords": [
-    "video",
     "puppeteer",
+    "screen",
+    "screen recorder",
+    "video capture",
+    "video recorder",
+    "video",
     "ffmpeg",
+    "record",
+    "cast",
+    "shot",
     "chrome",
     "chromium",
     "render",
@@ -35,7 +42,13 @@
     "animation",
     "canvas",
     "html5",
-    "vtuber"
+    "vtuber",
+    "automatic",
+    "automation",
+    "screen frame",
+    "screeencast",
+    "screeencasts",
+    "headless"
   ],
   "bugs": "https://github.com/Vinlic/WebVideoCreator/issues",
   "dependencies": {
