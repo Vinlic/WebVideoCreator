@@ -464,6 +464,8 @@ export default class CaptureContext {
      */
     addAudio(options = {}) {
         const audioId = this.audioId++;
+        const { url } = options;
+        url && (options.url = this._currentUrlJoin(url));
         ____addAudio({
             audioId,
             ...options
