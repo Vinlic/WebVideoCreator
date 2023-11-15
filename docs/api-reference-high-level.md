@@ -277,6 +277,11 @@
             <td>页面等待选项</td>
         </tr>
         <tr>
+            <td>pageViewport</td>
+            <td><a href="https://pptr.dev/api/puppeteer.viewport#properties">Viewport</a></td>
+            <td>页面视窗参数</td>
+        </tr>
+        <tr>
             <td>pagePrepareFn</td>
             <td>Function</td>
             <td>页面预处理函数，可以在渲染之前对Page对象操作</td>
@@ -682,6 +687,11 @@
             <td>pageWaitForOptions</td>
             <td><a href="https://pptr.dev/api/puppeteer.waitforoptions">WaitForOptions</a></td>
             <td>页面等待选项</td>
+        </tr>
+        <tr>
+            <td>pageViewport</td>
+            <td><a href="https://pptr.dev/api/puppeteer.viewport#properties">Viewport</a></td>
+            <td>页面视窗参数</td>
         </tr>
         <tr>
             <td>pagePrepareFn</td>

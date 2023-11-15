@@ -4,12 +4,14 @@ import AsyncLock from "async-lock";
 
 import VideoChunk from "../core/VideoChunk.js";
 import Transition from "../entity/Transition.js";
+import Page from "../core/Page.js";
 import Font from "../entity/Font.js";
 import logger from "../lib/logger.js";
 import util from "../lib/util.js";
 
 /**
  * @typedef {import('puppeteer-core').WaitForOptions} WaitForOptions
+ * @typedef {import('puppeteer-core').Viewport} Viewport
  */
 
 /**
@@ -29,6 +31,8 @@ export default class ChunkVideo extends VideoChunk {
     consoleLog;
     /** @type {boolean} - 是否输出视频预处理日志 */
     videoPreprocessLog;
+    /** @type {Viewport} - 页面视窗参数 */
+    pageViewport;
     /** @type {Function} - 页面预处理函数 */
     pagePrepareFn;
     /** @type {Function} - 页面获取函数 */
@@ -67,18 +71,20 @@ export default class ChunkVideo extends VideoChunk {
      * @param {boolean} [options.consoleLog=false] - 是否开启控制台日志输出
      * @param {boolean} [options.videoPreprocessLog=false] - 是否开启视频预处理日志输出
      * @param {WaitForOptions} [options.pageWaitForOptions] - 页面等待选项
+     * @param {Viewport} [options.pageViewport] - 页面视窗参数
      * @param {Function} [options.pagePrepareFn] - 页面预处理函数
      */
     constructor(options = {}) {
         super(options);
         assert(_.isObject(options), "options must be Object");
-        const { url, content, autostartRender, consoleLog, videoPreprocessLog, pageWaitForOptions, pagePrepareFn } = options;
+        const { url, content, autostartRender, consoleLog, videoPreprocessLog, pageWaitForOptions, pageViewport, pagePrepareFn } = options;
         assert(_.isUndefined(url) || util.isURL(url), `url ${url} is not valid URL`);
         assert(_.isUndefined(content) || _.isString(content), "page content must be string");
         assert(!_.isUndefined(url) || !_.isUndefined(content), "page url or content must be provide");
         assert(_.isUndefined(autostartRender) || _.isBoolean(autostartRender), "autostartRender must be boolean");
         assert(_.isUndefined(consoleLog) || _.isBoolean(consoleLog), "consoleLog must be boolean");
         assert(_.isUndefined(pageWaitForOptions) || _.isObject(pageWaitForOptions), "pageWaitForOptions must be Object");
+        assert(_.isUndefined(pageViewport) || _.isObject(pageViewport), "pageViewport must be Object");
         assert(_.isUndefined(pagePrepareFn) || _.isFunction(pagePrepareFn), "pagePrepareFn must be Function");
         this.url = url;
         this.content = content;
@@ -86,6 +92,7 @@ export default class ChunkVideo extends VideoChunk {
         this.consoleLog = _.defaultTo(consoleLog, false);
         this.videoPreprocessLog = _.defaultTo(videoPreprocessLog, false);
         this.pageWaitForOptions = pageWaitForOptions;
+        this.pageViewport = pageViewport;
         this.pagePrepareFn = pagePrepareFn;
     }
 
@@ -132,7 +139,7 @@ export default class ChunkVideo extends VideoChunk {
     async #synthesize() {
         const page = await this.#acquirePage();
         try {
-            const { url, content, width, height, fps, duration, pageWaitForOptions } = this;
+            const { url, content, width, height, fps, duration, pageWaitForOptions, pageViewport = {} } = this;
             // 监听页面实例发生的某些内部错误
             page.on("error", err => this._emitError("Page error:\n" + err.stack));
             // 监听页面是否崩溃，当内存不足或过载时可能会崩溃
@@ -156,7 +163,8 @@ export default class ChunkVideo extends VideoChunk {
             // 设置视窗宽高
             await page.setViewport({
                 width,
-                height
+                height,
+                ...pageViewport
             });
             // 跳转到您希望渲染的页面，您可以考虑创建一个本地的Web服务器提供页面以提升加载速度和安全性
             if(url)

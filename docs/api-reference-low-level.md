@@ -238,32 +238,7 @@ const { ... } = core;
 
 #### options 参数
 
-<table width="100%">
-    <thead>
-        <tr>
-            <th>参数</th>
-            <th>类型</th>
-            <th>说明</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>width</td>
-            <td>number</td>
-            <td>页面视窗宽度</td>
-        </tr>
-        <tr>
-            <td>height</td>
-            <td>number</td>
-            <td>页面视窗高度</td>
-        </tr>
-        <tr>
-            <td>deviceScaleFactor</td>
-            <td>number</td>
-            <td>设备缩放因子</td>
-        </tr>
-    </tbody>
-</table>
+与Puppeteer的[Viewport](https://pptr.dev/api/puppeteer.viewport#properties)保持一致。
 
 ### Page.goto(url: string, waitForOptions: Object): Promise
 

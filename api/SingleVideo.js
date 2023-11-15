@@ -10,6 +10,7 @@ import util from "../lib/util.js";
 
 /**
  * @typedef {import('puppeteer-core').WaitForOptions} WaitForOptions
+ * @typedef {import('puppeteer-core').Viewport} Viewport
  */
 
 /**
@@ -31,6 +32,8 @@ export default class SingleVideo extends Synthesizer {
     consoleLog;
     /** @type {boolean} - 是否输出视频预处理日志 */
     videoPreprocessLog;
+    /** @type {Viewport} - 页面视窗参数 */
+    pageViewport;
     /** @type {Function} - 页面预处理函数 */
     pagePrepareFn;
     /** @type {Function} - 页面获取函数 */
@@ -62,6 +65,7 @@ export default class SingleVideo extends Synthesizer {
      * @param {string} [options.audioBitrate] - 音频码率
      * @param {number} [options.volume] - 视频音量（0-100）
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
+     * @param {Viewport} [options.pageViewport] - 页面视窗参数
      * @param {Function} [options.pagePrepareFn] - 页面预处理函数
      * @param {WaitForOptions} [options.pageWaitForOptions] - 页面等待选项
      * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
@@ -72,7 +76,7 @@ export default class SingleVideo extends Synthesizer {
      */
     constructor(options = {}) {
         super(options);
-        const { url, content, duration, autostartRender, consoleLog, videoPreprocessLog, pageWaitForOptions, pagePrepareFn } = options;
+        const { url, content, duration, autostartRender, consoleLog, videoPreprocessLog, pageWaitForOptions, pageViewport, pagePrepareFn } = options;
         assert(_.isUndefined(url) || util.isURL(url), `url ${url} is not valid URL`);
         assert(_.isUndefined(content) || _.isString(content), "page content must be string");
         assert(!_.isUndefined(url) || !_.isUndefined(content), "page url or content must be provide");
@@ -80,6 +84,7 @@ export default class SingleVideo extends Synthesizer {
         assert(_.isUndefined(autostartRender) || _.isBoolean(autostartRender), "autostartRender must be boolean");
         assert(_.isUndefined(consoleLog) || _.isBoolean(consoleLog), "consoleLog must be boolean");
         assert(_.isUndefined(pageWaitForOptions) || _.isObject(pageWaitForOptions), "pageWaitForOptions must be Object");
+        assert(_.isUndefined(pageViewport) || _.isObject(pageViewport), "pageViewport must be Object");
         assert(_.isUndefined(pagePrepareFn) || _.isFunction(pagePrepareFn), "pagePrepareFn must be Function");
         this.url = url;
         this.content = content;
@@ -87,6 +92,7 @@ export default class SingleVideo extends Synthesizer {
         this.autostartRender = _.defaultTo(autostartRender, true);
         this.consoleLog = _.defaultTo(consoleLog, false);
         this.videoPreprocessLog = _.defaultTo(videoPreprocessLog, false);
+        this.pageViewport = pageViewport;
         this.pageWaitForOptions = pageWaitForOptions;
         this.pagePrepareFn = pagePrepareFn;
     }
@@ -134,7 +140,7 @@ export default class SingleVideo extends Synthesizer {
     async #synthesize() {
         const page = await this.#acquirePage();
         try {
-            const { url, content, width, height, fps, duration, pageWaitForOptions } = this;
+            const { url, content, width, height, fps, duration, pageWaitForOptions, pageViewport = {} } = this;
             // 监听页面实例发生的某些内部错误
             page.on("error", err => this._emitError("Page error:\n" + err.stack));
             // 监听页面是否崩溃，当内存不足或过载时可能会崩溃
@@ -151,6 +157,7 @@ export default class SingleVideo extends Synthesizer {
             page.on("audioUpdate", (audioId, options) => this.updateAudio(audioId, options))
             // 设置视窗宽高
             await page.setViewport({
+                ...pageViewport,
                 width,
                 height
             });
