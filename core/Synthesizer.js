@@ -363,8 +363,8 @@ export default class Synthesizer extends EventEmitter {
         if (_.isString(err))
             err = new Error(err);
         const message = err.message;
-        if (message.indexOf("Error while opening encoder for output stream") != -1)
-            err = new Error(`Video codec ${this.videoEncoder} may not be supported, please check if your hardware supports it. Some hardware encoders may have limitations in parallel encoding (such as NVENC https://github.com/keylase/nvidia-patch)`);
+        if (message.indexOf("Error while opening encoder for output stream") != -1 || message.indexOf("ffmpeg exited with code 3221225477") != -1)
+            err = new Error(`Video codec ${this.videoEncoder} may not be supported, please check if your hardware supports it: https://github.com/Vinlic/WebVideoCreator/blob/master/docs/video-encoder.md. Some hardware encoders may have limitations in parallel encoding (such as NVENC https://github.com/keylase/nvidia-patch)`);
         if (this._cliProgress) {
             this._cliProgress.stop();
             this._cliProgress = null;
