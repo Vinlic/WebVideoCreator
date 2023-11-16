@@ -98,10 +98,12 @@ export default class ChunkSynthesizer extends Synthesizer {
         const chunksRenderPromises = [];
         this.chunks.forEach(chunk => {
             chunk.audios.forEach(audio => {
-                if (_.isFinite(audio.startTime))
-                    audio.startTime += offsetTime;
-                if (_.isFinite(audio.endTime))
-                    audio.endTime += offsetTime;
+                if (!_.isFinite(audio.startTime))
+                    audio.startTime = 0;
+                audio.startTime += offsetTime;
+                if (!_.isFinite(audio.endTime))
+                    audio.endTime = chunk.duration;
+                audio.endTime += offsetTime;
                 this.addAudio(audio);
             });
             // 分块未完成时先进行渲染
@@ -126,7 +128,11 @@ export default class ChunkSynthesizer extends Synthesizer {
         return await new Promise((resolve, reject) => {
             chunk.on("audioAdd", options => {
                 const audio = this.addAudio(options);
+                if (!_.isFinite(audio.startTime))
+                    audio.startTime = 0;
                 audio.startTime += offsetTime;
+                if (!_.isFinite(audio.endTime))
+                    audio.endTime = chunk.duration;
                 audio.endTime += offsetTime;
             });
             chunk.on("audioUpdate", options => {
