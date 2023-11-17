@@ -13,13 +13,13 @@
 
 # 简介
 
-WebVideoCreator（简称WVC）是一个将Web动画渲染为视频的框架，基于 Node.js + Puppeteer + Chrome + FFmpeg 实现，它执行确定性的渲染，准确的以目标帧率捕获任何可在HTML5播放动画（CSS3动画/SVG动画/Lottie动画/GIF动画/APNG动画/WEBP动画）以及任何基于时间轴使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动的动画（[anime.js](https://animejs.com/)是一个不错的选择 :D），当然您也可以调皮的使用setInterval或者setTimeout来控制动画，支持导出和嵌入mp4或透明通道的webm视频，还支持转场合成、音频合成与字体加载等功能。让我们[快速开始](#快速开始)。
+🌈 WebVideoCreator（简称WVC）是一个将Web动画渲染为视频的框架，基于 Node.js + Puppeteer + Chrome + FFmpeg 实现，它执行确定性的渲染，准确的以目标帧率捕获任何可在HTML5播放动画（CSS3动画/SVG动画/Lottie动画/GIF动画/APNG动画/WEBP动画）以及任何基于时间轴使用[RAF](https://developer.mozilla.org/zh-CN/docs/Web/API/Window/requestAnimationFrame)驱动的动画（[anime.js](https://animejs.com/)是一个不错的选择 :D），当然您也可以调皮的使用setInterval或者setTimeout来控制动画，支持导出和嵌入mp4或透明通道的webm视频，还支持转场合成、音频合成与字体加载等功能。让我们[快速开始](#快速开始) 🍻。
 
-WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以想象成是一个《楚门的世界》），它的主要职责是将一个 [不确定性渲染的环境](./docs/renderer-env.md#不确定性的渲染环境) 转化到 [确定性渲染的环境](./docs/renderer-env.md#确定性的渲染环境)。
+WVC为您酷炫的动画页面创造了一个虚拟时间环境🕒（也许可以想象成是一个《楚门的世界》），它的主要职责是将一个 [不确定性渲染的环境](./docs/renderer-env.md#不确定性的渲染环境) 转化到 [确定性渲染的环境](./docs/renderer-env.md#确定性的渲染环境)。
 
-这一切的前提由Chrome提供的[确定性渲染模式](https://goo.gle/chrome-headless-rendering)和无头实验API支持：[HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame)
+这一切的前提由Chrome提供的[确定性渲染模式](https://goo.gle/chrome-headless-rendering)和无头实验API支持：[HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame)，这是创新的实验性功能 🧪。
 
-答疑交流QQ群：752693580
+答疑交流QQ群🐧：752693580
 
 <br>
 
@@ -30,18 +30,44 @@ WVC为您酷炫的动画页面创造了一个虚拟时间环境（也许可以�
  - 支持单幕和多幕视频渲染合成，多幕视频可应用[转场效果](#插入转场效果)。
  - 支持分块视频合成，可以将分块分发到多个设备上渲染回传再合成为多幕视频，大幅降低长视频渲染耗时。
  - 支持并行多个视频渲染合成任务，充分利用系统资源。
- - 支持嵌入或导出支持透明通道的webm格式视频。
+ - 支持嵌入或导出支持透明通道的webm格式视频，可以用于合成数字人。
  - API支持进行[分布式渲染](#分布式渲染方案)封装，只需对WVC进行一些封装即可将大量视频分块分发到多个设备渲染并最终取回合并输出
  - 支持使用GPU加速渲染和合成，可以显著的降低视频渲染耗时。
- - 支持在Windows和Linux平台部署运行。
+ - 支持在Windows和Linux平台部署运行，Mac上需要开启[兼容渲染模式](#兼容渲染模式)。
+
+<br>
+
+# 有什么用？
+
+WVC实现对Web页面任意动画的逐帧完美捕获，它可以最大化降低实现所见即所得的成本，它作为渲染后端目前发掘了以下用途：
+
+**📊 数据可视化视频渲染**：结合ECharts等图表库在Web上实现图表动画并用WVC捕获为视频，比如抖音和视频号常见的动态排行榜视频，配合爬虫采数据更佳。
+
+**👩‍🏫 数字人视频渲染**：AIGC概念火爆，各种数字分身搬上了荧幕，WVC支持在页面中使用透明通道视频或蒙版视频，可以在动画基础上配上数字人获得更好的视觉效果。
+
+**🎨 内容创作视频渲染**：您可以设计一个简单的前端动画编辑和预览器来满足一些内容创作需求，使用WVC作为后端获得所见即所得的视频效果。
+
+**🎮️ 游戏或用户操作回放视频渲染**：与基于Web开发的游戏或应用结合，云上将回放捕获为视频提供给用户可方便分享和二次剪辑。
+
+更多应用场景等待您的发掘，有好的想法记得提issue 🙋‍♀️...
+
+## 相比录屏工具的优势？
+
+**💯 完美捕获**：浏览器的帧合成器默认存在节流策略以减少资源消耗，当绘制大量复杂图形或系统负载加大时会导致Web动画出现跳帧、掉帧、延缓等问题，如果使用录屏工具将难以确保每一帧都被正确捕获，而WVC接管了时间流速，能够决定下一帧什么时候绘制到画面。
+
+**🎞️ 并行渲染**：录屏工具通常无法同时捕获多个Tab页的动画内容，但WVC可以在多个页面中并行捕获动画并最终合成这些分块为一个长视频，分段直接还支持合成转场。
+
+**🦾 可自动化**：录屏工具需要人工操作，基于WVC可以使用一套Web动画模板结合数据爬虫+定时任务，自动的产出视频。
+
+**🧩 快速集成**：录屏工具难以集成，WVC是基于Node.js开发的NPM包，可以很快的进行后端集成，有的开发者用于将游戏回放捕获为视频。
 
 <br>
 
 # 视频DEMO
 
-我们还缺少动画设计师，不过还是从开放的平台中使用WVC捕获渲染了一些优秀的动画Demo。
+我们还缺少动画设计师，如果您热衷于开源事业欢迎加入我们😆。
 
-在这里查看所有DEMO：**[渲染示例页面](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)**
+在这里查看所有DEMO：**[渲染示例页面](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)** 🤗
 
 <img src="assets/demo.gif"/>
 
@@ -300,8 +326,8 @@ wvc.config({
     browserExecutablePath: "...",
     // 是否允许不安全的上下文，默认禁用，开启后能够导航到不安全的URL，但由于不安全上下文限制，将无法在页面中使用动态图像和内嵌视频
     allowUnsafeContext: false,
-    // 兼容渲染模式，不建议启用，启用后将禁用HeadlessExperimental.beginFrame API调用改为普通的Page.screenshot
-    // 这会导致渲染性能下降，且部分动画可能帧率无法同步，当你遭遇 TargetCloseError: Protocol error (HeadlessExperimental.beginFrame): Target closed 错误的时候可以尝试开启它
+    // 兼容渲染模式，MacOS中需要启用，其它环境不建议启用，启用后将禁用HeadlessExperimental.beginFrame API调用改为普通的Page.screenshot
+    // 这会导致渲染效率下降40%，当你遭遇 TargetCloseError: Protocol error (HeadlessExperimental.beginFrame): Target closed 错误的时候可以尝试开启它
     compatibleRenderingMode: false,
     // 资源池最小浏览器实例数量
     numBrowserMin: 1,
@@ -790,6 +816,15 @@ video.on("error", err => console.error(err));
 
 ```javascript
 page.on("error", err => console.error(err));
+```
+
+## 兼容渲染模式
+
+MacOS上由于Chrome不支持BeginFrame API，需要更改为兼容渲染模式才能正常工作，此模式会导致渲染效率下降40%左右，建议部署在Windows或Linux设备上以获得更佳的性能。
+
+```javascript
+// 启用兼容渲染模式
+wvc.config({ compatibleRenderingMode: true });
 ```
 
 <br>

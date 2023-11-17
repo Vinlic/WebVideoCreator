@@ -13,13 +13,13 @@
 
 # Introduction
 
-WebVideoCreator (abbreviated as WVC) is a framework for rendering web animations into videos. It's implemented based on Node.js + Puppeteer + Chrome + FFmpeg. It performs deterministic rendering and captures any HTML5-playable animations (CSS3 animations/SVG animations/Lottie animations/GIF animations/APNG animations/WEBP animations) and any timeline-based animations driven by [RAF](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame). You can also mischievously use `setInterval` or `setTimeout` to control animations. WVC supports embedding or exporting MP4 and transparent WebM videos, as well as features such as transition compositing, audio synthesis, and font loading. Let's get started with the [Quick Start](#quick-start).
+🌈 WebVideoCreator (abbreviated as WVC) is a framework for rendering web animations into videos. It's implemented based on Node.js + Puppeteer + Chrome + FFmpeg. It performs deterministic rendering and captures any HTML5-playable animations (CSS3 animations/SVG animations/Lottie animations/GIF animations/APNG animations/WEBP animations) and any timeline-based animations driven by [RAF](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame). You can also mischievously use `setInterval` or `setTimeout` to control animations. WVC supports embedding or exporting MP4 and transparent WebM videos, as well as features such as transition compositing, audio synthesis, and font loading. Let's get started with the [Quick Start](#quick-start) 🍻.
 
-WVC creates a virtual time environment for your cool animated pages, which can be imagined as something akin to "The Truman Show." Its main responsibility is to transform an [uncertain rendering environment](./docs/renderer-env.md#不确定性的渲染环境) into a [deterministic rendering environment](./docs/renderer-env.md#确定性的渲染环境).
+WVC creates a virtual time environment🕒 for your cool animated pages, which can be imagined as something akin to "The Truman Show." Its main responsibility is to transform an [uncertain rendering environment](./docs/renderer-env.md#不确定性的渲染环境) into a [deterministic rendering environment](./docs/renderer-env.md#确定性的渲染环境).
 
-All of this is made possible by Chrome's provided [deterministic rendering mode](https://goo.gle/chrome-headless-rendering) and support for the headless experimental API: [HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame).
+All of this is made possible by Chrome's provided [deterministic rendering mode](https://goo.gle/chrome-headless-rendering) and support for the headless experimental API: [HeadlessExperimental.beginFrame](https://chromedevtools.github.io/devtools-protocol/tot/HeadlessExperimental/#method-beginFrame), This is an innovative experimental function 🧪.
 
-Q&A and discussion group on QQ: 752693580
+Q&A and discussion group on QQ🐧: 752693580
 
 <br>
 
@@ -33,15 +33,41 @@ Q&A and discussion group on QQ: 752693580
 - Support embedding or exporting webm format videos that support transparent channels.
 - API support for [distributed rendering](#distributed-rendering-solution), enabling the distribution of a large number of videos to multiple devices for rendering and final merging output with minimal wrapping of WVC.
 - Supports GPU acceleration for rendering and compositing, reducing video rendering time significantly.
-- Can be deployed and run on both Windows and Linux platforms.
+- Can be deployed and run on both Windows and Linux platforms, On MacOS, it is necessary to enable [Compatible Rendering Mode](#compatible-rendering-mode).
+
+<br>
+
+# What is it for?
+
+WVC achieves perfect frame-by-frame capture of any animation on a web page. It minimizes the cost of achieving a WYSIWYG (What You See Is What You Get) experience. As a rendering backend, it currently explores the following applications:
+
+**📊 Data Visualization Video Rendering**: Combine chart libraries such as ECharts to create animated charts on the web and capture them as videos using WVC. This is useful for creating dynamic ranking videos commonly seen on platforms like TikTok, especially when combined with web scraping for data collection.
+
+**👩‍🏫 Digital Human Video Rendering**: With the popularity of AI-generated characters, various digital avatars appear on screens. WVC supports the use of transparent channel videos or mask videos on web pages, enhancing visual effects by incorporating digital humans into animations.
+
+**🎨 Content Creation Video Rendering**: Design a simple frontend animation editor and previewer to meet content creation needs. Use WVC as the backend to achieve a WYSIWYG video effect.
+
+**🎮️ Game or User Operation Replay Video Rendering**: Integrate with web-based games or applications to capture replays as videos, providing users with easy sharing and secondary editing options.
+
+There are more application scenarios waiting for your exploration, and if you have great ideas, remember to raise an issue 🙋‍♀️...
+
+## Advantages over Screen Recording Tools?
+
+**💯 Perfect Capture**: The browser's frame composer defaults to a throttling strategy to reduce resource consumption. When drawing complex graphics or under increased system load, web animations may experience frame skipping, dropping frames, or delays. Using screen recording tools makes it difficult to ensure that every frame is captured correctly. In contrast, WVC takes control of the timing, determining when to draw the next frame onto the screen.
+
+**🎞️ Parallel Rendering**: Screen recording tools typically cannot capture the animation content of multiple tab pages simultaneously. However, WVC can capture animations in parallel across multiple pages and ultimately combine these chunks into a single long video, with support for seamless transitions.
+
+**🦾 Automation-Friendly**: Screen recording tools require manual operation. With WVC, a set of web animation templates can be combined with data scrapers and scheduled tasks to automate video production.
+
+**🧩 Quick Integration**: Screen recording tools are challenging to integrate. WVC, developed as an NPM package based on Node.js, can be quickly integrated on the backend. Some developers use it to capture game replays as videos.
 
 <br>
 
 # Video Demos
 
-While we may be missing an animation designer, we've still managed to capture and render some excellent animation demos from open platforms using WVC.
+We're also in need of animators! If you're passionate about open source projects, feel free to join us 😆.
 
-Please visit the **[Rendering Example Page](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)** for more details.
+Check out all the demos here: **[Rendering Example Page](https://github.com/Vinlic/WebVideoCreator/wiki/Rendering-Example)** 🤗
 
 <img src="assets/demo.gif"/>
 
@@ -294,7 +320,7 @@ wvc.config({
     browserExecutablePath: "...",
     // Allow unsafe contexts, false by default. Once enabled, users can navigate to unsafe URLs, but due to unsafe context restrictions, dynamic images and embedded videos cannot be used on the page
     allowUnsafeContext: false,
-    // Compatible rendering mode; not recommended to enable; enabling this will disable HeadlessExperimental.beginFrame API calls and use regular Page.screenshot, which can lead to decreased rendering performance and frame rate desynchronization in some animations; you can try enabling it if you encounter the error "TargetCloseError: Protocol error (HeadlessExperimental.beginFrame): Target closed"
+    // Compatible Rendering Mode is necessary on MacOS but not recommended for other environments; enabling this will disable HeadlessExperimental.beginFrame API calls and use regular Page.screenshot, which can lead to decreased rendering performance and frame rate desynchronization in some animations; you can try enabling it if you encounter the error "TargetCloseError: Protocol error (HeadlessExperimental.beginFrame): Target closed"
     compatibleRenderingMode: false,
     // Minimum number of browser instances in the resource pool
     numBrowserMin: 1,
@@ -789,6 +815,15 @@ When using the low-level API, you can listen for errors through the `error` even
 page.on("error", err => console.error(err));
 ```
 
+## Compatible Rendering Mode
+
+On MacOS, due to Chrome's lack of support for the BeginFrame API, it is necessary to switch to the compatible rendering mode for proper functionality. This mode may result in a decrease in rendering efficiency of around 40%. It is recommended to deploy on Windows or Linux devices for better performance.
+
+```javascript
+// Enable compatible rendering mode
+wvc.config({ compatibleRenderingMode: true });
+```
+
 <br>
 
 # Distributed Rendering
@@ -861,7 +896,7 @@ Parallel Rendering Count: 16
 
 - Constrained by browser [secure context restrictions](https://w3c.github.io/webappsec-secure-contexts/), WebVideoCreator can only access `localhost` / `127.0.0.1` or domains using HTTPS with valid certificates. For security reasons, it's recommended to use a local static server (e.g., `live-server` is a good choice).
 
-- The headless experimental API on Mac systems may cause crashes and needs to be switched to compatibility rendering mode to run. However, compatibility rendering mode has various issues, so it is not recommended for Mac systems. See [Compatibility Rendering Mode](#compatibility-rendering-mode).
+- The headless experimental API on Mac systems may cause crashes and needs to be switched to compatibility rendering mode to run. However, compatibility rendering mode has various issues, so it is not recommended for Mac systems. See [Compatibility Rendering Mode](#compatible-rendering-mode).
 
 - WebVideoCreator is a pure ESM package and cannot be imported using CommonJS-style `require`. If you still want to use `require` to import it, refer to this [gist](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c) for guidance.
 
