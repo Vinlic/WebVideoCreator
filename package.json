@@ -1,6 +1,6 @@
 {
   "name": "web-video-creator",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "description": "A framework for creating videos based on Node.js + Puppeteer + FFmpeg.",
   "type": "module",
   "main": "index.js",
@@ -41,6 +41,7 @@
     "synthesis",
     "animation",
     "canvas",
+    "web",
     "html5",
     "vtuber",
     "automatic",
