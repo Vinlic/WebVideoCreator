@@ -785,12 +785,12 @@ You can actively throw errors in the page to interrupt rendering.
 
 If your page involves heavy computations or consumes excessive memory, it may crash, causing rendering to be interrupted.
 
-If you're using the high-level API, you can be notified of page crashes through the `error` event of the video instance.
+If you're using the high-level API, you can be notified of page crashes through the `pageCrashed` event of the video instance.
 
 ```javascript
 const video = wvc.createSingleVideo({ ... });
-// Output "Page crashed:..." when an error occurs
-video.on("error", err => console.error(err));
+// Output crash errors when an error occurs
+video.on("pageCrashed", err => console.error(err));
 ```
 
 When using the low-level API, you can listen for page crashes through the `crashed` event of the Page instance.

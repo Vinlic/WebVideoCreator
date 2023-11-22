@@ -144,7 +144,7 @@ export default class SingleVideo extends Synthesizer {
             // 监听页面实例发生的某些内部错误
             page.on("error", err => this._emitError("Page error:\n" + err.stack));
             // 监听页面是否崩溃，当内存不足或过载时可能会崩溃
-            page.on("crashed", err => this._emitError("Page crashed:\n" + err.stack));
+            page.on("crashed", err => this.#emitPageCrashedError(err));
             if (this.consoleLog) {
                 // 监听页面打印到console的正常日志
                 page.on("consoleLog", message => logger.log("[page]", message));
@@ -224,6 +224,18 @@ export default class SingleVideo extends Synthesizer {
     async #acquirePage() {
         assert(_.isFunction(this.#pageAcquireFn), "Page acquire function must be Function");
         return await this.#pageAcquireFn();
+    }
+
+    /**
+     * 发送页面崩溃错误
+     * 
+     * @param {Error} err - 错误对象
+     */
+    #emitPageCrashedError(err) {
+        if (this.eventNames().includes("pageCrashed"))
+            this.emit("pageCrashed", err);
+        else
+            logger.error("Page crashed:\n" + err.stack);
     }
 
 }

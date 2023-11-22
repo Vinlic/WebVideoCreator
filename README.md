@@ -788,12 +788,12 @@ video.on("progress", (progress, synthesizedFrameCount, totalFrameCount) => {
 
 如果您的页面存在大量密集计算或者占用过多的运行内存，页面将可能崩溃，从而导致渲染中断。
 
-如果使用高级别API，页面崩溃时通过视频实例的 `error` 事件通知。
+如果使用高级别API，页面崩溃时通过视频实例的 `pageCrashed` 事件通知。
 
 ```javascript
 const video = wvc.createSingleVideo({ ... });
-// 错误时输出 Page crashed:...
-video.on("error", err => console.error(err));
+// 错误时输出崩溃错误
+video.on("pageCrashed", err => console.error(err));
 ```
 
 使用低级别API时，页面崩溃时通过Page实例的 `crashed` 事件通知
