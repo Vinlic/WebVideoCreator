@@ -207,6 +207,11 @@
             <td>视频时长</td>
         </tr>
         <tr>
+            <td>startTime</td>
+            <td>number</td>
+            <td>视频开始捕获时间点</td>
+        </tr>
+        <tr>
             <td>fps</td>
             <td>number</td>
             <td>视频帧率</td>
@@ -412,6 +417,11 @@
             <td>未渲染或已渲染的ChunkVideo列表，可以是ChunkVideo实例也可以是普通对象</td>
         </tr>
         <tr>
+            <td>startTime</td>
+            <td>number</td>
+            <td>视频开始捕获时间点</td>
+        </tr>
+        <tr>
             <td>fps</td>
             <td>number</td>
             <td>视频帧率</td>
@@ -612,6 +622,11 @@
             <td>duration</td>
             <td>number</td>
             <td>视频时长</td>
+        </tr>
+        <tr>
+            <td>startTime</td>
+            <td>number</td>
+            <td>视频开始捕获时间点</td>
         </tr>
         <tr>
             <td>fps</td>
