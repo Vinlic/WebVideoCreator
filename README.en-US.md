@@ -617,6 +617,25 @@ In your page code, call the start function when appropriate.
 </script>
 ```
 
+<br>
+
+## Start Capturing at a Specified Time Point
+
+By default, WVC begins capturing the screen from the 0 time point after rendering starts. However, it also supports initiating screen capture from other time points.
+
+```javascript
+const video = wvc.createSingleVideo({
+    url: "http://localhost:8080/test.html",
+    width: 1280,
+    height: 720,
+    // Start capturing from the 5-second mark
+    startTime: 5000,
+    duration: 10000
+});
+```
+
+<br>
+
 ## Pre-render Page Operations
 
 ```javascript
@@ -853,12 +872,6 @@ wvc.cleanLocalFontCache();
 
 <br>
 
-# Distributed Rendering
-
-If you have multiple devices available for rendering, you can deploy WVC on these devices. WVC provides `MultiVideo` and `ChunkVideo`, allowing you to divide the animation pages into many segments (e.g., 0-10 seconds, 10-20 seconds, etc.). Distribute their parameters to different WVC instances on different devices, create ChunkVideo instances on these devices, and execute parallel rendering to generate multiple video segments (`ts`). These segments are then sent back to the core node, where they are combined, and transitions, audio tracks, and output are handled. **The distribution and return process is not yet implemented in WVC, but it is not difficult, and you can wrap it according to your own scenario. Contributions to WVC are welcome through [PR](https://github.com/Vinlic/WebVideoCreator/pulls)!**
-
-<br>
-
 # API Reference
 
 ## High-Level API
@@ -870,6 +883,12 @@ In most cases, it is recommended to use the high-level API because it is simple 
 ## Low-Level API
 
 [API Reference Low Level](./docs/api-reference-low-level.md)
+
+<br>
+
+# Distributed Rendering
+
+If you have multiple devices available for rendering, you can deploy WVC on these devices. WVC provides `MultiVideo` and `ChunkVideo`, allowing you to divide the animation pages into many segments (e.g., 0-10 seconds, 10-20 seconds, etc.). Distribute their parameters to different WVC instances on different devices, create ChunkVideo instances on these devices, and execute parallel rendering to generate multiple video segments (`ts`). These segments are then sent back to the core node, where they are combined, and transitions, audio tracks, and output are handled. **The distribution and return process is not yet implemented in WVC, but it is not difficult, and you can wrap it according to your own scenario. Contributions to WVC are welcome through [PR](https://github.com/Vinlic/WebVideoCreator/pulls)!**
 
 <br>
 
@@ -921,14 +940,10 @@ Parallel Rendering Count: 16
 
 # Limitations
 
-- Constrained by browser [secure context restrictions](https://w3c.github.io/webappsec-secure-contexts/), WebVideoCreator can only access `localhost` / `127.0.0.1` or domains using HTTPS with valid certificates. For security reasons, it's recommended to use a local static server (e.g., `live-server` is a good choice).
+- Constrained by browser [secure context restrictions](https://w3c.github.io/webappsec-secure-contexts/), WebVideoCreator can only access `localhost` / `127.0.0.1` or domains using HTTPS with valid certificates. For security reasons, it's recommended to use a local static server (e.g., `live-server` is a good choice), You can also use the content option to directly set the page content to avoid URL restrictions.
 
 - The headless experimental API on Mac systems may cause crashes and needs to be switched to compatibility rendering mode to run. However, compatibility rendering mode has various issues, so it is not recommended for Mac systems. See [Compatibility Rendering Mode](#compatible-rendering-mode).
 
 - WebVideoCreator is a pure ESM package and cannot be imported using CommonJS-style `require`. If you still want to use `require` to import it, refer to this [gist](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c) for guidance.
 
-<br>
-
-# Technical Implementation
-Work in progress...
-
+- The page jump request during the video rendering process will be intercepted because jumping to the page will result in the loss of capture context.

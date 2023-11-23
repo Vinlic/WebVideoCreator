@@ -620,6 +620,21 @@ const video = wvc.createSingleVideo({
 </script>
 ```
 
+## 在指定时间点开始捕获
+
+WVC默认在渲染启动后从第0秒位置开始捕获画面，但也支持您从其它时间点开始捕获。
+
+```javascript
+const video = wvc.createSingleVideo({
+    url: "http://localhost:8080/test.html",
+    width: 1280,
+    height: 720,
+    // 从第5秒位置开始捕获画面
+    startTime: 5000,
+    duration: 10000
+});
+```
+
 ## 启动渲染前操作页面
 
 ```javascript
@@ -856,12 +871,6 @@ wvc.cleanLocalFontCache();
 
 <br>
 
-# 分布式渲染方案
-
-如果您有多台设备可以为这些设备部署WVC，它提供了 `MultiVideo` 和 `ChunkVideo`，您可以将动画页面分为很多个分段，如0-10秒、10-20秒...，将它们的参数分发到不同设备的WVC上，在这些设备上创建ChunkVideo实例并执行并行渲染为多个视频 `ts` 分段，将他们回传到核心节点上，并最终输入MultiVideo进行合并以及转场、音轨合成输出。**这个分发以及回传流程WVC还未实现，但它并不难，您可以根据自己的场景进行封装并欢迎为WVC贡献[PR](https://github.com/Vinlic/WebVideoCreator/pulls)！**
-
-<br>
-
 # API参考
 
 ## 高级别API
@@ -873,6 +882,12 @@ wvc.cleanLocalFontCache();
 ## 低级别API
 
 [API Reference Low Level](./docs/api-reference-low-level.md)
+
+<br>
+
+# 分布式渲染方案
+
+如果您有多台设备可以为这些设备部署WVC，它提供了 `MultiVideo` 和 `ChunkVideo`，您可以将动画页面分为很多个分段，如0-10秒、10-20秒...，将它们的参数分发到不同设备的WVC上，在这些设备上创建ChunkVideo实例并执行并行渲染为多个视频 `ts` 分段，将他们回传到核心节点上，并最终输入MultiVideo进行合并以及转场、音轨合成输出。**这个分发以及回传流程WVC还未实现，但它并不难，您可以根据自己的场景进行封装并欢迎为WVC贡献[PR](https://github.com/Vinlic/WebVideoCreator/pulls)！**
 
 <br>
 
@@ -920,11 +935,10 @@ RAM: 16GB（DDR4 2400MHz）
 
 # 局限性
 
-- 受制于浏览器的[安全上下文限制](https://w3c.github.io/webappsec-secure-contexts/)，只能访问 localhost / 127.0.0.1 或者使用HTTPS协议且证书有效的域，从安全角度考虑建议使用本机静态服务器（live-server是一个不错的选择）。
+- 受制于浏览器的[安全上下文限制](https://w3c.github.io/webappsec-secure-contexts/)，只能访问 localhost / 127.0.0.1 或者使用HTTPS协议且证书有效的域，从安全角度考虑建议使用本机静态服务器（live-server是一个不错的选择），也可以使用content选项直接设置页面内容从而避开url限制。
+
 - 在Mac系统中使用无头实验API在会发生崩溃，需要改为兼容渲染模式才能运行，但兼容渲染模式存在诸多问题，不建议在Mac系统使用，详见[兼容渲染模式](#兼容渲染模式)
+
 - WebVideoCreator是纯ESM包，无法使用CommonJS风格引入，如果依然希望使用require引入，请参考：https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
 
-<br>
-
-# 技术实现
-正在编写中...
+- 渲染过程中的页面跳转请求将被拦截，因为跳转页面将导致捕获上下文丢失。
