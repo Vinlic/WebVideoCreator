@@ -60,6 +60,7 @@ export default class WebVideoCreator {
      * @param {number} options.width - 视频宽度
      * @param {number} options.height - 视频高度
      * @param {number} options.duration - 视频时长
+     * @param {number} [options.startTime=0] - 开始捕获时间点
      * @param {number} [options.fps=30] - 视频帧率
      * @param {string} [options.format] - 导出视频格式（mp4/webm）
      * @param {string} [options.attachCoverPath] - 附加到视频首帧的封面路径
@@ -135,6 +136,7 @@ export default class WebVideoCreator {
      * @param {number} options.width - 视频宽度
      * @param {number} options.height - 视频高度
      * @param {number} options.duration - 视频时长
+     * @param {number} [options.startTime=0] - 开始捕获时间点
      * @param {number} [options.fps=30] - 视频帧率
      * @param {Transition} [options.transition] - 进入下一视频分块的转场
      * @param {string} [options.format] - 导出视频格式（mp4/webm）

@@ -321,15 +321,17 @@ export default class Page extends EventEmitter {
      * 
      * @param {Object} [options] - 录制选项
      * @param {number} [options.fps] - 渲染帧率
+     * @param {number} [options.startTime=0] - 渲染开始事件点（毫秒）
      * @param {number} [options.duration] - 渲染时长（毫秒）
      * @param {number} [options.frameCount] - 渲染总帧数
      * @param {boolean} [options.autostart=true] - 是否自动启动渲染
      */
     async startScreencast(options = {}) {
         await this.#asyncLock.acquire("startScreencast", async () => {
-            let { fps, duration, frameCount, autostart = true } = options;
+            let { fps, startTime = 0, duration, frameCount, autostart = true } = options;
             assert(this.isReady(), "Page state must be ready");
             assert(_.isUndefined(fps) || _.isFinite(fps), "fps must be number");
+            assert(_.isFinite(startTime), "startTime must be number");
             assert(_.isUndefined(duration) || _.isFinite(duration), "duration must be number");
             assert(_.isUndefined(frameCount) || _.isFinite(frameCount), "frameCount must be number");
             // 指定时长时将计算总帧数
@@ -353,7 +355,7 @@ export default class Page extends EventEmitter {
                 Object.assign(captureCtx.config, config);
                 // 如果准备后还未启动且自动启动选项开启时渲染则开始
                 !captureCtx.ready() && captureCtx.config.autostart && captureCtx.start();
-            }, _.pickBy({ fps, duration, frameCount, autostart }, v => !_.isUndefined(v)));
+            }, _.pickBy({ fps, startTime, duration, frameCount, autostart }, v => !_.isUndefined(v)));
         });
     }
 
@@ -510,7 +512,7 @@ export default class Page extends EventEmitter {
         const pauseAnimationIds = [];
         const seekPromises = [];
         this.cssAnimations = this.cssAnimations.filter(animation => {
-            if(animation.startTime == null)
+            if (animation.startTime == null)
                 pauseAnimationIds.push(animation.id);
             animation.startTime = _.defaultTo(animation.startTime, currentTime);
             const animationCurrentTime = Math.floor(currentTime - animation.startTime);
@@ -525,7 +527,7 @@ export default class Page extends EventEmitter {
             return true;
         });
         // 暂停动画
-        if(pauseAnimationIds.length > 0) {
+        if (pauseAnimationIds.length > 0) {
             this.#cdpSession.send("Animation.setPaused", {
                 animations: pauseAnimationIds,
                 paused: true

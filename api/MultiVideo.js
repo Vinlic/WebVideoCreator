@@ -12,6 +12,8 @@ import logger from "../lib/logger.js";
  */
 export default class MultiVideo extends ChunkSynthesizer {
 
+    /** @type {number} - 开始捕获时间点 */
+    startTime;
     /** @type {Font[]} - 注册的字体 */
     fonts = [];
     /** @type {Function} - 页面预处理函数 */
@@ -29,6 +31,7 @@ export default class MultiVideo extends ChunkSynthesizer {
      * @param {number} options.width - 视频宽度
      * @param {number} options.height - 视频高度
      * @param {ChunkVideo[]} options.chunks - 分块视频列表
+     * @param {number} [options.startTime=0] - 开始捕获时间点
      * @param {number} [options.fps=30] - 视频合成帧率
      * @param {string} [options.format] - 导出视频格式（mp4/webm）
      * @param {string} [options.attachCoverPath] - 附加到视频首帧的封面路径
@@ -48,8 +51,10 @@ export default class MultiVideo extends ChunkSynthesizer {
      */
     constructor(options) {
         super(options);
-        const { pagePrepareFn } = options;
+        const { startTime, pagePrepareFn } = options;
+        assert(_.isUndefined(startTime) || _.isFinite(startTime), "startTime must be number");
         assert(_.isUndefined(pagePrepareFn) || _.isFunction(pagePrepareFn), "pagePrepareFn must be Function");
+        this.startTime = startTime;
         this.pagePrepareFn = pagePrepareFn;
     }
 
@@ -111,6 +116,8 @@ export default class MultiVideo extends ChunkSynthesizer {
      */
     async #synthesize() {
         this.chunks.forEach(chunk => {
+            if (_.isUndefined(chunk.startTime) && this.startTime)
+                chunk.startTime = this.startTime;
             if (_.isUndefined(chunk.pagePrepareFn) && this.pagePrepareFn)
                 chunk.pagePrepareFn = this.pagePrepareFn;
             if (this.fonts.length > 0)

@@ -23,6 +23,8 @@ export default class ChunkVideo extends VideoChunk {
     url;
     /** @type {string} - 页面内容 */
     content;
+    /** @type {number} - 开始捕获时间点 */
+    startTime;
     /** @type {Font[]} - 注册的字体 */
     fonts = [];
     /** @type {boolean} - 是否自动启动渲染 */
@@ -50,6 +52,7 @@ export default class ChunkVideo extends VideoChunk {
      * @param {number} options.width - 视频宽度
      * @param {number} options.height - 视频高度
      * @param {number} options.duration - 视频时长
+     * @param {number} [options.startTime] - 开始捕获时间点
      * @param {number} [options.fps=30] - 视频帧率
      * @param {string|Transition} [options.transition] - 进入下一视频分块的转场效果
      * @param {string} [options.format] - 导出视频格式（mp4/webm）
@@ -77,10 +80,11 @@ export default class ChunkVideo extends VideoChunk {
     constructor(options = {}) {
         super(options);
         assert(_.isObject(options), "options must be Object");
-        const { url, content, autostartRender, consoleLog, videoPreprocessLog, pageWaitForOptions, pageViewport, pagePrepareFn } = options;
+        const { url, content, startTime, autostartRender, consoleLog, videoPreprocessLog, pageWaitForOptions, pageViewport, pagePrepareFn } = options;
         assert(_.isUndefined(url) || util.isURL(url), `url ${url} is not valid URL`);
         assert(_.isUndefined(content) || _.isString(content), "page content must be string");
         assert(!_.isUndefined(url) || !_.isUndefined(content), "page url or content must be provide");
+        assert(_.isUndefined(startTime) || _.isFinite(startTime), "startTime must be number");
         assert(_.isUndefined(autostartRender) || _.isBoolean(autostartRender), "autostartRender must be boolean");
         assert(_.isUndefined(consoleLog) || _.isBoolean(consoleLog), "consoleLog must be boolean");
         assert(_.isUndefined(pageWaitForOptions) || _.isObject(pageWaitForOptions), "pageWaitForOptions must be Object");
@@ -88,6 +92,7 @@ export default class ChunkVideo extends VideoChunk {
         assert(_.isUndefined(pagePrepareFn) || _.isFunction(pagePrepareFn), "pagePrepareFn must be Function");
         this.url = url;
         this.content = content;
+        this.startTime = startTime;
         this.autostartRender = _.defaultTo(autostartRender, true);
         this.consoleLog = _.defaultTo(consoleLog, false);
         this.videoPreprocessLog = _.defaultTo(videoPreprocessLog, false);
@@ -139,7 +144,7 @@ export default class ChunkVideo extends VideoChunk {
     async #synthesize() {
         const page = await this.#acquirePage();
         try {
-            const { url, content, width, height, fps, duration, pageWaitForOptions, pageViewport = {} } = this;
+            const { url, content, width, height, fps, startTime, duration, pageWaitForOptions, pageViewport = {} } = this;
             // 监听页面实例发生的某些内部错误
             page.on("error", err => this._emitError("Page error:\n" + err.stack));
             // 监听页面是否崩溃，当内存不足或过载时可能会崩溃
@@ -190,6 +195,7 @@ export default class ChunkVideo extends VideoChunk {
             // 启动捕获
             await page.startScreencast({
                 fps,
+                startTime,
                 duration,
                 autostart: this.autostartRender
             });

@@ -22,8 +22,8 @@ export default class SingleVideo extends Synthesizer {
     url;
     /** @type {string} - 页面内容 */
     content;
-    /** @type {number} - 视频时长 */
-    duration;
+    /** @type {number} - 开始捕获时间点 */
+    startTime;
     /** @type {Font[]} - 注册的字体列表 */
     fonts = [];
     /** @type {boolean} - 是否自动启动渲染 */
@@ -51,6 +51,7 @@ export default class SingleVideo extends Synthesizer {
      * @param {number} options.width - 视频宽度
      * @param {number} options.height - 视频高度
      * @param {number} options.duration - 视频时长
+     * @param {number} [options.startTime] - 开始捕获时间点
      * @param {number} [options.fps=30] - 视频帧率
      * @param {string} [options.format] - 导出视频格式（mp4/webm）
      * @param {string} [options.attachCoverPath] - 附加到视频首帧的封面路径
@@ -76,11 +77,11 @@ export default class SingleVideo extends Synthesizer {
      */
     constructor(options = {}) {
         super(options);
-        const { url, content, duration, autostartRender, consoleLog, videoPreprocessLog, pageWaitForOptions, pageViewport, pagePrepareFn } = options;
+        const { url, content, startTime, autostartRender, consoleLog, videoPreprocessLog, pageWaitForOptions, pageViewport, pagePrepareFn } = options;
         assert(_.isUndefined(url) || util.isURL(url), `url ${url} is not valid URL`);
         assert(_.isUndefined(content) || _.isString(content), "page content must be string");
         assert(!_.isUndefined(url) || !_.isUndefined(content), "page url or content must be provide");
-        assert(_.isFinite(duration), "duration must be number");
+        assert(_.isUndefined(startTime) || _.isFinite(startTime), "startTime must be number");
         assert(_.isUndefined(autostartRender) || _.isBoolean(autostartRender), "autostartRender must be boolean");
         assert(_.isUndefined(consoleLog) || _.isBoolean(consoleLog), "consoleLog must be boolean");
         assert(_.isUndefined(pageWaitForOptions) || _.isObject(pageWaitForOptions), "pageWaitForOptions must be Object");
@@ -88,7 +89,7 @@ export default class SingleVideo extends Synthesizer {
         assert(_.isUndefined(pagePrepareFn) || _.isFunction(pagePrepareFn), "pagePrepareFn must be Function");
         this.url = url;
         this.content = content;
-        this.duration = duration;
+        this.startTime = startTime;
         this.autostartRender = _.defaultTo(autostartRender, true);
         this.consoleLog = _.defaultTo(consoleLog, false);
         this.videoPreprocessLog = _.defaultTo(videoPreprocessLog, false);
@@ -140,7 +141,7 @@ export default class SingleVideo extends Synthesizer {
     async #synthesize() {
         const page = await this.#acquirePage();
         try {
-            const { url, content, width, height, fps, duration, pageWaitForOptions, pageViewport = {} } = this;
+            const { url, content, width, height, fps, startTime, duration, pageWaitForOptions, pageViewport = {} } = this;
             // 监听页面实例发生的某些内部错误
             page.on("error", err => this._emitError("Page error:\n" + err.stack));
             // 监听页面是否崩溃，当内存不足或过载时可能会崩溃
@@ -185,6 +186,7 @@ export default class SingleVideo extends Synthesizer {
             // 启动捕获
             await page.startScreencast({
                 fps,
+                startTime,
                 duration,
                 autostart: this.autostartRender
             });

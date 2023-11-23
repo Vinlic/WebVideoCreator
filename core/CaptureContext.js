@@ -44,6 +44,8 @@ export default class CaptureContext {
     config = {
         /** @type {number} - 渲染帧率 */
         fps: null,
+        /** @type {number} - 开始时间点 */
+        startTime: 0,
         /** @type {number} - 总时长 */
         duration: null,
         /** @type {number} - 目标总帧数 */
@@ -90,6 +92,13 @@ export default class CaptureContext {
     }
 
     /**
+     * 是否已经启动捕获
+     */
+    isCapturing() {
+        return this.currentTime >= (this.config.startTime || 0);
+    }
+
+    /**
      * 开始捕获
      */
     start() {
@@ -113,27 +122,34 @@ export default class CaptureContext {
         // 递归捕获帧
         (function nextFrame() {
             (async () => {
+                // 是否处于捕获中状态
+                const isCapturing = this.isCapturing();
+
                 // 如果已停止则跳出
                 if(this.stopFlag)
                     return;
-                // 媒体调度
-                const mediaRenderPromises = this.dispatchMedias.map(media => (async () => {
-                    // 媒体可销毁时执行销毁
-                    if (media.canDestory(this.currentTime))
-                        return media.destory();
-                    // 如媒体不可播放则跳过调度
-                    if (!media.canPlay(this.currentTime))
-                        return;
-                    // 媒体未准备完毕时调用加载
-                    if (!media.isReady()) {
-                        // 加载媒体，如加载失败则跳过
-                        if (!await media.load())
+
+                if(isCapturing) {
+                    // 媒体调度
+                    const mediaRenderPromises = this.dispatchMedias.map(media => (async () => {
+                        // 媒体可销毁时执行销毁
+                        if (media.canDestory(this.currentTime))
+                            return media.destory();
+                        // 如媒体不可播放则跳过调度
+                        if (!media.canPlay(this.currentTime))
                             return;
-                    };
-                    const mediaCurrentTime = this.currentTime - media.startTime - (media.offsetTime || 0);
-                    await media.seek(mediaCurrentTime > 0 ? mediaCurrentTime : 0);
-                })());
-                await Promise.all(mediaRenderPromises);
+                        // 媒体未准备完毕时调用加载
+                        if (!media.isReady()) {
+                            // 加载媒体，如加载失败则跳过
+                            if (!await media.load())
+                                return;
+                        };
+                        const mediaCurrentTime = this.currentTime - media.startTime - (media.offsetTime || 0);
+                        await media.seek(mediaCurrentTime > 0 ? mediaCurrentTime : 0);
+                    })());
+                    await Promise.all(mediaRenderPromises);
+                }
+
                 // 根据帧间隔推进当前时间
                 this.currentTime += this.frameInterval;
                 // 时间偏移HACK重置（处理mojs动画）
@@ -143,24 +159,26 @@ export default class CaptureContext {
                 // 触发超时回调列表
                 this._callTimeoutCallbacks();
 
-                // 捕获帧图 - 此函数请见Page.js的#envInit的exposeFunction
-                if (!await ____captureFrame(this.currentTime)) {
-                    this.stopFlag = true;
-                    return;
+                if(isCapturing) {
+                    // 捕获帧图 - 此函数请见Page.js的#envInit的exposeFunction
+                    if (!await ____captureFrame(this.currentTime)) {
+                        this.stopFlag = true;
+                        return;
+                    }
+    
+                    // 遇到暂停标志时等待恢复
+                    if (this.pauseFlag)
+                        await new Promise(resolve => this.resumeCallback = resolve);
+                    // 捕获帧数到达目标帧数时终止捕获
+                    if (++this.frameIndex >= this.config.frameCount) {
+                        this.stopFlag = true;
+                        // 完成录制回调 - 此函数请见Page.js的#envInit的exposeFunction
+                        return ____screencastCompleted();
+                    }
+                    // 如果未到达目标帧数但已被停止也触发录制完成
+                    else if(this.stopFlag)
+                        return ____screencastCompleted();
                 }
-
-                // 遇到暂停标志时等待恢复
-                if (this.pauseFlag)
-                    await new Promise(resolve => this.resumeCallback = resolve);
-                // 捕获帧数到达目标帧数时终止捕获
-                if (++this.frameIndex >= this.config.frameCount) {
-                    this.stopFlag = true;
-                    // 完成录制回调 - 此函数请见Page.js的#envInit的exposeFunction
-                    return ____screencastCompleted();
-                }
-                // 如果未到达目标帧数但已被停止也触发录制完成
-                else if(this.stopFlag)
-                    return ____screencastCompleted();
 
                 // 开始捕获下一帧
                 nextFrame.bind(this)();
