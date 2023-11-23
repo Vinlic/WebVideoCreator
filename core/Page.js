@@ -485,6 +485,8 @@ export default class Page extends EventEmitter {
         await this.target.exposeFunction("____screencastCompleted", this.#emitScreencastCompleted.bind(this));
         // 暴露CSS动画控制函数
         await this.target.exposeFunction("____seekCSSAnimations", this.#seekCSSAnimations.bind(this));
+        // 暴露跳帧函数
+        await this.target.exposeFunction("____skipFrame", this.#skipFrame.bind(this));
         // 暴露下一帧函数
         await this.target.exposeFunction("____captureFrame", this.#captureFrame.bind(this));
         // 暴露添加音频函数
@@ -537,6 +539,27 @@ export default class Page extends EventEmitter {
         }
         // 调度动画
         await Promise.all(seekPromises);
+    }
+
+    /**
+     * 跳过帧
+     */
+    async #skipFrame() {
+        if (globalConfig.compatibleRenderingMode)
+            return;
+        let timer;
+        // 帧数据捕获
+        const frameData = await Promise.race([
+            this.#cdpSession.send("HeadlessExperimental.beginFrame"),
+            // 帧渲染超时处理
+            new Promise(resolve => timer = setTimeout(() => resolve(false), this.beginFrameTimeout))
+        ]);
+        clearTimeout(timer);
+        // 帧渲染超时处理
+        if (frameData === false) {
+            this.#setState(Page.STATE.UNAVAILABLED);
+            throw new Error("beginFrame wait timeout");
+        }
     }
 
     /**

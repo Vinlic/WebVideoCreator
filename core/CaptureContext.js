@@ -180,6 +180,9 @@ export default class CaptureContext {
                         return ____screencastCompleted();
                     
                 }
+                // 跳过无需捕获的帧
+                else
+                    await ____skipFrame();
 
                 // 开始捕获下一帧
                 nextFrame.bind(this)();
