@@ -414,6 +414,8 @@ export default class Page extends EventEmitter {
      * @param {Error} err - 错误对象
      */
     #emitError(err) {
+        if(err.message.indexOf("Another frame is pending") != -1)
+            err = new Error("Page rendering has been interrupted");
         if (this.eventNames().indexOf("error") != -1)
             this.emit("error", err);
         else

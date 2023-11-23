@@ -319,7 +319,7 @@ export default class Synthesizer extends EventEmitter {
         if (value > 100)
             value = 100;
         this.progress = Math.floor(value * 1000) / 1000;
-        if (this.showProgress) {
+        if (this._cliProgress) {
             if (!this._cliProgress.started) {
                 if (this._cliProgress instanceof cliProgress.MultiBar)
                     this._cliProgress = this._cliProgress.create(this._targetFrameCount, 0);
