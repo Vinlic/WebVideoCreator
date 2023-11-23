@@ -483,6 +483,8 @@ export default class Page extends EventEmitter {
         this.target.once("close", this.close.bind(this));
         // 暴露录制完成函数
         await this.target.exposeFunction("____screencastCompleted", this.#emitScreencastCompleted.bind(this));
+        // 暴露CSS动画控制函数
+        await this.target.exposeFunction("____seekCSSAnimations", this.#seekCSSAnimations.bind(this));
         // 暴露下一帧函数
         await this.target.exposeFunction("____captureFrame", this.#captureFrame.bind(this));
         // 暴露添加音频函数
@@ -540,10 +542,8 @@ export default class Page extends EventEmitter {
     /**
      * 捕获帧
      */
-    async #captureFrame(currentTime) {
+    async #captureFrame() {
         try {
-            // CSS动画同步
-            await this.#seekCSSAnimations(currentTime);
             // 非兼容渲染模式使用BeginFrame API进行捕获否则使用截图API
             const frameFormat = this.backgroundOpacity < 1 ? "png" : this.frameFormat;
             if (!globalConfig.compatibleRenderingMode) {

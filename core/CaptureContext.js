@@ -122,33 +122,31 @@ export default class CaptureContext {
         // 递归捕获帧
         (function nextFrame() {
             (async () => {
-                // 是否处于捕获中状态
-                const isCapturing = this.isCapturing();
-
                 // 如果已停止则跳出
                 if(this.stopFlag)
                     return;
 
-                if(isCapturing) {
-                    // 媒体调度
-                    const mediaRenderPromises = this.dispatchMedias.map(media => (async () => {
-                        // 媒体可销毁时执行销毁
-                        if (media.canDestory(this.currentTime))
-                            return media.destory();
-                        // 如媒体不可播放则跳过调度
-                        if (!media.canPlay(this.currentTime))
+                // 媒体调度
+                const mediaRenderPromises = this.dispatchMedias.map(media => (async () => {
+                    // 媒体可销毁时执行销毁
+                    if (media.canDestory(this.currentTime))
+                        return media.destory();
+                    // 如媒体不可播放则跳过调度
+                    if (!media.canPlay(this.currentTime))
+                        return;
+                    // 媒体未准备完毕时调用加载
+                    if (!media.isReady()) {
+                        // 加载媒体，如加载失败则跳过
+                        if (!await media.load())
                             return;
-                        // 媒体未准备完毕时调用加载
-                        if (!media.isReady()) {
-                            // 加载媒体，如加载失败则跳过
-                            if (!await media.load())
-                                return;
-                        };
-                        const mediaCurrentTime = this.currentTime - media.startTime - (media.offsetTime || 0);
-                        await media.seek(mediaCurrentTime > 0 ? mediaCurrentTime : 0);
-                    })());
-                    await Promise.all(mediaRenderPromises);
-                }
+                    };
+                    const mediaCurrentTime = this.currentTime - media.startTime - (media.offsetTime || 0);
+                    await media.seek(mediaCurrentTime > 0 ? mediaCurrentTime : 0);
+                })());
+                await Promise.all(mediaRenderPromises);
+
+                // CSS动画调度                
+                await ____seekCSSAnimations(this.currentTime);
 
                 // 根据帧间隔推进当前时间
                 this.currentTime += this.frameInterval;
@@ -159,9 +157,11 @@ export default class CaptureContext {
                 // 触发超时回调列表
                 this._callTimeoutCallbacks();
 
-                if(isCapturing) {
+                // 是否处于捕获中状态
+                if(this.isCapturing()) {
+
                     // 捕获帧图 - 此函数请见Page.js的#envInit的exposeFunction
-                    if (!await ____captureFrame(this.currentTime)) {
+                    if (!await ____captureFrame()) {
                         this.stopFlag = true;
                         return;
                     }
@@ -178,6 +178,7 @@ export default class CaptureContext {
                     // 如果未到达目标帧数但已被停止也触发录制完成
                     else if(this.stopFlag)
                         return ____screencastCompleted();
+                    
                 }
 
                 // 开始捕获下一帧
