@@ -681,6 +681,11 @@ export default class Page extends EventEmitter {
      */
     #requestHandle(request) {
         (async () => {
+            // 如果是捕获中产生的跳转请求则终止
+            if (this.isCapturing() && request.isNavigationRequest() && request.frame() === this.target.mainFrame()) {
+                request.abort("aborted");
+                return;
+            }
             const method = request.method();
             const url = request.url();
             const { pathname } = new URL(url);
