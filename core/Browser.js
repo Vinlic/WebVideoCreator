@@ -126,7 +126,7 @@ export default class Browser {
             // 启动浏览器
             this.target = await puppeteer.launch({
                 // BeginFrameControl必需处于无头模式下可用，新无头"new"暂时不可用，请关注进展：https://bugs.chromium.org/p/chromium/issues/detail?id=1480747
-                headless: true,
+                headless: _.defaultTo(globalConfig.browserHeadless, true),
                 // 浏览器入口文件路径
                 executablePath,
                 // 忽略HTTPS错误
