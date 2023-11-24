@@ -53,7 +53,6 @@ export default class CaptureContext {
         /** @type {number} - 目标总帧数 */
         frameCount: null
     };
-    skipFramePromise;
     /** @type {SvgAnimation[]|VideoCanvas[]|DynamicImage[]|LottieCanvas[]} - 媒体调度列表 */
     dispatchMedias = [];
 
@@ -233,7 +232,7 @@ export default class CaptureContext {
         (function update() {
             rotate = rotate >= 360 ? 0 : (rotate + 0.1);
             captureHelper.style.transform = `rotate(${rotate}deg)`;
-            setTimeout(update, 0);
+            ____setTimeout(update, 0);
         })();
     }
 
