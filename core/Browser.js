@@ -333,6 +333,8 @@ export default class Browser {
             "--disable-new-content-rendering-timeout",
             // 禁用渲染器代码完整性，避免因为STATUS_ACCESS_VIOLATION导致页面崩溃
             "--disable-features=RendererCodeIntegrity",
+            // 解除帧率限制
+            "--disable-frame-rate-limit",
             ...(!globalConfig.compatibleRenderingMode ? [
                 // 启用确定性模式
                 "--deterministic-mode",
