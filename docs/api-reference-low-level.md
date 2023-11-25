@@ -280,6 +280,14 @@ const { ... } = core;
 
 参考 [Font](#font) 字体参数。
 
+### Page.registerTimeActions(actions: {[key: Number]: Function})
+
+注册动作序列
+
+#### actions 参数
+
+序列对象
+
 ### Page.waitForFontsLoaded(timeout: number): Promise
 
 等待字体加载完成。
