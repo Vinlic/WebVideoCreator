@@ -680,7 +680,7 @@ const video = wvc.createSingleVideo({
     fps: 60,
     outputPath: "./t2.mp4",
     showProgress: true,
-    url: "https://www.bilibili.com/v/popular/all/?spm_id_from=333.1007.0.0",
+    url: "https://www.bilibili.com/v/popular/all/",
     // 设置动作序列
     timeActions: {
         3000: actionFn,
