@@ -356,8 +356,6 @@ export default class CaptureContext {
         window.____setInterval = window.setInterval;
         // 重写setInterval函数
         window.setInterval = (fn, interval) => {
-            if(!this.startFlag)
-                return window.____setInterval(fn, interval);
             if (typeof fn !== "function")
                 throw new TypeError("setInterval function must be Function");
             if (isNaN(interval))
@@ -371,8 +369,6 @@ export default class CaptureContext {
         // 重写cleanInterval函数
         window.clearInterval = timerId => {
             if (!timerId) return;
-            if(!this.startFlag)
-                return window.____clearInterval(timerId);
             this.intervalCallbacks = this.intervalCallbacks.filter(([_timerId]) => {
                 if (_timerId == timerId)
                     return false;
@@ -384,8 +380,6 @@ export default class CaptureContext {
         window.____setTimeout = window.setTimeout;
         // 重写setTimeout函数
         window.setTimeout = (fn, timeout = 0) => {
-            if(!this.startFlag)
-                return window.____setTimeout(fn, timeout);
             if (typeof fn !== "function")
                 return;
             this.timerId++;
@@ -397,8 +391,6 @@ export default class CaptureContext {
         // 重写clearTimeout函数
         window.clearTimeout = timerId => {
             if (!timerId) return;
-            if(!this.startFlag)
-                return window.____clearTimeout(timerId);
             this.timeoutCallbacks = this.timeoutCallbacks.filter(([_timerId]) => {
                 if (_timerId == timerId)
                     return false;
