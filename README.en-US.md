@@ -686,8 +686,6 @@ const video = wvc.createSingleVideo({
         6000: actionFn,
         9000: actionFn
     },
-    autostartRender: true,
-    consoleLog: true,
     duration: 10000
 });
 ```
