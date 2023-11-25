@@ -314,7 +314,7 @@ export default class Browser {
             // 禁用字形提示以原始轮廓渲染
             "--font-render-hinting=none",
             // 允许在HTTPS页面中加载不安全的HTTP内容
-            // "--allow-running-insecure-content",
+            "--allow-running-insecure-content",
             // 禁用默认浏览器检查
             "--no-default-browser-check",
             // 禁用弹窗
@@ -333,8 +333,10 @@ export default class Browser {
             "--disable-new-content-rendering-timeout",
             // 禁用渲染器代码完整性，避免因为STATUS_ACCESS_VIOLATION导致页面崩溃
             "--disable-features=RendererCodeIntegrity",
-            // 解除帧率限制
-            "--disable-frame-rate-limit",
+            ...(!globalConfig.browserFrameRateLimit ? [
+                // 解除帧率限制
+                "--disable-frame-rate-limit",
+            ] : []),
             ...(!globalConfig.compatibleRenderingMode ? [
                 // 启用确定性模式
                 "--deterministic-mode",
