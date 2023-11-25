@@ -270,7 +270,7 @@ export default class Page extends EventEmitter {
      * @param {Object} timeActions 
      */
     registerTimeActions(timeActions) {
-        this.timeActions = timeActions;
+        this.timeActions = { ...timeActions };
     }
 
     /**
@@ -559,8 +559,16 @@ export default class Page extends EventEmitter {
      * seek所有时间轴动作
      */
     async #seekTimeActions(currentTime) {
-        const timeAction = this.timeActions[parseInt(currentTime)]
+        currentTime = parseInt(currentTime)
+        const matchTimeNodes = Object.keys(this.timeActions)
+            .map(Number)
+            .sort()
+            .filter(time => currentTime >= time)
+            .shift()
+        const timeAction = this.timeActions[matchTimeNodes]
         timeAction && await timeAction(this)
+            .catch(err => this.#emitError(err))
+            .finally(() => delete this.timeActions[matchTimeNodes])
     }
 
     /**
