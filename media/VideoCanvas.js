@@ -246,7 +246,7 @@ export default class VideoCanvas {
         if (this.frameIndex === frameIndex)
             return;
         // 如果元素被移除播放已结束或画布则跳过
-        if (this.removed || (!this.loop && this.isEnd()))
+        if (this.removed || (!this.loop && this.isEnd()) || frameIndex >= this.config.frameCount)
             return;
         // console.log(`${frameIndex}/${this.decoder.decodeQueueSize}/${this.config.frameCount}`);
         const frame = await this._acquireFrame(frameIndex);
@@ -369,7 +369,12 @@ export default class VideoCanvas {
      */
     _clearUnclosedFrames() {
         this.frames
-            .forEach(frame => frame && frame.close());
+            .forEach((frame, index) => {
+                if(!frame)
+                    return;
+                frame.close();
+                this.frames[index] = null;
+            });
         this.frames = [];
     }
 
@@ -378,7 +383,12 @@ export default class VideoCanvas {
      */
     _clearUnclosedMaskFrames() {
         this.maskFrames
-            .forEach(maskFrame => maskFrame && maskFrame.close());
+            .forEach((maskFrame, index) => {
+                if(!maskFrame)
+                    return;
+                maskFrame.close();
+                this.maskFrames[index] = null;
+            });
         this.maskFrames = [];
     }
 
@@ -416,7 +426,7 @@ export default class VideoCanvas {
                 this.waitFrameIndex = frameIndex;
                 this.waitFrameCallback = resolve;
             }),
-            new Promise((_, reject) => ____setTimeout(() => reject(new Error("Acquire video frame timeout (30s)")), 30000))
+            new Promise((_, reject) => ____setTimeout(() => reject(new Error(`Acquire video frame ${frameIndex} timeout (30s)`)), 30000))
         ]);
         ____clearTimeout(timer);
         return this.frames[frameIndex];
@@ -438,7 +448,7 @@ export default class VideoCanvas {
                 this.waitMaskFrameIndex = frameIndex;
                 this.waitMaskFrameCallback = resolve;
             }),
-            new Promise((_, reject) => ____setTimeout(() => reject(new Error("Acquire mask video frame timeout (30s)")), 30000))
+            new Promise((_, reject) => ____setTimeout(() => reject(new Error(`Acquire mask video frame ${frameIndex} timeout (30s)`)), 30000))
         ]);
         ____clearTimeout(timer);
         return this.maskFrames[frameIndex];
@@ -458,6 +468,8 @@ export default class VideoCanvas {
             this.waitFrameCallback = null;
             fn();
         }
+        else if(frame.index < this.waitFrameIndex)
+            frame.close();
         this.decodedFrameIndex++;
     }
 
@@ -475,6 +487,8 @@ export default class VideoCanvas {
             this.waitMaskFrameCallback = null;
             fn();
         }
+        else if(frame.index < this.waitMaskFrameIndex)
+            frame.close();
         this.decodedMaskFrameIndex++;
     }
 
