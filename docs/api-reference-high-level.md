@@ -23,6 +23,21 @@
             <td>WebVideoCreator调试日志，开启后将输出一些内部的调试日志</td>
         </tr>
         <tr>
+            <td>browserVersion</td>
+            <td>string</td>
+            <td>指定WVC使用的Chrome浏览器版本</td>
+        </tr>
+        <tr>
+            <td>browserHeadless</td>
+            <td>boolean</td>
+            <td>浏览器无头开关，建议保持开启，如果关闭请确保开启兼容渲染模式否则无法渲染，仅用于调试画面</td>
+        </tr>
+        <tr>
+            <td>browserFrameRateLimit</td>
+            <td>boolean</td>
+            <td>浏览器帧率限制开关，默认开启，关闭帧率限制可以提高渲染效率并支持高于60fps的动画，但这会关闭GPU垂直同步可能导致画面撕裂或其它问题</td>
+        </tr>
+        <tr>
             <td>browserDebug</td>
             <td>boolean</td>
             <td>浏览器Debug开关，开启后将输出浏览器的运行日志，如果你想看页面的日志，请设置consoleLog为true，而不是这个</td>

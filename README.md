@@ -308,6 +308,12 @@ const wvc = new WebVideoCreator();
 wvc.config({
     // 开启后将输出一些WVC的调试日志
     debug: true,
+    // 指定使用的Chrome浏览器版本
+    browserVersion: "...",
+    // 建议开启，如果关闭将显示窗口并且需要启用兼容渲染模式才可正常渲染，仅用于调试画面
+    browserHeadless: true,
+    // 默认开启帧率限制，关闭它可以提高渲染效率并支持高于60fps的动画，但这会关闭GPU垂直同步可能导致画面撕裂或其它问题
+    browserFrameRateLimit: true,
     // 开启后将输出浏览器的运行日志
     browserDebug: true,
     // 开启后将输出每一条执行的FFmpeg命令
