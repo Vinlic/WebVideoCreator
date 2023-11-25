@@ -18,6 +18,8 @@ export default class MultiVideo extends ChunkSynthesizer {
     fonts = [];
     /** @type {Function} - 页面预处理函数 */
     pagePrepareFn;
+    /** @type {{[key: number]: Function}} - 动作序列 */
+    timeActions;
     /** @type {Function} - 页面获取函数 */
     #pageAcquireFn = null;
     /** @type {AsyncLock} - 异步锁 */

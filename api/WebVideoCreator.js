@@ -83,6 +83,7 @@ export default class WebVideoCreator {
      * @param {WaitForOptions} [options.pageWaitForOptions] - 页面等待选项
      * @param {Viewport} [options.pageViewport] - 页面视窗参数
      * @param {Function} [options.pagePrepareFn] - 页面预处理函数
+     * @param {{[key: number]: Function}} [options.timeActions] - 动作序列
      */
     createSingleVideo(options) {
         assert(this.#configured, "WebVideoCreator has not been configured yet, please execute config() first");
@@ -160,6 +161,7 @@ export default class WebVideoCreator {
      * @param {WaitForOptions} [options.pageWaitForOptions] - 页面等待选项
      * @param {Viewport} [options.pageViewport] - 页面视窗参数
      * @param {Function} [options.pagePrepareFn] - 页面预处理函数
+     * @param {{[key: number]: Function}} [options.timeActions] - 动作序列
      */
     createChunkVideo(options) {
         assert(this.#configured, "WebVideoCreator has not been configured yet, please execute config() first");

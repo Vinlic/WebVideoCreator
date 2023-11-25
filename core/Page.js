@@ -91,6 +91,8 @@ export default class Page extends EventEmitter {
     rejectResources = [];
     /** @type {Object[]} - CSS动画列表 */
     cssAnimations = [];
+    /** @type {{[key: number]: Function}} - CSS动画列表 */
+    timeActions = {}
     /** @type {Set} - 资源排重Set */
     #resourceSet = new Set();
     /** @type {CDPSession} - CDP会话 */
@@ -264,6 +266,14 @@ export default class Page extends EventEmitter {
     }
 
     /**
+     * 注册动作序列
+     * @param {Object} timeActions 
+     */
+    registerTimeActions(timeActions) {
+        this.timeActions = timeActions;
+    }
+
+    /**
      * 等待字体加载完成
      * 
      * @param {number} [timeout=30000] - 等待超时时间（毫秒）
@@ -414,7 +424,7 @@ export default class Page extends EventEmitter {
      * @param {Error} err - 错误对象
      */
     #emitError(err) {
-        if(err.message.indexOf("Another frame is pending") != -1)
+        if (err.message.indexOf("Another frame is pending") != -1)
             err = new Error("Page rendering has been interrupted");
         if (this.eventNames().indexOf("error") != -1)
             this.emit("error", err);
@@ -487,6 +497,8 @@ export default class Page extends EventEmitter {
         await this.target.exposeFunction("____screencastCompleted", this.#emitScreencastCompleted.bind(this));
         // 暴露CSS动画控制函数
         await this.target.exposeFunction("____seekCSSAnimations", this.#seekCSSAnimations.bind(this));
+        // 暴露动作序列
+        await this.target.exposeFunction("____seekTimeActions", this.#seekTimeActions.bind(this));
         // 暴露跳帧函数
         await this.target.exposeFunction("____skipFrame", this.#skipFrame.bind(this));
         // 暴露下一帧函数
@@ -541,6 +553,14 @@ export default class Page extends EventEmitter {
         }
         // 调度动画
         await Promise.all(seekPromises);
+    }
+
+    /**
+     * seek所有时间轴动作
+     */
+    async #seekTimeActions(currentTime) {
+        const timeAction = this.timeActions[parseInt(currentTime)]
+        timeAction && await timeAction(this)
     }
 
     /**
@@ -867,6 +887,7 @@ export default class Page extends EventEmitter {
         this.acceptResources = [];
         this.rejectResources = [];
         this.cssAnimations = [];
+        this.timeActions = {};
     }
 
     /**

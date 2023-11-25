@@ -151,6 +151,8 @@ export default class CaptureContext {
 
                 // CSS动画调度                
                 await ____seekCSSAnimations(this.currentTime);
+                // 动作序列调度
+                await ____seekTimeActions(this.currentTime);
 
                 // 根据帧间隔推进当前时间
                 this.currentTime += this.frameInterval;
