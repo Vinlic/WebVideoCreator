@@ -307,6 +307,11 @@
             <td>页面预处理函数，可以在渲染之前对Page对象操作</td>
         </tr>
         <tr>
+            <td>timeActions</td>
+            <td>Object{[key: Number]: Function}</td>
+            <td>事件序列，可以在渲染过程中对Page对象操作，key 为 Number 指定某个渲染时刻触发</td>
+        </tr>
+        <tr>
             <td>showProgress</td>
             <td>boolean</td>
             <td>是否在命令行展示进度</td>
@@ -505,6 +510,11 @@
             <td>pagePrepareFn</td>
             <td>Function</td>
             <td>页面预处理函数，可以在渲染之前对Page对象操作</td>
+        </tr>
+        <tr>
+            <td>timeActions</td>
+            <td>Object{[key: Number]: Function}</td>
+            <td>事件序列，可以在渲染过程中对Page对象操作，key 为 Number 指定某个渲染时刻触发</td>
         </tr>
         <tr>
             <td>showProgress</td>
