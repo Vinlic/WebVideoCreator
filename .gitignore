@@ -11,3 +11,5 @@ tmp
 *.jpg
 *.bmp
 test.js
+.DS_Store
+yarn.lock

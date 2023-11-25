@@ -36,6 +36,8 @@ export default class SingleVideo extends Synthesizer {
     pageViewport;
     /** @type {Function} - 页面预处理函数 */
     pagePrepareFn;
+    /** @type {{[key: number]: Function}} - 动作序列 */
+    timeActions;
     /** @type {Function} - 页面获取函数 */
     #pageAcquireFn = null;
     /** @type {AsyncLock} - 异步锁 */
@@ -68,6 +70,7 @@ export default class SingleVideo extends Synthesizer {
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
      * @param {Viewport} [options.pageViewport] - 页面视窗参数
      * @param {Function} [options.pagePrepareFn] - 页面预处理函数
+     * @param {{[key: number]: Function}} [options.timeActions] - 动作序列
      * @param {WaitForOptions} [options.pageWaitForOptions] - 页面等待选项
      * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
      * @param {boolean} [options.backgroundOpacity=1] - 背景不透明度（0-1），仅webm格式支持
@@ -77,7 +80,7 @@ export default class SingleVideo extends Synthesizer {
      */
     constructor(options = {}) {
         super(options);
-        const { url, content, startTime, autostartRender, consoleLog, videoPreprocessLog, pageWaitForOptions, pageViewport, pagePrepareFn } = options;
+        const { url, content, startTime, autostartRender, consoleLog, videoPreprocessLog, pageWaitForOptions, pageViewport, pagePrepareFn, timeActions } = options;
         assert(_.isUndefined(url) || util.isURL(url), `url ${url} is not valid URL`);
         assert(_.isUndefined(content) || _.isString(content), "page content must be string");
         assert(!_.isUndefined(url) || !_.isUndefined(content), "page url or content must be provide");
@@ -87,6 +90,12 @@ export default class SingleVideo extends Synthesizer {
         assert(_.isUndefined(pageWaitForOptions) || _.isObject(pageWaitForOptions), "pageWaitForOptions must be Object");
         assert(_.isUndefined(pageViewport) || _.isObject(pageViewport), "pageViewport must be Object");
         assert(_.isUndefined(pagePrepareFn) || _.isFunction(pagePrepareFn), "pagePrepareFn must be Function");
+        assert(_.isUndefined(timeActions) || _.isObject(timeActions), "timeActions must be Object");
+        timeActions && Object.keys(timeActions).forEach(key => {
+            key = Number(key)
+            assert(_.isFinite(key), `timeActions key ${key} must be Number`);
+            assert(_.isFunction(timeActions[key]), `timeActions[${key}] must be Function`);
+        })
         this.url = url;
         this.content = content;
         this.startTime = startTime;
@@ -96,6 +105,7 @@ export default class SingleVideo extends Synthesizer {
         this.pageViewport = pageViewport;
         this.pageWaitForOptions = pageWaitForOptions;
         this.pagePrepareFn = pagePrepareFn;
+        this.timeActions = timeActions;
     }
 
     /**
@@ -163,7 +173,7 @@ export default class SingleVideo extends Synthesizer {
                 height
             });
             // 跳转到您希望渲染的页面，您可以考虑创建一个本地的Web服务器提供页面以提升加载速度和安全性
-            if(url)
+            if (url)
                 await page.goto(url, pageWaitForOptions);
             // 或者设置页面内容
             else
@@ -173,10 +183,14 @@ export default class SingleVideo extends Synthesizer {
             // 存在预处理函数时先执行预处理
             this.pagePrepareFn && await this.pagePrepareFn(page);
             // 注册字体
-            if(this.fonts.length > 0)
+            if (this.fonts.length > 0)
                 page.registerFonts(this.fonts);
             // 等待字体加载完成
             await page.waitForFontsLoaded();
+            // 注册事件序列
+            if (this.timeActions && Object.keys(this.timeActions).length > 0)
+                page.registerTimeActions(this.timeActions);
+
             // 启动合成
             super.start();
             // 合成完成promise
