@@ -659,6 +659,39 @@ const video = wvc.createSingleVideo({
 });
 ```
 
+## Using Action Sequences
+
+WVC allows you to set actions to be executed at specific time points within a video. This feature enables convenient manipulation of a page at arbitrary intervals within a video. The following code is used to perform scrolling at the 3rd, 6th, and 9th seconds of the video.
+
+```javascript
+const actionFn = async (page) => {
+    const _page = page.target;
+    await _page.evaluate(() => {
+        window.scrollTo({
+            top: window.scrollY + 1280,
+            behavior: "smooth"
+        });
+    });
+};
+const video = wvc.createSingleVideo({
+    width: 1080,
+    height: 1280,
+    fps: 60,
+    outputPath: "./t2.mp4",
+    showProgress: true,
+    url: "https://www.bilibili.com/v/popular/all/?spm_id_from=333.1007.0.0",
+    // Setting up the action sequence
+    timeActions: {
+        3000: actionFn,
+        6000: actionFn,
+        9000: actionFn
+    },
+    autostartRender: true,
+    consoleLog: true,
+    duration: 10000
+});
+```
+
 ## Page Console Output
 
 If you want to see the page's logs, you can enable `consoleLog` in the video options. If there are embedded videos, you can also enable `videoPreprocessLog` to output video preprocessing logs.

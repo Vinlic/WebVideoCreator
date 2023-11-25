@@ -564,11 +564,11 @@ export default class Page extends EventEmitter {
             .map(Number)
             .sort()
             .filter(time => currentTime >= time)
-            .shift()
+            .shift();
         const timeAction = this.timeActions[matchTimeNodes]
         timeAction && await timeAction(this)
             .catch(err => this.#emitError(err))
-            .finally(() => delete this.timeActions[matchTimeNodes])
+            .finally(() => delete this.timeActions[matchTimeNodes]);
     }
 
     /**

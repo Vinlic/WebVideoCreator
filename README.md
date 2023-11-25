@@ -643,6 +643,8 @@ const video = wvc.createSingleVideo({
 
 ## 启动渲染前操作页面
 
+WVC允许在渲染前您对页面进行处理，比如点击播放按钮。
+
 ```javascript
 const video = wvc.createSingleVideo({
     url: "http://localhost:8080/test.html",
@@ -655,6 +657,39 @@ const video = wvc.createSingleVideo({
         // 点击按钮
         await _page.tap("#play-button");
     }
+});
+```
+
+## 使用动作序列
+
+WVC支持您设置某个时间点执行的动作，它可以方便的在视频的任意时间点对页面进行操作，以下代码用于在视频的第3、6、9秒处执行滚动。
+
+```javascript
+const actionFn = async (page) => {
+    const _page = page.target;
+    await _page.evaluate(() => {
+        window.scrollTo({
+            top: window.scrollY + 1280,
+            behavior: "smooth"
+        });
+    });
+};
+const video = wvc.createSingleVideo({
+    width: 1080,
+    height: 1280,
+    fps: 60,
+    outputPath: "./t2.mp4",
+    showProgress: true,
+    url: "https://www.bilibili.com/v/popular/all/?spm_id_from=333.1007.0.0",
+    // 设置动作序列
+    timeActions: {
+        3000: actionFn,
+        6000: actionFn,
+        9000: actionFn
+    },
+    autostartRender: true,
+    consoleLog: true,
+    duration: 10000
 });
 ```
 
