@@ -286,7 +286,7 @@ const { ... } = core;
 
 #### actions 参数
 
-序列对象
+动作序列对象
 
 ### Page.waitForFontsLoaded(timeout: number): Promise
 
