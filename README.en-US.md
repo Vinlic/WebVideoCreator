@@ -306,6 +306,12 @@ const wvc = new WebVideoCreator();
 wvc.config({
     // Enable this to output some debug logs from WVC
     debug: true,
+    // Specify the Chrome browser version to use
+    browserVersion: "...",
+    // It is recommended to enable this. If disabled, the window will be displayed and requires compatibility rendering mode to render properly. It's only used for debugging visuals.
+    browserHeadless: true,
+    // Frame rate limit is enabled by default. Disabling it can improve rendering efficiency and support animations above 60fps. However, this might disable GPU vertical sync, potentially causing screen tearing or other issues.
+    browserFrameRateLimit: true,
     // Enable this to output browser runtime logs
     browserDebug: true,
     // Enable this to output each executed FFmpeg command
