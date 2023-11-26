@@ -563,12 +563,19 @@ export default class Page extends EventEmitter {
         const matchTimeNodes = Object.keys(this.timeActions)
             .map(Number)
             .sort()
-            .filter(time => currentTime >= time)
-            .shift();
-        const timeAction = this.timeActions[matchTimeNodes]
-        timeAction && await timeAction(this)
-            .catch(err => this.#emitError(err))
-            .finally(() => delete this.timeActions[matchTimeNodes]);
+            .find(time => currentTime >= time);
+        if(!matchTimeNodes)
+            return;
+        const timeAction = this.timeActions[matchTimeNodes];
+        delete this.timeActions[matchTimeNodes]
+        try {
+            const result = timeAction(this);
+            if(result instanceof Promise)
+                await result.catch(err => this.#emitError(err))
+        }
+        catch(err) {
+            this.#emitError(err)
+        }
     }
 
     /**
