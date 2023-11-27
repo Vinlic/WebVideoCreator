@@ -296,9 +296,9 @@ export default class Page extends EventEmitter {
             let timer;
             await Promise.race([
                 Promise.all(fonts.map(font => new ____FontFaceObserver(font.family).load())),
-                new Promise((_, reject) => timer = setTimeout(reject, _timeout))
+                new Promise((_, reject) => timer = (window.____setTimeout || window.setTimeout)(reject, _timeout))
             ]);
-            clearTimeout(timer);
+            (window.____clearTimeout || window.clearTimeout)(timer);
         }, timeout);
     }
 

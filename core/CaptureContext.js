@@ -28,6 +28,8 @@ export default class CaptureContext {
     stopFlag = false;
     /** @type {boolean} - 暂停标志 */
     pauseFlag = false;
+    /** @type {number} - 准备完毕时间点 */
+    readyTime;
     /** @type {Function} - 准备完毕回调 */
     readyCallback;
     /** @type {Function} - 恢复回调 */
@@ -85,6 +87,8 @@ export default class CaptureContext {
     ready() {
         // 设置准备完毕标志为true
         this.readyFlag = true;
+        // 设置准备完毕时的时间点
+        this.readyTime = performance.____now();
         // 如果存在准备前的启动则调用
         if (this.readyCallback) {
             this.readyCallback();
@@ -121,13 +125,15 @@ export default class CaptureContext {
         this.startTime = Date.now();
         // 计算帧间隔时间
         this.frameInterval = 1000 / this.config.fps;
-        // 设置启动标志
-        this.startFlag = true;
+
         // 递归捕获帧
         (function nextFrame() {
             (async () => {
+                // 设置启动标志位
+                if (!this.startFlag)
+                    this.startFlag = true;
                 // 如果已停止则跳出
-                if(this.stopFlag)
+                if (this.stopFlag)
                     return;
 
                 // 媒体调度
@@ -159,19 +165,19 @@ export default class CaptureContext {
                 // 时间偏移HACK重置（处理mojs动画）
                 this.timeOffset = 0;
                 // 触发轮询回调列表
-                this._callIntervalCallbacks();
+                this._callIntervalCallbacks(this.currentTime);
                 // 触发超时回调列表
-                this._callTimeoutCallbacks();
+                this._callTimeoutCallbacks(this.currentTime);
 
                 // 是否处于捕获中状态
-                if(this.isCapturing()) {
+                if (this.isCapturing()) {
 
                     // 捕获帧图 - 此函数请见Page.js的#envInit的exposeFunction
                     if (!await ____captureFrame()) {
                         this.stopFlag = true;
                         return;
                     }
-    
+
                     // 遇到暂停标志时等待恢复
                     if (this.pauseFlag)
                         await new Promise(resolve => this.resumeCallback = resolve);
@@ -182,9 +188,9 @@ export default class CaptureContext {
                         return ____screencastCompleted();
                     }
                     // 如果未到达目标帧数但已被停止也触发录制完成
-                    else if(this.stopFlag)
+                    else if (this.stopFlag)
                         return ____screencastCompleted();
-                    
+
                 }
                 // 跳过无需捕获的帧
                 else
@@ -356,11 +362,9 @@ export default class CaptureContext {
         window.____setInterval = window.setInterval;
         // 重写setInterval函数
         window.setInterval = (fn, interval) => {
-            if (typeof fn !== "function")
-                throw new TypeError("setInterval function must be Function");
-            if (isNaN(interval))
-                throw new TypeError("setInterval interval must be number");
-            this.timerId++;
+            if (typeof fn !== "function" || isNaN(interval))
+                return;
+            this.timerId--;
             this.intervalCallbacks.push([this.timerId, this.currentTime, interval, fn]);
             return this.timerId;
         };
@@ -369,20 +373,21 @@ export default class CaptureContext {
         // 重写cleanInterval函数
         window.clearInterval = timerId => {
             if (!timerId) return;
+            if (timerId >= 0)
+                return window.____clearInterval(timerId);
             this.intervalCallbacks = this.intervalCallbacks.filter(([_timerId]) => {
                 if (_timerId == timerId)
                     return false;
                 return true;
             });
-            window.____clearInterval(timerId);
         }
         // 暂存setTimeout函数
         window.____setTimeout = window.setTimeout;
         // 重写setTimeout函数
         window.setTimeout = (fn, timeout = 0) => {
-            if (typeof fn !== "function")
+            if (typeof fn !== "function" || isNaN(timeout))
                 return;
-            this.timerId++;
+            this.timerId--;
             this.timeoutCallbacks.push([this.timerId, this.currentTime, timeout, fn]);
             return this.timerId;
         };
@@ -391,21 +396,24 @@ export default class CaptureContext {
         // 重写clearTimeout函数
         window.clearTimeout = timerId => {
             if (!timerId) return;
+            if (timerId >= 0)
+                return window.____clearTimeout(timerId);
             this.timeoutCallbacks = this.timeoutCallbacks.filter(([_timerId]) => {
                 if (_timerId == timerId)
                     return false;
                 return true;
             });
-            window.____clearTimeout(timerId);
         }
         // 暂存requestAnimationFrame函数
         window.____requestAnimationFrame = window.requestAnimationFrame;
         // 重写requestAnimationFrame，传递上下文提供的currentTime确保在非60fps捕获时实现帧率同步
         window.requestAnimationFrame = fn => {
+            if (!this.startFlag)
+                return setTimeout(currentTime => fn(currentTime), 0);
             if (this.stopFlag)
                 return;
             // 下一个事件循环再调用
-            return window.____requestAnimationFrame(rawCurrentTime => fn(this.startFlag ? this.currentTime : rawCurrentTime));
+            return window.____requestAnimationFrame(() => fn(this.currentTime));
         };
         // 暂存Date对象
         window.____Date = Date;
@@ -426,7 +434,26 @@ export default class CaptureContext {
             UTC: window.____Date.UTC.bind(window.____Date)
         });
         // 重写performance.now函数
+        performance.____now = performance.now;
         performance.now = () => this.currentTime;
+        // 启动前进行定时器调度，避免死锁
+        (async () => {
+            (function dispatchBeforeStart() {
+                // 如果已启动则不再调度，调度权交由nextFrame调度
+                if (this.startFlag)
+                    return;
+                // 如果已准备完毕开始调度操作
+                if(this.readyFlag) {
+                    const currentTime = performance.____now() - this.readyTime;
+                    this._callTimeoutCallbacks(currentTime);
+                    this._callIntervalCallbacks(currentTime);
+                    ____setTimeout(dispatchBeforeStart.bind(this), 0);
+                }
+                // 如果还未准备完毕则进行轮询检查
+                else
+                    ____setTimeout(dispatchBeforeStart.bind(this), 1000);
+            }).bind(this)();
+        })();
     }
 
     /**
@@ -448,14 +475,16 @@ export default class CaptureContext {
      * 
      * @private
      */
-    _callIntervalCallbacks() {
+    _callIntervalCallbacks(currentTime) {
+        if(this.intervalCallbacks.length == 0)
+            return;
         for (let i = 0; i < this.intervalCallbacks.length; i++) {
             const [timerId, timestamp, interval, fn] = this.intervalCallbacks[i];
-            if (this.currentTime < timestamp + interval)
+            if (currentTime < timestamp + interval)
                 continue;
-            this.intervalCallbacks[i][1] = this.currentTime;
+            this.intervalCallbacks[i][1] = currentTime;
             // 下一个事件循环再调用
-            ____setTimeout(() => fn(this.currentTime), 0);
+            ____setTimeout(() => fn(currentTime), 0);
         }
     }
 
@@ -464,12 +493,14 @@ export default class CaptureContext {
      * 
      * @private
      */
-    _callTimeoutCallbacks() {
+    _callTimeoutCallbacks(currentTime) {
+        if(this.timeoutCallbacks.length == 0)
+            return;
         this.timeoutCallbacks = this.timeoutCallbacks.filter(([timerId, timestamp, timeout, fn]) => {
-            if (this.currentTime < timestamp + timeout)
+            if (currentTime < timestamp + timeout)
                 return true;
             // 下一个事件循环再调用
-            ____setTimeout(() => fn(this.currentTime), 0);
+            ____setTimeout(() => fn(currentTime), 0);
             return false;
         });
     }
@@ -630,7 +661,7 @@ export default class CaptureContext {
             ignoreCache: e.getBooleanAttribute("ignore-cache") || e.getBooleanAttribute("ignoreCache"),
         };
         let canvas;
-        if(!(e instanceof HTMLCanvasElement)) {
+        if (!(e instanceof HTMLCanvasElement)) {
             // 创建画布元素
             canvas = this._createCanvas(options);
             // 复制目标元素样式
@@ -683,7 +714,7 @@ export default class CaptureContext {
             retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs")
         };
         let canvas;
-        if(!(e instanceof HTMLCanvasElement)) {
+        if (!(e instanceof HTMLCanvasElement)) {
             // 创建画布元素
             canvas = this._createCanvas(options);
             // 复制目标元素样式
@@ -734,7 +765,7 @@ export default class CaptureContext {
             retryFetchs: e.getNumberAttribute("retry-fetchs") || e.getNumberAttribute("retryFetchs")
         };
         let canvas;
-        if(!(e instanceof HTMLCanvasElement)) {
+        if (!(e instanceof HTMLCanvasElement)) {
             // 创建画布元素
             canvas = this._createCanvas(options);
             // 复制目标元素样式
