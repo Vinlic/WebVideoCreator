@@ -240,8 +240,12 @@ export default class CaptureContext {
         (function update() {
             rotate = rotate >= 360 ? 0 : (rotate + 0.1);
             captureHelper.style.transform = `rotate(${rotate}deg)`;
-            ____setTimeout(update, 0);
-        })();
+            // 如果已启动则高频更新，未启动时摸鱼
+            if (this.startFlag)
+                ____setTimeout(update.bind(this), 0);
+            else
+                ____setTimeout(update.bind(this), 1000);
+        }).bind(this)();
     }
 
     /**
@@ -476,7 +480,7 @@ export default class CaptureContext {
      * @private
      */
     _callIntervalCallbacks(currentTime) {
-        if(this.intervalCallbacks.length == 0)
+        if (this.intervalCallbacks.length == 0)
             return;
         for (let i = 0; i < this.intervalCallbacks.length; i++) {
             const [timerId, timestamp, interval, fn] = this.intervalCallbacks[i];
@@ -494,7 +498,7 @@ export default class CaptureContext {
      * @private
      */
     _callTimeoutCallbacks(currentTime) {
-        if(this.timeoutCallbacks.length == 0)
+        if (this.timeoutCallbacks.length == 0)
             return;
         this.timeoutCallbacks = this.timeoutCallbacks.filter(([timerId, timestamp, timeout, fn]) => {
             if (currentTime < timestamp + timeout)
