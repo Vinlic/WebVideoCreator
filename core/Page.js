@@ -858,6 +858,8 @@ export default class Page extends EventEmitter {
         await this.#asyncLock.acquire("release", async () => {
             // 重置页面
             await this.reset();
+            // 通知浏览器释放页面
+            await this.parent.releasePage(this);
             // 设置页面状态为ready
             this.#setState(Page.STATE.READY);
         });
