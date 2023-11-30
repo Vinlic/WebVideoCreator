@@ -105,7 +105,7 @@ npm i -g live-server
 live-server
 ```
 
-创建一个测试页面到Web服务根路径，以下html内容展示一个自动旋转的三角形svg动画。
+创建一个测试页面到Web服务根路径，以下html内容展示一个自动旋转的红色三角形svg动画。
 
 ```html
 <!DOCTYPE html>
@@ -117,7 +117,7 @@ live-server
     <body>
         <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" version="1.1"
         xmlns:xlink="http://www.w3.org/1999/xlink">
-            <polygon points="60,30 90,90 30,90">
+            <polygon points="60,30 90,90 30,90" fill="red">
                 <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0 60 70" to="360 60 70"
                     dur="10s" repeatCount="indefinite" />
             </polygon>
