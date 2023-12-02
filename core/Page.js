@@ -546,7 +546,7 @@ export default class Page extends EventEmitter {
         });
         // 暂停动画
         if (pauseAnimationIds.length > 0) {
-            this.#cdpSession.send("Animation.setPaused", {
+            await this.#cdpSession.send("Animation.setPaused", {
                 animations: pauseAnimationIds,
                 paused: true
             });
