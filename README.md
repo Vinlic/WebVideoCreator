@@ -330,6 +330,10 @@ wvc.config({
     browserDisableDevShm: false,
     // 浏览器可执行文件路径，设置后将禁用内部的浏览器，建议您默认使用内部的浏览器以确保功能完整性
     browserExecutablePath: "...",
+    // 浏览器启动超时时间（毫秒），设置等待浏览器启动超时时间
+    browserLaunchTimeout: 30000,
+    // 浏览器协议通信超时时间（毫秒），设置CDP协议通信超时时间
+    browserProtocolTimeout: 180000,
     // 是否允许不安全的上下文，默认禁用，开启后能够导航到不安全的URL，但由于不安全上下文限制，将无法在页面中使用动态图像和内嵌视频
     allowUnsafeContext: false,
     // 兼容渲染模式，MacOS中需要启用，其它环境不建议启用，启用后将禁用HeadlessExperimental.beginFrame API调用改为普通的Page.screenshot

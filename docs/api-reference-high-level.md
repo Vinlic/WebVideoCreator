@@ -78,6 +78,16 @@
             <td>浏览器可执行文件路径，设置后将禁用内部的浏览器，建议您默认使用内部的浏览器以确保功能完整性</td>
         </tr>
         <tr>
+            <td>browserLaunchTimeout</td>
+            <td>number</td>
+            <td>浏览器启动超时时间（毫秒），设置等待浏览器启动超时时间</td>
+        </tr>
+        <tr>
+            <td>browserProtocolTimeout</td>
+            <td>number</td>
+            <td>浏览器协议通信超时时间（毫秒），设置CDP协议通信超时时间</td>
+        </tr>
+        <tr>
             <td>allowUnsafeContext</td>
             <td>boolean</td>
             <td>默认禁用，开启后能够导航到不安全的URL，但由于不安全上下文限制，将无法在页面中使用动态图像和内嵌视频</td>

@@ -132,11 +132,13 @@ export default class Browser {
                 // 忽略HTTPS错误
                 ignoreHTTPSErrors: true,
                 // 浏览器启动超时时间（毫秒）
-                timeout: 30000,
+                timeout: _.defaultTo(globalConfig.browserLaunchTimeout, 30000),
                 // 是否输出调试信息到控制台
                 dumpio: _.defaultTo(globalConfig.browserDebug, false),
                 // 是否使用管道通信
                 pipe: false,
+                // 协议超时时间（毫秒）
+                protocolTimeout: _.defaultTo(globalConfig.browserProtocolTimeout, 180000),
                 // 用户目录路径
                 userDataDir: "tmp/browser",
                 // 浏览器启动参数
