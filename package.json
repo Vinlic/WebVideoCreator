@@ -1,6 +1,6 @@
 {
   "name": "web-video-creator",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "description": "A framework for creating videos based on Node.js + Puppeteer + FFmpeg.",
   "type": "module",
   "main": "index.js",
