@@ -302,7 +302,7 @@ export default class Synthesizer extends EventEmitter {
         if (!this.#pipeStream)
             return;
         if (this.#frameBufferIndex > 0)
-            this.#pipeStream.write(Buffer.concat(this.#frameBuffers));
+            this.#pipeStream.write(Buffer.concat(this.#frameBuffers.filter(v => v)));
         this.#frameBufferIndex = 0;
         if (!this.#pipeStream.closed)
             this.#pipeStream.end();
