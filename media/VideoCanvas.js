@@ -341,7 +341,9 @@ export default class VideoCanvas {
     async _fetchData() {
         if (!this.buffer) {
             // console.time();
-            const response = await captureCtx.fetch("/api/video_preprocess", {
+            // 当页面url未定义时采用localhost代替
+            const base = window.location.url ? "" : "http://localhost";
+            const response = await captureCtx.fetch(base + "/api/video_preprocess", {
                 method: "POST",
                 body: JSON.stringify(this._exportConfig()),
                 retryFetchs: 0
