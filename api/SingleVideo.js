@@ -151,7 +151,7 @@ export default class SingleVideo extends Synthesizer {
     async #synthesize() {
         const page = await this.#acquirePage();
         try {
-            const { url, content, width, height, fps, startTime, duration, pageWaitForOptions, pageViewport = {} } = this;
+            const { url, content, width, height, pageWaitForOptions, pageViewport = {} } = this;
             // 监听页面实例发生的某些内部错误
             page.on("error", err => this._emitError("Page error:\n" + err.stack));
             // 监听页面是否崩溃，当内存不足或过载时可能会崩溃
@@ -199,9 +199,9 @@ export default class SingleVideo extends Synthesizer {
             page.on("frame", buffer => this.input(buffer));
             // 启动捕获
             await page.startScreencast({
-                fps,
-                startTime,
-                duration,
+                fps: this.fps,
+                startTime: this.startTime,
+                duration: this.duration,
                 autostart: this.autostartRender
             });
             // 监听并等待录制完成
