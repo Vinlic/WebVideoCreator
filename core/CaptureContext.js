@@ -134,7 +134,7 @@ export default class CaptureContext {
                     this.startFlag = true;
                 // 如果已停止则跳出
                 if (this.stopFlag)
-                    return;
+                    return ____screencastCompleted();
 
                 // 媒体调度
                 const mediaRenderPromises = this.dispatchMedias.map(media => (async () => {
