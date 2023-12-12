@@ -26,7 +26,34 @@ export default class WebVideoCreator {
     /**
      * 配置引擎
      * 
-     * @param {globalConfig} config - 配置对象
+     * @param {Object} config - 配置对象
+     * @param {string} config.mp4Encoder - 全局MP4格式的视频编码器，默认使用libx264软编码器，建议根据您的硬件选用合适的硬编码器加速合成
+     * @param {string} config.webmEncoder - 全局WEBM格式的视频编码器，默认使用libvpx软编码器，建议根据您的硬件选用合适的硬编码器加速合成
+     * @param {string} config.audioEncoder - 全局音频编码器，建议采用默认的aac编码器
+     * @param {boolean} config.browserUseGPU - 浏览器GPU加速开关，建议开启提高渲染性能，如果您没有GPU设备或遭遇了诡异的渲染问题则可以关闭它
+     * @param {boolean} config.browserUseAngle - 浏览器是否使用Angle作为渲染后端，建议开启增强渲染跨平台兼容性和性能
+     * @param {string} config.browserExecutablePath - 浏览器可执行文件路径，设置后将禁用内部的浏览器，建议您默认使用内部的浏览器以确保功能完整性
+     * @param {number} config.numBrowserMin - 资源池可并行的最小浏览器实例数量
+     * @param {number} config.numBrowserMax - 资源池可并行的最大浏览器实例数量
+     * @param {number} config.numPageMin - 浏览器实例可并行的最小页面实例数量
+     * @param {number} conifg.numPageMax - 浏览器实例可并行的最大页面实例数量
+     * @param {boolean} config.debug - 开启后将输出一些WVC的调试日志
+     * @param {boolean} config.browserDebug - 浏览器Debug开关，开启后将输出浏览器的运行日志，如果您想看页面的日志，请设置视频参数的consoleLog为true，而不是这个
+     * @param {boolean} config.ffmpegDebug - FFmpeg Debug开关，开启后将输出每一条执行的ffmpeg命令
+     * @param {boolean} config.allowUnsafeContext - 是否允许不安全的上下文，默认禁用，开启后能够导航到不安全的URL，但由于不安全上下文限制，将无法在页面中使用动态图像和内嵌视频
+     * @param {boolean} config.compatibleRenderingMode - 兼容渲染模式，如果您使用MacOS请开启他，这将导致渲染效率降低40%，启用后将禁用HeadlessExperimental.beginFrame API调用改为普通的Page.screenshot
+     * @param {string} config.browserVersion - 指定WVC使用的Chrome浏览器版本
+     * @param {boolean} config.browserHeadless - 浏览器无头开关，建议保持开启，如果关闭请确保开启兼容渲染模式否则无法渲染，仅用于调试画面
+     * @param {boolean} config.browserFrameRateLimit - 浏览器帧率限制开关，默认开启，关闭帧率限制可以提高渲染效率并支持高于60fps的动画，但这会关闭GPU垂直同步可能导致画面撕裂或其它问题
+     * @param {string} config.ffmpegExecutablePath - ffmpeg可执行文件路径，设置后将禁用内部的ffmpeg-static，建议您默认使用内部的FFmpeg以确保功能完整性
+     * @param {string} conifg.ffprobeExecutablePath - ffprobe可执行文件路径，设置后将禁用内部的ffprobe-static，建议您默认使用内部的ffprobe以确保功能完整性
+     * @param {string} config.frameFormat - 帧图格式（jpeg/png），建议使用jpeg，png捕获较为耗时
+     * @param {number} config.frameQuality - 捕获帧图质量（0-100），仅frameFormat为jpeg时有效
+     * @param {number} config.beginFrameTimeout - BeginFrame捕获图像超时时间（毫秒）
+     * @param {boolean} config.browserDisableDevShm - 是否禁用浏览器使用共享内存，当/dev/shm分区较小时建议开启此选项
+     * @param {number} config.browserLaunchTimeout - 浏览器启动超时时间（毫秒），设置等待浏览器启动超时时间
+     * @param {number} config.browserProtocolTimeout - 浏览器协议通信超时时间（毫秒），设置CDP协议通信超时时间
+     * @param {string} config.userAgent - 访问页面时的用户UA
      */
     config(config = {}) {
         for (let key in globalConfig) {
