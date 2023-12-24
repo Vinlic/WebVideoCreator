@@ -214,6 +214,7 @@ export default class Synthesizer extends EventEmitter {
         assert(this.isReady(), "Synthesizer status is not READY, please reset the synthesizer: synthesizer.reset()");
         this.#setState(Synthesizer.STATE.SYNTHESIZING);
         this._startupTime = _.defaultTo(this._startupTime, performance.now());
+        this._targetFrameCount = util.durationToFrameCount(this.duration, this.fps);
         (async () => {
             await fs.ensureDir(path.dirname(this.outputPath));
             await fs.ensureDir(this.tmpDirPath);
