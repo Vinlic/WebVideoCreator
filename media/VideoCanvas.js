@@ -35,6 +35,8 @@ export default class VideoCanvas {
     volume;
     /** @type {boolean} - 是否自动播放 */
     autoplay;
+    /** @type {string} - 解码器硬件加速方法提示 */
+    hardwareAcceleration;
     /** @type {boolean} - 是否静音 */
     muted;
     /** @type {number} - 重试下载次数 */
@@ -104,13 +106,14 @@ export default class VideoCanvas {
      * @param {number} [options.volume=100] - 视频音频音量（0-100）
      * @param {boolean} [options.loop=false] - 是否循环播放
      * @param {boolean} [options.muted=false] - 是否静音
+     * @param {string} [options.hardwareAcceleration="prefer-hardware"] - 解码器硬件加速方法提示
      * @param {boolean} [options.retryFetchs=2] - 重试下载次数
      * @param {boolean} [options.ignoreCache=false] - 是否忽略本地缓存
      */
     constructor(options) {
         const u = ____util;
         u.assert(u.isObject(options), "VideoCanvas options must be Object");
-        const { url, maskUrl, startTime, endTime, audioId, format, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, volume, loop, muted, retryFetchs, ignoreCache } = options;
+        const { url, maskUrl, startTime, endTime, audioId, format, seekStart, seekEnd, fadeInDuration, fadeOutDuration, autoplay, volume, loop, muted, hardwareAcceleration, retryFetchs, ignoreCache } = options;
         u.assert(u.isString(url), "url must be string");
         u.assert(u.isNumber(startTime), "startTime must be number");
         u.assert(u.isNumber(endTime), "endTime must be number");
@@ -125,6 +128,7 @@ export default class VideoCanvas {
         u.assert(u.isUndefined(volume) || u.isNumber(volume), "volume must be number");
         u.assert(u.isUndefined(loop) || u.isBoolean(loop), "loop must be boolean");
         u.assert(u.isUndefined(muted) || u.isBoolean(muted), "muted must be boolean");
+        u.assert(u.isUndefined(hardwareAcceleration) || u.isString(hardwareAcceleration), "hardwareAcceleration must be string");
         u.assert(u.isUndefined(retryFetchs) || u.isNumber(retryFetchs), "retryFetchs must be number");
         u.assert(u.isUndefined(ignoreCache) || u.isBoolean(ignoreCache), "ignoreCache must be boolean");
         this.url = url;
@@ -141,6 +145,7 @@ export default class VideoCanvas {
         this.volume = u.defaultTo(volume, 100);
         this.loop = u.defaultTo(loop, false);
         this.muted = u.defaultTo(muted, false);
+        this.hardwareAcceleration = u.defaultTo(hardwareAcceleration, "prefer-hardware");
         this.retryFetchs = u.defaultTo(retryFetchs, 2);
         this.ignoreCache = u.defaultTo(ignoreCache, false);
     }
@@ -227,7 +232,7 @@ export default class VideoCanvas {
             return true;
         }
         catch (err) {
-            console.log(err);
+            console.error(err);
             this.destory();
             return false;
         }
@@ -513,7 +518,7 @@ export default class VideoCanvas {
         u.assert(u.isFunction(onError), "onError must be Function");
         const decoder = (isMask ? this.maskDecoder : this.decoder) || new VideoDecoder({
             output: onFrame.bind(this),
-            error: onError.bind(this)
+            error: err => onError.bind(this)(new Error(err))
         });
         const demuxer = new ____MP4Demuxer();
         let timer;
@@ -523,8 +528,8 @@ export default class VideoCanvas {
                     decoder.configure({
                         // 视频信息配置
                         ...config,
-                        // 指示优先使用硬件加速解码
-                        hardwareAcceleration: "prefer-hardware",
+                        // 解码器硬件加速指示
+                        hardwareAcceleration: this.hardwareAcceleration,
                         // 关闭延迟优化，让解码器批量处理解码，降低负载
                         optimizeForLatency: true
                     });

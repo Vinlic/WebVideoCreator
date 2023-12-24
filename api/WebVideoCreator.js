@@ -80,6 +80,7 @@ export default class WebVideoCreator {
      * @param {boolean} [options.autostartRender=true] - 是否自动启动渲染，如果为false请务必在页面中执行 captureCtx.start()
      * @param {boolean} [options.consoleLog=false] - 是否开启控制台日志输出
      * @param {boolean} [options.videoPreprocessLog=false] - 是否开启视频预处理日志输出
+     * @param {string} [options.videoDecoderHardwareAcceleration] - VideoDecoder硬件加速指示
      * @param {WaitForOptions} [options.pageWaitForOptions] - 页面等待选项
      * @param {Viewport} [options.pageViewport] - 页面视窗参数
      * @param {Function} [options.pagePrepareFn] - 页面预处理函数
@@ -158,6 +159,7 @@ export default class WebVideoCreator {
      * @param {boolean} [options.autostartRender=true] - 是否自动启动渲染，如果为false请务必在页面中执行 captureCtx.start()
      * @param {boolean} [options.consoleLog=false] - 是否开启控制台日志输出
      * @param {boolean} [options.videoPreprocessLog=false] - 是否开启视频预处理日志输出
+     * @param {string} [options.videoDecoderHardwareAcceleration] - VideoDecoder硬件加速指示
      * @param {WaitForOptions} [options.pageWaitForOptions] - 页面等待选项
      * @param {Viewport} [options.pageViewport] - 页面视窗参数
      * @param {Function} [options.pagePrepareFn] - 页面预处理函数

@@ -342,6 +342,11 @@
             <td>是否开启视频预处理日志输出</td>
         </tr>
         <tr>
+            <td>videoDecoderHardwareAcceleration</td>
+            <td>string</td>
+            <td><a href="https://developer.mozilla.org/en-US/docs/Web/API/VideoDecoder/configure">VideoDecoder</a>硬件加速指示，默认值 prefer-hardware</td>
+        </tr>
+        <tr>
             <td>parallelWriteFrames</td>
             <td>number</td>
             <td>并行写入流的帧数</td>

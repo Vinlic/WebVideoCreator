@@ -331,6 +331,11 @@ const { ... } = core;
             <td>boolean</td>
             <td>是否自动启动渲染，默认true</td>
         </tr>
+        <tr>
+            <td>videoDecoderHardwareAcceleration</td>
+            <td>string</td>
+            <td><a href="https://developer.mozilla.org/en-US/docs/Web/API/VideoDecoder/configure">VideoDecoder</a>硬件加速指示，默认值 prefer-hardware</td>
+        </tr>
     </tbody>
 </table>
 

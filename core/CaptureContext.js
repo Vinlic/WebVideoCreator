@@ -657,6 +657,8 @@ export default class CaptureContext {
             volume: (e.getNumberAttribute("volume") || e.volume || 1) * 100,
             // 视频是否自动播放
             autoplay: e.getBooleanAttribute("autoplay"),
+            // 解码器硬件加速方法提示
+            hardwareAcceleration: this.config.videoDecoderHardwareAcceleration,
             // 视频是否静音
             muted: e.getBooleanAttribute("muted"),
             // 拉取失败时重试拉取次数

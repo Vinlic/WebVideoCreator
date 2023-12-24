@@ -338,12 +338,13 @@ export default class Page extends EventEmitter {
      */
     async startScreencast(options = {}) {
         await this.#asyncLock.acquire("startScreencast", async () => {
-            let { fps, startTime = 0, duration, frameCount, autostart = true } = options;
+            let { fps, startTime = 0, duration, frameCount, autostart = true, videoDecoderHardwareAcceleration } = options;
             assert(this.isReady(), "Page state must be ready");
             assert(_.isUndefined(fps) || _.isFinite(fps), "fps must be number");
             assert(_.isFinite(startTime), "startTime must be number");
             assert(_.isUndefined(duration) || _.isFinite(duration), "duration must be number");
             assert(_.isUndefined(frameCount) || _.isFinite(frameCount), "frameCount must be number");
+            assert(_.isUndefined(videoDecoderHardwareAcceleration) || _.isString(videoDecoderHardwareAcceleration), "videoDecoderHardwareAcceleration must be string");
             // 指定时长时将计算总帧数
             if (_.isFinite(duration))
                 frameCount = util.durationToFrameCount(duration, fps);
@@ -365,7 +366,7 @@ export default class Page extends EventEmitter {
                 Object.assign(captureCtx.config, config);
                 // 如果准备后还未启动且自动启动选项开启时渲染则开始
                 !captureCtx.ready() && captureCtx.config.autostart && captureCtx.start();
-            }, _.pickBy({ fps, startTime, duration, frameCount, autostart }, v => !_.isUndefined(v)));
+            }, _.pickBy({ fps, startTime, duration, frameCount, autostart, videoDecoderHardwareAcceleration }, v => !_.isUndefined(v)));
         });
     }
 

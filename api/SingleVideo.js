@@ -70,6 +70,7 @@ export default class SingleVideo extends Synthesizer {
      * @param {number} [options.parallelWriteFrames=10] - 并行写入帧数
      * @param {Viewport} [options.pageViewport] - 页面视窗参数
      * @param {Function} [options.pagePrepareFn] - 页面预处理函数
+     * @param {string} [options.videoDecoderHardwareAcceleration] - VideoDecoder硬件加速指示
      * @param {{[key: number]: Function}} [options.timeActions] - 动作序列
      * @param {WaitForOptions} [options.pageWaitForOptions] - 页面等待选项
      * @param {boolean} [options.showProgress=false] - 是否在命令行展示进度
@@ -80,7 +81,7 @@ export default class SingleVideo extends Synthesizer {
      */
     constructor(options = {}) {
         super(options);
-        const { url, content, startTime, autostartRender, consoleLog, videoPreprocessLog, pageWaitForOptions, pageViewport, pagePrepareFn, timeActions } = options;
+        const { url, content, startTime, autostartRender, consoleLog, videoPreprocessLog, pageWaitForOptions, pageViewport, pagePrepareFn, videoDecoderHardwareAcceleration, timeActions } = options;
         assert(_.isUndefined(url) || util.isURL(url), `url ${url} is not valid URL`);
         assert(_.isUndefined(content) || _.isString(content), "page content must be string");
         assert(!_.isUndefined(url) || !_.isUndefined(content), "page url or content must be provide");
@@ -90,6 +91,7 @@ export default class SingleVideo extends Synthesizer {
         assert(_.isUndefined(pageWaitForOptions) || _.isObject(pageWaitForOptions), "pageWaitForOptions must be Object");
         assert(_.isUndefined(pageViewport) || _.isObject(pageViewport), "pageViewport must be Object");
         assert(_.isUndefined(pagePrepareFn) || _.isFunction(pagePrepareFn), "pagePrepareFn must be Function");
+        assert(_.isUndefined(videoDecoderHardwareAcceleration) || _.isString(videoDecoderHardwareAcceleration), "videoDecoderHardwareAcceleration must be string");
         assert(_.isUndefined(timeActions) || _.isObject(timeActions), "timeActions must be Object");
         timeActions && Object.keys(timeActions).forEach(key => {
             key = Number(key)
@@ -105,6 +107,7 @@ export default class SingleVideo extends Synthesizer {
         this.pageViewport = pageViewport;
         this.pageWaitForOptions = pageWaitForOptions;
         this.pagePrepareFn = pagePrepareFn;
+        this.videoDecoderHardwareAcceleration = videoDecoderHardwareAcceleration;
         this.timeActions = timeActions;
     }
 
@@ -151,7 +154,7 @@ export default class SingleVideo extends Synthesizer {
     async #synthesize() {
         const page = await this.#acquirePage();
         try {
-            const { url, content, width, height, fps, startTime, duration, pageWaitForOptions, pageViewport = {} } = this;
+            const { url, content, width, height, fps, startTime, duration, pageWaitForOptions, pageViewport = {}, videoDecoderHardwareAcceleration } = this;
             // 监听页面实例发生的某些内部错误
             page.on("error", err => this._emitError("Page error:\n" + err.stack));
             // 监听页面是否崩溃，当内存不足或过载时可能会崩溃
@@ -202,6 +205,7 @@ export default class SingleVideo extends Synthesizer {
                 fps,
                 startTime,
                 duration,
+                videoDecoderHardwareAcceleration,
                 autostart: this.autostartRender
             });
             // 监听并等待录制完成
