@@ -346,11 +346,12 @@ export default class Synthesizer extends EventEmitter {
         }
         const takes = performance.now() - this._startupTime;
         this._startupTime = null;
+        const outputDuration = this.getOutputDuration();
         const result = {
             takes,
-            duration: this.duration,
+            duration: outputDuration,
             outputPath: this.outputPath,
-            rtf: this.duration / takes
+            rtf: outputDuration / takes
         };
         this.emit("completed", result);
     }

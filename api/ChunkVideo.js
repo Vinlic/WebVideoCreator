@@ -39,6 +39,8 @@ export default class ChunkVideo extends VideoChunk {
     pagePrepareFn;
     /** @type {{[key: number]: Function}} - 动作序列 */
     timeActions;
+    /** @type {Function} - 终止回调函数 */
+    #abortCallback = null;
     /** @type {Function} - 页面获取函数 */
     #pageAcquireFn = null;
     /** @type {AsyncLock} - 异步锁 */
@@ -118,6 +120,7 @@ export default class ChunkVideo extends VideoChunk {
      * 启动合成
      */
     start() {
+        this.#abortCallback = null;
         this.#asyncLock.acquire("start", () => this.#synthesize())
             .catch(err => logger.error(err));
     }
@@ -127,6 +130,15 @@ export default class ChunkVideo extends VideoChunk {
      */
     async startAndWait() {
         await this.#asyncLock.acquire("start", () => this.#synthesize());
+    }
+
+    /**
+     * 终止捕获
+     */
+    abort() {
+        if(!this.#abortCallback)
+            return this.#abortCallback;
+        this.#abortCallback();
     }
 
     /**
@@ -202,6 +214,8 @@ export default class ChunkVideo extends VideoChunk {
             // 注册事件序列
             if (this.timeActions && Object.keys(this.timeActions).length > 0)
                 page.registerTimeActions(this.timeActions);
+             // 注册终止回调
+             this.#abortCallback = () => page.target.evaluate(() => captureCtx.abort()).catch(err => console.error(err));
             // 启动合成
             super.start();
             // 合成完成promise

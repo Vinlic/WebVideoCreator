@@ -204,6 +204,15 @@ export default class CaptureContext {
     }
 
     /**
+     * 终止捕获
+     */
+    abort() {
+        if(!this.isCapturing())
+            return;
+        this.stopFlag = true;
+    }
+
+    /**
      * 检查配置
      */
     _checkConfig() {
