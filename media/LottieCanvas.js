@@ -123,7 +123,25 @@ export default class LottieCanvas {
                 autoplay: true,
                 // 渲染器设置画布上下文
                 rendererSettings: {
-                    context: this.canvasCtx
+                    context: this.canvasCtx,
+                    // 禁用表达式求值
+                    // Lottie 的 "expressions" 特性会把动画 JSON 中属性的 `x` 字段
+                    // 交给 eval() 执行。动画文件是外部数据（通过 <lottie src> 加载），
+                    // 不应被当作可执行代码；而渲染页面中已注入 ____addAudio 等 Node
+                    // 桥接方法，因此表达式可以越过数据/代码边界。
+                    // lottie-web 默认 runExpressions 为 true，这里显式关闭。
+                    // 注意：该选项由 rendererSettings 读取，放在顶层无效。
+                    //
+                    // Disable expression evaluation. Lottie's "expressions"
+                    // feature passes the `x` field of a property in the
+                    // animation JSON to eval(). Animation files are external
+                    // data loaded via <lottie src>, and the rendering page has
+                    // WVC's Node bridge (____addAudio and friends) installed on
+                    // it, so an expression crosses the data/code boundary.
+                    // lottie-web defaults runExpressions to true.
+                    // Note: this option is read from rendererSettings — putting
+                    // it at the top level of loadAnimation() has no effect.
+                    runExpressions: false
                 }
             });
             return true;
